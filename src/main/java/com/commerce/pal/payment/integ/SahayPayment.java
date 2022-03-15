@@ -25,9 +25,13 @@ public class SahayPayment {
     @Value(value = "${org.commerce.pal.sahay.payment.endpoint}")
     private String URL_AUTH;
 
-    @Value(value = "${org.app.properties.gateway.mpesa.gateway.b2c_queue_timeOutURL}")
-    private String URL_PAYMENT;
+    @Value(value = "${org.commerce.pal.sahay.payment.request.endpoint}")
+    private String URL_PAYMENT_REQUEST;
+    @Value(value = "${org.commerce.pal.sahay.payment.fulfillment.endpoint}")
+    private String URL_PAYMENT_FULFILLMENT;
 
+    @Value(value = "${org.commerce.pal.sahay.check.customer.endpoint}")
+    private String URL_CHECK_CUSTOMER;
 
     private final HttpProcessor httpProcessor;
 
