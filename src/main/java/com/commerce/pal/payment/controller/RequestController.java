@@ -1,6 +1,8 @@
 package com.commerce.pal.payment.controller;
 
-import com.commerce.pal.payment.integ.sahay.SahayPayment;
+import com.commerce.pal.payment.integ.sahay.SahayCustomerValidation;
+import com.commerce.pal.payment.integ.sahay.SahayPaymentFulfillment;
+import com.commerce.pal.payment.module.PaymentService;
 import com.commerce.pal.payment.module.ValidateAccessToken;
 import com.commerce.pal.payment.util.ResponseCodes;
 import lombok.extern.java.Log;
@@ -18,14 +20,21 @@ import java.util.logging.Level;
 @CrossOrigin(origins = "*")
 @SuppressWarnings("Duplicates")
 public class RequestController {
-    private final SahayPayment sahayPayment;
+    private final PaymentService paymentService;
     private final ValidateAccessToken validateAccessToken;
+    private final SahayCustomerValidation sahayCustomerValidation;
+    private final SahayPaymentFulfillment sahayPaymentFulfillment;
 
     @Autowired
-    public RequestController(SahayPayment sahayPayment,
-                             ValidateAccessToken validateAccessToken) {
-        this.sahayPayment = sahayPayment;
+    public RequestController(PaymentService paymentService,
+                             ValidateAccessToken validateAccessToken,
+                             SahayCustomerValidation sahayCustomerValidation,
+                             SahayPaymentFulfillment sahayPaymentFulfillment) {
+        this.paymentService = paymentService;
+
         this.validateAccessToken = validateAccessToken;
+        this.sahayCustomerValidation = sahayCustomerValidation;
+        this.sahayPaymentFulfillment = sahayPaymentFulfillment;
     }
 
     @RequestMapping(value = "/request", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -43,15 +52,16 @@ public class RequestController {
             JSONObject valTokenBdy = validateAccessToken.pickAndProcess(valTokenReq);
 
             if (valTokenBdy.getString("Status").equals("00")) {
+                requestObject.put("UserEmail", valTokenBdy.getString("Email"));
                 switch (requestObject.getString("ServiceCode")) {
                     case "SAHAY-LOOKUP":
-                        responseBody = sahayPayment.checkCustomer(requestObject.getString("PhoneNumber"));
+                        responseBody = sahayCustomerValidation.checkCustomer(requestObject.getString("PhoneNumber"));
                         break;
                     case "CHECKOUT":
-//                responseBody = charityProcessor.pickAndProcess(requestObject);
+                        responseBody = paymentService.pickAndProcess(requestObject);
                         break;
-                    case "CONFIRM-PAYMENT":
-//                responseBody = charityProcessor.pickAndProcess(requestObject);
+                    case "SAHAY-CONFIRM-PAYMENT":
+                        responseBody = sahayPaymentFulfillment.pickAndProcess(requestObject);
                         break;
                     default:
                         responseBody.put("statusCode", ResponseCodes.REQUEST_NOT_ACCEPTED)

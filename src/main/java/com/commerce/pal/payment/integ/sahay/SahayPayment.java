@@ -1,118 +1,123 @@
 package com.commerce.pal.payment.integ.sahay;
 
+import com.commerce.pal.payment.model.PalPayment;
+import com.commerce.pal.payment.repo.PalPaymentRepository;
 import com.commerce.pal.payment.util.HttpProcessor;
 import com.commerce.pal.payment.util.ResponseCodes;
 import lombok.extern.java.Log;
 import org.asynchttpclient.RequestBuilder;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.Base64;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.logging.Level;
 
 @Log
 @Component
 @SuppressWarnings("Duplicates")
 public class SahayPayment {
-    @Value(value = "${org.commerce.pal.sahay.consumer.key}")
-    private String consumerKey;
-    @Value(value = "${org.commerce.pal.sahay.consumer.secret}")
-    private String consumerSecret;
 
-    @Value(value = "${org.commerce.pal.sahay.auth.endpoint}")
-    private String URL_AUTH;
     @Value(value = "${org.commerce.pal.sahay.payment.request.endpoint}")
     private String URL_PAYMENT_REQUEST;
-    @Value(value = "${org.commerce.pal.sahay.payment.fulfillment.endpoint}")
-    private String URL_PAYMENT_FULFILLMENT;
-    @Value(value = "${org.commerce.pal.sahay.check.customer.endpoint}")
-    private String URL_CHECK_CUSTOMER;
 
+
+    private final Constants constants;
     private final HttpProcessor httpProcessor;
+    private final PalPaymentRepository palPaymentRepository;
 
     @Autowired
-    public SahayPayment(HttpProcessor httpProcessor) {
+    public SahayPayment(Constants constants,
+                        HttpProcessor httpProcessor,
+                        PalPaymentRepository palPaymentRepository) {
+        this.constants = constants;
         this.httpProcessor = httpProcessor;
+        this.palPaymentRepository = palPaymentRepository;
     }
 
-    public String getToken() {
-        try {
-            log.log(Level.INFO, "Getting Sahay Bill Payment Access token");
-
-            JSONObject payload = new JSONObject();
-            payload.put("consumerKey", consumerKey)
-                    .put("consumerSecret", consumerSecret);
-
-            HttpProcessor httpProcessor = new HttpProcessor();
-            RequestBuilder builder = new RequestBuilder("POST");
-            builder.setUrl(URL_AUTH)
-                    .addHeader("Content-Type", "application/json")
-                    .setBody(payload.toString())
-                    .build();
-            String token = httpProcessor.processProperRequest(builder);
-            JSONObject jsonObject = null;
-            try {
-                jsonObject = new JSONObject(token);
-            } catch (JSONException err) {
-                log.log(Level.SEVERE, err.getMessage());
-                return null;
-            }
-            if (token.contains("Error") || token.contains("errorCode")) {
-                return null;
-            }
-            try {
-                return jsonObject.getString("AccessToken");
-            } catch (JSONException err) {
-                log.log(Level.SEVERE, err.getMessage());
-            }
-            return "Error";
-        } catch (Exception e) {
-            log.log(Level.SEVERE, e.getMessage());
-        }
-        return "Error";
-    }
-
-    public JSONObject checkCustomer(String phone) {
+    public JSONObject pickAndProcess(PalPayment payment) {
         JSONObject respBdy = new JSONObject();
         try {
-            String accessToken = getToken();
+            String accessToken = constants.getToken();
             if (accessToken == null || accessToken.equals("") || accessToken.contains("Error")) {
                 log.log(Level.SEVERE, "Unable to get access token");
                 respBdy.put("statusCode", ResponseCodes.SYSTEM_ERROR)
                         .put("statusDescription", "failed")
                         .put("statusMessage", "Request failed");
+
+                payment.setStatus(5);
+                payment.setBillTransRef("FAILED");
+                payment.setResponsePayload("FAILED");
+                payment.setResponseDate(Timestamp.from(Instant.now()));
+
+                payment.setFinalResponse("999");
+                payment.setFinalResponseMessage("FAILED");
+                payment.setFinalResponseDate(Timestamp.from(Instant.now()));
+                palPaymentRepository.save(payment);
             } else {
                 JSONObject payload = new JSONObject();
-                payload.put("PhoneNumber", phone);
+                payload.put("PhoneNumber", payment.getAccountNumber());
+                payload.put("BillerReference", payment.getTransRef());
+                payload.put("Amount", payment.getAmount().toString());
+
+                payment.setRequestPayload(payload.toString());
+                palPaymentRepository.save(payment);
 
                 RequestBuilder builder = new RequestBuilder("POST");
                 builder.addHeader("Authorization", "Bearer " + accessToken)
                         .addHeader("Content-Type", "application/json")
                         .setBody(payload.toString())
-                        .setUrl(URL_CHECK_CUSTOMER)
+                        .setUrl(URL_PAYMENT_REQUEST)
                         .build();
 
                 JSONObject resp = httpProcessor.jsonRequestProcessor(builder);
 
                 if (resp.getString("StatusCode").equals("200")) {
                     JSONObject resBody = new JSONObject(resp.getString("ResponseBody"));
+                    payment.setResponsePayload(resBody.toString());
+                    payment.setResponseDate(Timestamp.from(Instant.now()));
                     if (resBody.getString("response").equals("000")) {
                         respBdy.put("statusCode", ResponseCodes.SUCCESS)
+                                .put("OrderRef", payment.getOrderRef())
+                                .put("TransRef", payment.getTransRef())
                                 .put("statusDescription", "Success")
-                                .put("customerName", resBody.getString("customerName"))
                                 .put("statusMessage", "Success");
+
+                        payment.setStatus(1);
+                        payment.setBillTransRef(resBody.getString("sahayRef"));
+                        payment.setFinalResponse("0");
+                        payment.setFinalResponseMessage("PENDING");
+                        payment.setFinalResponseDate(Timestamp.from(Instant.now()));
+                        palPaymentRepository.save(payment);
+
                     } else {
                         respBdy.put("statusCode", ResponseCodes.NOT_EXIST)
                                 .put("statusDescription", "failed")
                                 .put("statusMessage", "Request failed");
+
+                        payment.setStatus(5);
+                        payment.setBillTransRef("FAILED");
+                        payment.setFinalResponse("999");
+                        payment.setFinalResponseMessage("FAILED");
+                        payment.setFinalResponseDate(Timestamp.from(Instant.now()));
+                        palPaymentRepository.save(payment);
                     }
                 } else {
                     respBdy.put("statusCode", ResponseCodes.SYSTEM_ERROR)
                             .put("statusDescription", "failed")
                             .put("statusMessage", "Request failed");
+
+                    payment.setStatus(5);
+                    payment.setBillTransRef("FAILED");
+                    payment.setResponsePayload("FAILED");
+                    payment.setResponseDate(Timestamp.from(Instant.now()));
+
+                    payment.setFinalResponse("999");
+                    payment.setFinalResponseMessage("FAILED");
+                    payment.setFinalResponseDate(Timestamp.from(Instant.now()));
+                    palPaymentRepository.save(payment);
                 }
             }
         } catch (Exception ex) {

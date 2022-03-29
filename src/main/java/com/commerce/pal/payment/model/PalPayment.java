@@ -18,8 +18,12 @@ public class PalPayment {
     @Column(name = "UserType")
     private String userType;
     @Basic
-    @Column(name = "UserId")
-    private Long userId;
+    @Column(name = "UserEmail")
+    private String userEmail;
+
+    @Basic
+    @Column(name = "OrderRef")
+    private String orderRef;
     @Basic
     @Column(name = "TransRef")
     private String transRef;
@@ -42,11 +46,14 @@ public class PalPayment {
     @Column(name = "Status")
     private Integer status;
     @Basic
+    @Column(name = "RequestPayload")
+    private String requestPayload;
+    @Basic
     @Column(name = "RequestDate")
     private Timestamp requestDate;
     @Basic
-    @Column(name = "RequestPayload")
-    private String requestPayload;
+    @Column(name = "BillTransRef")
+    private String billTransRef;
     @Basic
     @Column(name = "ResponseDate")
     private Timestamp responseDate;
@@ -59,7 +66,6 @@ public class PalPayment {
     @Basic
     @Column(name = "FinalResponse")
     private String finalResponse;
-
     @Basic
     @Column(name = "FinalResponseDate")
     private Timestamp finalResponseDate;
