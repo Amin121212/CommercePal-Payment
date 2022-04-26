@@ -1,4 +1,4 @@
-package com.commerce.pal.payment.model;
+package com.commerce.pal.payment.model.payment;
 
 import lombok.*;
 

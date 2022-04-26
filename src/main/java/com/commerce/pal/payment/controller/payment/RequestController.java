@@ -1,9 +1,9 @@
-package com.commerce.pal.payment.controller;
+package com.commerce.pal.payment.controller.payment;
 
-import com.commerce.pal.payment.integ.sahay.SahayCustomerValidation;
-import com.commerce.pal.payment.integ.sahay.SahayPaymentFulfillment;
-import com.commerce.pal.payment.module.PaymentService;
-import com.commerce.pal.payment.module.ValidateAccessToken;
+import com.commerce.pal.payment.integ.payment.sahay.SahayCustomerValidation;
+import com.commerce.pal.payment.integ.payment.sahay.SahayPaymentFulfillment;
+import com.commerce.pal.payment.module.payment.PaymentService;
+import com.commerce.pal.payment.module.payment.ValidateAccessToken;
 import com.commerce.pal.payment.util.ResponseCodes;
 import lombok.extern.java.Log;
 import org.json.JSONObject;
@@ -74,8 +74,6 @@ public class RequestController {
                         .put("statusDescription", "failed")
                         .put("statusMessage", "Request failed");
             }
-
-
             return ResponseEntity.ok(responseBody.toString());
 
         } catch (Exception ex) {

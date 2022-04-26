@@ -1,8 +1,7 @@
-package com.commerce.pal.payment.repo;
+package com.commerce.pal.payment.repo.payment;
 
-import com.commerce.pal.payment.model.PalPayment;
+import com.commerce.pal.payment.model.payment.PalPayment;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.expression.spel.ast.OpAnd;
 
 import java.util.Optional;
 

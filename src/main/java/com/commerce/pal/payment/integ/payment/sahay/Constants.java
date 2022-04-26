@@ -1,4 +1,4 @@
-package com.commerce.pal.payment.integ.sahay;
+package com.commerce.pal.payment.integ.payment.sahay;
 
 import com.commerce.pal.payment.util.HttpProcessor;
 import lombok.extern.java.Log;

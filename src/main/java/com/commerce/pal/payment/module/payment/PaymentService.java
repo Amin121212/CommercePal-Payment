@@ -1,8 +1,8 @@
-package com.commerce.pal.payment.module;
+package com.commerce.pal.payment.module.payment;
 
-import com.commerce.pal.payment.integ.sahay.SahayPayment;
-import com.commerce.pal.payment.model.PalPayment;
-import com.commerce.pal.payment.repo.PalPaymentRepository;
+import com.commerce.pal.payment.integ.payment.sahay.SahayPayment;
+import com.commerce.pal.payment.model.payment.PalPayment;
+import com.commerce.pal.payment.repo.payment.PalPaymentRepository;
 import com.commerce.pal.payment.util.GlobalUtils;
 import com.commerce.pal.payment.util.ResponseCodes;
 import lombok.extern.java.Log;

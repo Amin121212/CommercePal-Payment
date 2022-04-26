@@ -1,8 +1,6 @@
-package com.commerce.pal.payment.module;
+package com.commerce.pal.payment.module.payment;
 
-import com.commerce.pal.payment.model.PalPayment;
 import com.commerce.pal.payment.util.HttpProcessor;
-import com.commerce.pal.payment.util.ResponseCodes;
 import lombok.extern.java.Log;
 import org.asynchttpclient.RequestBuilder;
 import org.json.JSONObject;
