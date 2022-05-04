@@ -1,5 +1,6 @@
 package com.commerce.pal.payment.integ.payment.sahay;
 
+import com.commerce.pal.payment.module.payment.ProcessSuccessPayment;
 import com.commerce.pal.payment.repo.payment.PalPaymentRepository;
 import com.commerce.pal.payment.util.HttpProcessor;
 import com.commerce.pal.payment.util.ResponseCodes;
@@ -24,14 +25,17 @@ public class SahayPaymentFulfillment {
     private final Constants constants;
     private final HttpProcessor httpProcessor;
     private final PalPaymentRepository palPaymentRepository;
+    private final ProcessSuccessPayment processSuccessPayment;
 
     @Autowired
     public SahayPaymentFulfillment(Constants constants,
                                    HttpProcessor httpProcessor,
-                                   PalPaymentRepository palPaymentRepository) {
+                                   PalPaymentRepository palPaymentRepository,
+                                   ProcessSuccessPayment processSuccessPayment) {
         this.constants = constants;
         this.httpProcessor = httpProcessor;
         this.palPaymentRepository = palPaymentRepository;
+        this.processSuccessPayment = processSuccessPayment;
     }
 
     public JSONObject pickAndProcess(JSONObject reqBdy) {
@@ -74,11 +78,15 @@ public class SahayPaymentFulfillment {
                                     .put("TransRef", payment.getTransRef())
                                     .put("statusDescription", "Success")
                                     .put("statusMessage", "Success");
+
                             payment.setStatus(3);
                             payment.setFinalResponse("000");
                             payment.setFinalResponseMessage(resBody.getString("responseDescription"));
                             payment.setFinalResponseDate(Timestamp.from(Instant.now()));
                             palPaymentRepository.save(payment);
+
+                            // Process Payment
+                            processSuccessPayment.pickAndProcess(payment);
                         } else {
                             respBdy.put("statusCode", ResponseCodes.NOT_EXIST)
                                     .put("statusDescription", "failed")

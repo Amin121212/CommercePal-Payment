@@ -3,7 +3,7 @@ package com.commerce.pal.payment.module.payment;
 import com.commerce.pal.payment.integ.payment.sahay.SahayPayment;
 import com.commerce.pal.payment.model.payment.PalPayment;
 import com.commerce.pal.payment.repo.payment.PalPaymentRepository;
-import com.commerce.pal.payment.util.GlobalUtils;
+import com.commerce.pal.payment.util.GlobalMethods;
 import com.commerce.pal.payment.util.ResponseCodes;
 import lombok.extern.java.Log;
 import org.json.JSONObject;
@@ -18,15 +18,15 @@ import java.util.concurrent.atomic.AtomicReference;
 @Service
 @SuppressWarnings("Duplicates")
 public class PaymentService {
-    private final GlobalUtils globalUtils;
+    private final GlobalMethods globalMethods;
     private final SahayPayment sahayPayment;
     private final PalPaymentRepository palPaymentRepository;
 
     @Autowired
-    public PaymentService(GlobalUtils globalUtils,
+    public PaymentService(GlobalMethods globalMethods,
                           SahayPayment sahayPayment,
                           PalPaymentRepository palPaymentRepository) {
-        this.globalUtils = globalUtils;
+        this.globalMethods = globalMethods;
         this.sahayPayment = sahayPayment;
         this.palPaymentRepository = palPaymentRepository;
     }
@@ -37,7 +37,7 @@ public class PaymentService {
             AtomicReference<PalPayment> payment = new AtomicReference<>(new PalPayment());
             payment.get().setUserType(rqBdy.getString("UserType"));
             payment.get().setUserEmail(rqBdy.getString("UserEmail"));
-            payment.get().setTransRef( globalUtils.generateTrans());
+            payment.get().setTransRef( globalMethods.generateTrans());
             payment.get().setOrderRef(rqBdy.getString("OrderRef"));
             payment.get().setTransType("OrderPayment");
             payment.get().setPaymentChannel(rqBdy.getString("PaymentMode"));

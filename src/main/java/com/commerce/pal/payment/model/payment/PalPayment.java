@@ -9,6 +9,7 @@ import java.util.Objects;
 
 @Data
 @Entity
+@Table(name = "PalPayment")
 public class PalPayment {
     @Id
     @Column(name = "Id")
@@ -20,7 +21,6 @@ public class PalPayment {
     @Basic
     @Column(name = "UserEmail")
     private String userEmail;
-
     @Basic
     @Column(name = "OrderRef")
     private String orderRef;

@@ -3,7 +3,7 @@ package com.commerce.pal.payment.controller.payment;
 import com.commerce.pal.payment.integ.payment.sahay.SahayCustomerValidation;
 import com.commerce.pal.payment.integ.payment.sahay.SahayPaymentFulfillment;
 import com.commerce.pal.payment.module.payment.PaymentService;
-import com.commerce.pal.payment.module.payment.ValidateAccessToken;
+import com.commerce.pal.payment.module.ValidateAccessToken;
 import com.commerce.pal.payment.util.ResponseCodes;
 import lombok.extern.java.Log;
 import org.json.JSONObject;

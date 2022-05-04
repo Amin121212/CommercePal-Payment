@@ -8,7 +8,7 @@ import java.time.Instant;
 
 @Log
 @Component
-public class GlobalUtils {
+public class GlobalMethods {
 
     public String generateTrans() {
         String ref = Timestamp.from(Instant.now()).toString();

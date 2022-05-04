@@ -1,4 +1,4 @@
-package com.commerce.pal.payment.module.payment;
+package com.commerce.pal.payment.module;
 
 import com.commerce.pal.payment.util.HttpProcessor;
 import lombok.extern.java.Log;
