@@ -10,7 +10,7 @@ import java.util.Objects;
 
 @Data
 @Entity
-@Table(name = "Order")
+@Table(name = "[dbo].[Order]")
 public class Order {
     @Id
     @Column(name = "OrderId")
@@ -37,6 +37,12 @@ public class Order {
     @Basic
     @Column(name = "SaleType")
     private String saleType;
+    @Basic
+    @Column(name = "Currency")
+    private String currency;
+    @Basic
+    @Column(name = "CountryCode")
+    private String countryCode;
     @Basic
     @Column(name = "TotalPrice")
     private BigDecimal totalPrice;

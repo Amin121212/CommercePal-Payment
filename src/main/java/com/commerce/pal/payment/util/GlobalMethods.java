@@ -10,6 +10,7 @@ import java.time.Instant;
 @Component
 public class GlobalMethods {
 
+
     public String generateTrans() {
         String ref = Timestamp.from(Instant.now()).toString();
         ref = IDGenerator.getInstance("SB").getRRN();

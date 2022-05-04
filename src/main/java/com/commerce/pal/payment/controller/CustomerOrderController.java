@@ -17,11 +17,4 @@ import org.springframework.web.bind.annotation.RestController;
 @SuppressWarnings("Duplicates")
 public class CustomerOrderController {
 
-    @Value("${org.commerce.pal.loan.request.email}")
-    private String loanRequestEmails;
-
-    @Autowired
-    private EmailClient emailClient;
-
-
 }

@@ -37,7 +37,7 @@ public class PaymentService {
             AtomicReference<PalPayment> payment = new AtomicReference<>(new PalPayment());
             payment.get().setUserType(rqBdy.getString("UserType"));
             payment.get().setUserEmail(rqBdy.getString("UserEmail"));
-            payment.get().setTransRef( globalMethods.generateTrans());
+            payment.get().setTransRef(globalMethods.generateTrans());
             payment.get().setOrderRef(rqBdy.getString("OrderRef"));
             payment.get().setTransType("OrderPayment");
             payment.get().setPaymentChannel(rqBdy.getString("PaymentMode"));

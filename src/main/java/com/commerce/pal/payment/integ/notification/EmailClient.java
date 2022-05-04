@@ -78,7 +78,7 @@ public class EmailClient {
 
             String mailMessage = "";
 
-            Template t = freemarkerConfig.getTemplate(messagePayload.getString("template"));
+            Template t = freemarkerConfig.getTemplate(messagePayload.getString("templates"));
             Map<String, Object> map =
                     new ObjectMapper().readValue(messagePayload.toString(), HashMap.class);
             mailMessage = FreeMarkerTemplateUtils.processTemplateIntoString(t, map);

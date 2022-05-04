@@ -86,7 +86,7 @@ public class SahayPaymentFulfillment {
                             palPaymentRepository.save(payment);
 
                             // Process Payment
-                            processSuccessPayment.pickAndProcess(payment);
+//                            processSuccessPayment.pickAndProcess(payment);
                         } else {
                             respBdy.put("statusCode", ResponseCodes.NOT_EXIST)
                                     .put("statusDescription", "failed")

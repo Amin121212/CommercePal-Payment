@@ -4,6 +4,7 @@ import com.commerce.pal.payment.integ.payment.sahay.SahayCustomerValidation;
 import com.commerce.pal.payment.integ.payment.sahay.SahayPaymentFulfillment;
 import com.commerce.pal.payment.module.payment.PaymentService;
 import com.commerce.pal.payment.module.ValidateAccessToken;
+import com.commerce.pal.payment.module.payment.ProcessSuccessPayment;
 import com.commerce.pal.payment.util.ResponseCodes;
 import lombok.extern.java.Log;
 import org.json.JSONObject;
@@ -22,17 +23,21 @@ import java.util.logging.Level;
 public class RequestController {
     private final PaymentService paymentService;
     private final ValidateAccessToken validateAccessToken;
+    private final ProcessSuccessPayment processSuccessPayment;
     private final SahayCustomerValidation sahayCustomerValidation;
     private final SahayPaymentFulfillment sahayPaymentFulfillment;
+
 
     @Autowired
     public RequestController(PaymentService paymentService,
                              ValidateAccessToken validateAccessToken,
+                             ProcessSuccessPayment processSuccessPayment,
                              SahayCustomerValidation sahayCustomerValidation,
                              SahayPaymentFulfillment sahayPaymentFulfillment) {
         this.paymentService = paymentService;
 
         this.validateAccessToken = validateAccessToken;
+        this.processSuccessPayment = processSuccessPayment;
         this.sahayCustomerValidation = sahayCustomerValidation;
         this.sahayPaymentFulfillment = sahayPaymentFulfillment;
     }
@@ -74,6 +79,26 @@ public class RequestController {
                         .put("statusDescription", "failed")
                         .put("statusMessage", "Request failed");
             }
+            return ResponseEntity.ok(responseBody.toString());
+
+        } catch (Exception ex) {
+            responseBody.put("statusCode", ResponseCodes.SYSTEM_ERROR)
+                    .put("statusDescription", "failed")
+                    .put("statusMessage", "Request failed");
+            log.log(Level.SEVERE, ex.getMessage());
+            return ResponseEntity.ok(responseBody.toString());
+        }
+    }
+
+
+    @RequestMapping(value = "/test-request", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<?> testRequest(@RequestBody String requestBody) {
+        log.log(Level.INFO, requestBody);
+        JSONObject responseBody = new JSONObject();
+        try {
+            JSONObject requestObject = new JSONObject(requestBody);
+            processSuccessPayment.pickAndProcess(requestObject.getString("OrderRef"));
             return ResponseEntity.ok(responseBody.toString());
 
         } catch (Exception ex) {
