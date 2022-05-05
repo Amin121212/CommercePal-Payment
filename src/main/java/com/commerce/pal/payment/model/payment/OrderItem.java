@@ -62,6 +62,9 @@ public class OrderItem {
     @Column(name = "DeliveryPrice")
     private BigDecimal deliveryPrice;
     @Basic
+    @Column(name = "UserShipmentStatus")
+    private Integer userShipmentStatus;
+    @Basic
     @Column(name = "ShipmentType")
     private String shipmentType;
     @Basic
