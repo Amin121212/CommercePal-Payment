@@ -63,4 +63,32 @@ public class ValidateAccessToken {
         }
         return respBdy;
     }
+
+    public JSONObject pickAndReturnAll(JSONObject rqBdy) {
+        JSONObject respBdy = new JSONObject();
+        try {
+            RequestBuilder builder = new RequestBuilder("GET");
+            builder.addHeader("Authorization", rqBdy.getString("AccessToken"))
+                    .addHeader("Content-Type", "application/json")
+                    .setUrl(VALIDATE_TOKEN_URL)
+                    .build();
+
+            JSONObject resp = httpProcessor.jsonRequestProcessor(builder);
+
+            if (resp.getString("StatusCode").equals("200")) {
+                JSONObject resBody = new JSONObject(resp.getString("ResponseBody"));
+                JSONObject userDetails = resBody.getJSONObject("Details");
+                respBdy.put("Status", "00")
+                        .put("UserDetails", resBody)
+                        .put("Email", userDetails.getString("email"));
+            } else {
+                respBdy.put("Status", "99")
+                        .put("Message", "Invalid Token");
+            }
+        } catch (Exception ex) {
+            respBdy.put("Status", "99")
+                    .put("Message", "Invalid Token");
+        }
+        return respBdy;
+    }
 }

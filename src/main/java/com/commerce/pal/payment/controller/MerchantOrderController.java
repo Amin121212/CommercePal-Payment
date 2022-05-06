@@ -52,10 +52,12 @@ public class MerchantOrderController {
         valTokenReq.put("AccessToken", accessToken)
                 .put("UserType", "M");
 
-        JSONObject valTokenBdy = validateAccessToken.pickAndProcess(valTokenReq);
+        JSONObject valTokenBdy = validateAccessToken.pickAndReturnAll(valTokenReq);
 
         if (valTokenBdy.getString("Status").equals("00")) {
-            Long merchantId = valTokenBdy.getLong("userId");
+            JSONObject userDetails = valTokenBdy.getJSONObject("UserDetails");
+            JSONObject merchantInfo = userDetails.getJSONObject("merchantInfo");// userDetails.getJSONObject("messengerInfo");
+            Long merchantId = Long.valueOf(userDetails.getJSONObject("merchantInfo").getInt("userId"));
             List<Integer> shipmentStatus = new ArrayList<>();
             if (status.equals(10)) {
                 shipmentStatus.add(0);
