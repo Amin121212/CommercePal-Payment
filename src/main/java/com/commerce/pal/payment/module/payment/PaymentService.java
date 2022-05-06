@@ -1,5 +1,6 @@
 package com.commerce.pal.payment.module.payment;
 
+import com.commerce.pal.payment.integ.payment.financials.FinancialPayment;
 import com.commerce.pal.payment.integ.payment.sahay.SahayPayment;
 import com.commerce.pal.payment.model.payment.PalPayment;
 import com.commerce.pal.payment.repo.payment.PalPaymentRepository;
@@ -18,16 +19,19 @@ import java.util.concurrent.atomic.AtomicReference;
 @Service
 @SuppressWarnings("Duplicates")
 public class PaymentService {
-    private final GlobalMethods globalMethods;
     private final SahayPayment sahayPayment;
+    private final GlobalMethods globalMethods;
+    private final FinancialPayment financialPayment;
     private final PalPaymentRepository palPaymentRepository;
 
     @Autowired
-    public PaymentService(GlobalMethods globalMethods,
-                          SahayPayment sahayPayment,
+    public PaymentService(SahayPayment sahayPayment,
+                          GlobalMethods globalMethods,
+                          FinancialPayment financialPayment,
                           PalPaymentRepository palPaymentRepository) {
-        this.globalMethods = globalMethods;
         this.sahayPayment = sahayPayment;
+        this.globalMethods = globalMethods;
+        this.financialPayment = financialPayment;
         this.palPaymentRepository = palPaymentRepository;
     }
 
@@ -40,18 +44,22 @@ public class PaymentService {
             payment.get().setTransRef(globalMethods.generateTrans());
             payment.get().setOrderRef(rqBdy.getString("OrderRef"));
             payment.get().setTransType("OrderPayment");
-            payment.get().setPaymentChannel(rqBdy.getString("PaymentMode"));
+            payment.get().setPaymentType(rqBdy.getString("PaymentType"));
+            payment.get().setPaymentAccountType(rqBdy.getString("PaymentMode"));
             payment.get().setAccountNumber(rqBdy.getString("PhoneNumber"));
             payment.get().setAmount(rqBdy.getDouble("TotalAmount"));
             payment.get().setCurrency(rqBdy.getString("Currency"));
             payment.get().setStatus(0);
-            payment.get().setRequestPayload("PRIOR");
+            payment.get().setRequestPayload(rqBdy.toString());
             payment.get().setRequestDate(Timestamp.from(Instant.now()));
             payment.set(palPaymentRepository.save(payment.get()));
 
             switch (rqBdy.getString("PaymentMode")) {
                 case "SAHAY":
                     respBdy = sahayPayment.pickAndProcess(payment.get());
+                    break;
+                case "FINANCIAL":
+                    respBdy = financialPayment.pickAndProcess(payment.get());
                     break;
                 default:
                     respBdy.put("statusCode", ResponseCodes.SYSTEM_ERROR)

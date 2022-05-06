@@ -18,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 @PropertySources({
 		@PropertySource(value = "file:E:\\Apps\\CommercePalPayment\\application.properties", ignoreResourceNotFound = true)
 })
-
 public class PaymentApplication {
 
 	public static void main(String[] args) {

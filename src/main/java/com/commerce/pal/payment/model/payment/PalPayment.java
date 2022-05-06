@@ -31,8 +31,11 @@ public class PalPayment {
     @Column(name = "TransType")
     private String transType;
     @Basic
-    @Column(name = "PaymentChannel")
-    private String paymentChannel;
+    @Column(name = "PaymentType")
+    private String paymentType;
+    @Basic
+    @Column(name = "PaymentAccountType")
+    private String paymentAccountType;
     @Basic
     @Column(name = "AccountNumber")
     private String accountNumber;

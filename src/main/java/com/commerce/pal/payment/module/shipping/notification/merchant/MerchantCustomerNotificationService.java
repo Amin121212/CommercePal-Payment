@@ -4,6 +4,7 @@ import com.commerce.pal.payment.integ.notification.EmailClient;
 import com.commerce.pal.payment.module.DataAccessService;
 import com.commerce.pal.payment.repo.payment.OrderItemRepository;
 import com.commerce.pal.payment.repo.payment.OrderRepository;
+import com.commerce.pal.payment.util.GlobalMethods;
 import lombok.extern.java.Log;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,17 +18,19 @@ import java.util.logging.Level;
 @Service
 @SuppressWarnings("Duplicates")
 public class MerchantCustomerNotificationService {
-    @Autowired
-    private EmailClient emailClient;
 
+
+    private final GlobalMethods globalMethods;
     private final OrderRepository orderRepository;
     private final DataAccessService dataAccessService;
     private final OrderItemRepository orderItemRepository;
 
     @Autowired
-    public MerchantCustomerNotificationService(OrderRepository orderRepository,
+    public MerchantCustomerNotificationService(GlobalMethods globalMethods,
+                                               OrderRepository orderRepository,
                                                DataAccessService dataAccessService,
                                                OrderItemRepository orderItemRepository) {
+        this.globalMethods = globalMethods;
         this.orderRepository = orderRepository;
         this.dataAccessService = dataAccessService;
         this.orderItemRepository = orderItemRepository;
@@ -74,7 +77,7 @@ public class MerchantCustomerNotificationService {
                                     orderPay.put("subject", "New Order Ref : " + order.getOrderRef());
                                     orderPay.put("templates", "merchant-new-order.ftl");
                                     //Send to Merchant
-                                    emailClient.emailTemplateSender(orderPay);
+                                    globalMethods.processEmailWithTemplate(orderPay);
 
                                 });
                         orderPay.put("orderItems", customerOrderItems);
@@ -82,7 +85,7 @@ public class MerchantCustomerNotificationService {
                         orderPay.put("subject", "New Order Ref : " + order.getOrderRef());
                         orderPay.put("templates", "merchant-new-order.ftl");
                         //Send to Customer
-                        emailClient.emailTemplateSender(orderPay);
+                        globalMethods.processEmailWithTemplate(orderPay);
                     }, () -> {
                         log.log(Level.WARNING, "Invalid Order Ref Passed : " + orderRef);
                     });
