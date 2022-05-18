@@ -26,4 +26,11 @@ public class GlobalMethods {
     public void processEmailWithTemplate(JSONObject payload) {
         emailClient.emailTemplateSender(payload);
     }
+
+    @Async
+    public void processEmailWithoutTemplate(JSONObject payload) {
+        emailClient.emailSender(payload.getString("EmailMessage"),
+                payload.getString("EmailDestination"),
+                payload.getString("EmailSubject"));
+    }
 }

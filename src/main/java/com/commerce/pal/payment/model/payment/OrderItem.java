@@ -26,6 +26,9 @@ public class OrderItem {
     @Column(name = "ProductLinkingId")
     private Long productLinkingId;
     @Basic
+    @Column(name = "SubProductId")
+    private Long subProductId;
+    @Basic
     @Column(name = "MerchantId")
     private Long merchantId;
     @Basic
@@ -68,6 +71,9 @@ public class OrderItem {
     @Column(name = "ShipmentType")
     private String shipmentType;
     @Basic
+    @Column(name = "ShipmentTypeComments")
+    private String shipmentTypeComments;
+    @Basic
     @Column(name = "ShipmentStatus")
     private Integer shipmentStatus;
     @Basic
@@ -76,6 +82,9 @@ public class OrderItem {
     @Basic
     @Column(name = "AssignedWareHouseId")
     private Integer assignedWareHouseId;
+    @Basic
+    @Column(name = "FinalizingWareHouseId")
+    private Integer finalizingWareHouseId;
     @Basic
     @Column(name = "Status")
     private Integer status;

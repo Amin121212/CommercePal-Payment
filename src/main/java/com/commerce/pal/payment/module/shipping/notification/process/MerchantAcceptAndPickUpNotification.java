@@ -1,13 +1,11 @@
-package com.commerce.pal.payment.module.shipping.notification.merchant;
+package com.commerce.pal.payment.module.shipping.notification.process;
 
-import com.commerce.pal.payment.integ.notification.EmailClient;
 import com.commerce.pal.payment.module.DataAccessService;
 import com.commerce.pal.payment.repo.payment.OrderItemRepository;
 import com.commerce.pal.payment.repo.payment.OrderRepository;
 import com.commerce.pal.payment.util.GlobalMethods;
 import lombok.extern.java.Log;
 import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -17,16 +15,14 @@ import java.util.logging.Level;
 @Log
 @Service
 @SuppressWarnings("Duplicates")
-public class MerchantCustomerNotificationService {
-
+public class MerchantAcceptAndPickUpNotification {
 
     private final GlobalMethods globalMethods;
     private final OrderRepository orderRepository;
     private final DataAccessService dataAccessService;
     private final OrderItemRepository orderItemRepository;
 
-    @Autowired
-    public MerchantCustomerNotificationService(GlobalMethods globalMethods,
+    public MerchantAcceptAndPickUpNotification(GlobalMethods globalMethods,
                                                OrderRepository orderRepository,
                                                DataAccessService dataAccessService,
                                                OrderItemRepository orderItemRepository) {
@@ -36,7 +32,7 @@ public class MerchantCustomerNotificationService {
         this.orderItemRepository = orderItemRepository;
     }
 
-    public void processNewOrderProcess(String orderRef) {
+    public void pickAndProcess(String orderRef) {
         try {
             orderRepository.findOrderByOrderRef(orderRef)
                     .ifPresentOrElse(order -> {
@@ -68,6 +64,11 @@ public class MerchantCustomerNotificationService {
                                                 itemPay.put("ProductImage", productBdy.getString("webImage"));
                                                 itemPay.put("NoOfProduct", orderItem.getQuantity());
                                                 itemPay.put("ItemOrderRef", orderItem.getSubOrderNumber());
+                                                JSONObject subProdReq = new JSONObject();
+                                                subProdReq.put("Type", "SUB-PRODUCT");
+                                                subProdReq.put("TypeId", orderItem.getSubProductId());
+                                                JSONObject subProductBdy = dataAccessService.pickAndProcess(subProdReq);
+
                                                 orderItems.add(itemPay);
                                                 customerOrderItems.add(itemPay);
                                             });

@@ -43,7 +43,7 @@ public class FinancialPayment {
             JSONObject payload = new JSONObject();
             JSONObject reqBdy = new JSONObject(payment.getRequestPayload());
 
-            payload.put("FinancialInst", payment.getPaymentAccountType());
+            payload.put("FinancialCode", payment.getPaymentAccountType());
             payload.put("UserType", payment.getUserType());
             payload.put("UserId", reqBdy.getLong("UserId"));
             payload.put("OrderRef", payment.getOrderRef());

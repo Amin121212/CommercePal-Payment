@@ -9,21 +9,15 @@ import java.util.Objects;
 
 @Data
 @Entity
-@Table(name = "ItemShipmentStatus", schema = "dbo", catalog = "CommercePal")
+@Table(name = "ItemShipmentStatus")
 public class ItemShipmentStatus {
     @Id
     @Column(name = "Id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     @Basic
-    @Column(name = "ItemShipmentId")
-    private Integer itemShipmentId;
-    @Basic
-    @Column(name = "UserType")
-    private String userType;
-    @Basic
-    @Column(name = "UserId")
-    private long userId;
+    @Column(name = "ItemId")
+    private Long itemId;
     @Basic
     @Column(name = "ShipmentStatus")
     private Integer shipmentStatus;

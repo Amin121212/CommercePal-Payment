@@ -61,6 +61,9 @@ public class PaymentService {
                 case "FINANCIAL":
                     respBdy = financialPayment.pickAndProcess(payment.get());
                     break;
+                case "AGENT-CASH":
+                    respBdy = financialPayment.pickAndProcess(payment.get());
+                    break;
                 default:
                     respBdy.put("statusCode", ResponseCodes.SYSTEM_ERROR)
                             .put("statusDescription", "failed")
