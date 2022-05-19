@@ -23,4 +23,6 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
     List<OrderItem> findOrderItemsByOrderIdAndMerchantId(Long orderId, Long merchant);
 
     Optional<OrderItem> findOrderItemByItemIdAndMerchantId(Long item,Long merchant);
+
+    Optional<OrderItem> findOrderItemBySubOrderNumberAndMerchantId(Long item,Long merchant);
 }

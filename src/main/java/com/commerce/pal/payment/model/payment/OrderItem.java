@@ -86,6 +86,15 @@ public class OrderItem {
     @Column(name = "FinalizingWareHouseId")
     private Integer finalizingWareHouseId;
     @Basic
+    @Column(name = "IsQrCodeAssigned")
+    private Integer isQrCodeAssigned;
+    @Basic
+    @Column(name = "QrCodeNumber")
+    private String qrCodeNumber;
+    @Basic
+    @Column(name = "QrCodeAssignmentDate")
+    private Timestamp qrCodeAssignmentDate;
+    @Basic
     @Column(name = "Status")
     private Integer status;
     @Basic
