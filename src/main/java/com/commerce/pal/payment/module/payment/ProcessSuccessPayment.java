@@ -54,6 +54,7 @@ public class ProcessSuccessPayment {
                         order.setStatus(PAYMENT_SUCCESS);
                         order.setStatusDescription("Payment Successful");
                         order.setBillerReference(payment.getBillTransRef());
+                        order.setPaymentMethod(payment.getPaymentType());
                         order.setPaymentDate(Timestamp.from(Instant.now()));
                         order.setPaymentStatus(PAYMENT_SUCCESS);
                         order.setShippingStatus("NEW");
@@ -66,7 +67,6 @@ public class ProcessSuccessPayment {
                                     orderItem.setStatus(PAYMENT_SUCCESS);
                                     orderItem.setStatusDescription("Payment Successful");
                                     orderItemRepository.save(orderItem);
-
                                 });
                         JSONObject orderPayment = new JSONObject();
                         BigDecimal orderAmount = new BigDecimal(order.getTotalPrice().doubleValue() - order.getTax().doubleValue() - order.getTax().doubleValue());

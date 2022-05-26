@@ -121,6 +121,7 @@ public class SahayPayment {
                 }
             }
         } catch (Exception ex) {
+            log.log(Level.WARNING, ex.getMessage());
             respBdy.put("statusCode", ResponseCodes.SYSTEM_ERROR)
                     .put("statusDescription", "failed")
                     .put("statusMessage", "Request failed");

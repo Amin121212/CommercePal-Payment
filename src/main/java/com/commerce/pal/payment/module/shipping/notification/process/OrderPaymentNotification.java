@@ -57,10 +57,6 @@ public class OrderPaymentNotification {
                         List<JSONObject> customerOrderItems = new ArrayList<>();
                         orderItemRepository.findAllByOrderId(order.getOrderId())
                                 .forEach(merchant -> {
-                                    JSONObject merReq = new JSONObject();
-                                    merReq.put("Type", "MERCHANT");
-                                    merReq.put("TypeId", merchant);
-                                    JSONObject merRes = dataAccessService.pickAndProcess(merReq);
                                     List<JSONObject> orderItems = new ArrayList<>();
                                     orderItemRepository.findOrderItemsByOrderIdAndMerchantId(order.getOrderId(), merchant)
                                             .forEach(orderItem -> {
@@ -91,12 +87,20 @@ public class OrderPaymentNotification {
                                             });
                                     orderPay.put("orderItems", orderItems);
 
-                                    orderPay.put("email", merRes.getString("email"));
-                                    orderPay.put("subject", "New Order Ref : " + order.getOrderRef());
-                                    orderPay.put("templates", "merchant-new-order.ftl");
-                                    //Send to Merchant
-                                    globalMethods.processEmailWithTemplate(orderPay);
+                                    if (!merchant.equals(0)) {
+                                        JSONObject merReq = new JSONObject();
+                                        merReq.put("Type", "MERCHANT");
+                                        merReq.put("TypeId", merchant);
+                                        JSONObject merRes = dataAccessService.pickAndProcess(merReq);
 
+                                        orderPay.put("email", merRes.getString("email"));
+                                        orderPay.put("subject", "New Order Ref : " + order.getOrderRef());
+                                        orderPay.put("templates", "merchant-new-order.ftl");
+                                        //Send to Merchant
+                                        globalMethods.processEmailWithTemplate(orderPay);
+                                    } else { // DO for WareHouse Id
+
+                                    }
                                 });
                         orderPay.put("orderItems", customerOrderItems);
                         orderPay.put("email", cusRes.getString("email"));
@@ -108,7 +112,7 @@ public class OrderPaymentNotification {
                         log.log(Level.WARNING, "Invalid Order Ref Passed : " + orderRef);
                     });
         } catch (Exception ex) {
-
+            log.log(Level.WARNING, ex.getMessage());
         }
     }
 }

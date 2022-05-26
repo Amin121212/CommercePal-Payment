@@ -3,6 +3,7 @@ package com.commerce.pal.payment.model.payment;
 import lombok.*;
 
 import javax.persistence.*;
+import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.Objects;
@@ -41,7 +42,7 @@ public class PalPayment {
     private String accountNumber;
     @Basic
     @Column(name = "Amount")
-    private Double amount;
+    private BigDecimal amount;
     @Basic
     @Column(name = "Currency")
     private String currency;

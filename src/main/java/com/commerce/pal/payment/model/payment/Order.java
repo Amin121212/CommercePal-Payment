@@ -15,7 +15,7 @@ public class Order {
     @Id
     @Column(name = "OrderId")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long orderId;
+    private Long orderId;
     @Basic
     @Column(name = "OrderRef")
     private String orderRef;
@@ -62,11 +62,14 @@ public class Order {
     @Column(name = "IsAgentInitiated")
     private Integer isAgentInitiated;
     @Basic
-    @Column(name = "CustomerAddressId")
-    private Long customerAddressId;
+    @Column(name = "IsUserAddressAssigned")
+    private Integer isUserAddressAssigned;
     @Basic
-    @Column(name = "IsCustomerAddressAssigned")
-    private Integer isCustomerAddressAssigned;
+    @Column(name = "PreferredLocationType")
+    private String preferredLocationType;
+    @Basic
+    @Column(name = "UserAddressId")
+    private Long userAddressId;
     @Basic
     @Column(name = "Status")
     private Integer status;
