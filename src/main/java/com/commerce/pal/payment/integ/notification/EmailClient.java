@@ -39,7 +39,6 @@ public class EmailClient {
     @Value(value = "${org.java.email.sender}")
     private String senderEmail;
 
-    @Async
     public String emailSender(String EmailMessage, String EmailDestination, String EmailSubject) {
         String response = "Failed";
         try {
@@ -67,7 +66,6 @@ public class EmailClient {
         return response;
     }
 
-    @Async
     public String emailTemplateSender(JSONObject messagePayload) {
         String response = "Failed";
         try {

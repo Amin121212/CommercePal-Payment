@@ -94,7 +94,7 @@ public class OrderPaymentNotification {
                                         JSONObject merRes = dataAccessService.pickAndProcess(merReq);
 
                                         orderPay.put("email", merRes.getString("email"));
-                                        orderPay.put("subject", "New Order Ref : " + order.getOrderRef());
+                                        orderPay.put("subject", "New Order Ref : " + order.getOrderRef() + " (Merchant)");
                                         orderPay.put("templates", "merchant-new-order.ftl");
                                         //Send to Merchant
                                         globalMethods.processEmailWithTemplate(orderPay);
@@ -104,7 +104,7 @@ public class OrderPaymentNotification {
                                 });
                         orderPay.put("orderItems", customerOrderItems);
                         orderPay.put("email", cusRes.getString("email"));
-                        orderPay.put("subject", "New Order Ref : " + order.getOrderRef());
+                        orderPay.put("subject", "New Order Ref : " + order.getOrderRef() + " (Customer)");
                         orderPay.put("templates", "merchant-new-order.ftl");
                         //Send to Customer
                         globalMethods.processEmailWithTemplate(orderPay);
