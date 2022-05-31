@@ -32,7 +32,7 @@ public class MerchantAcceptAndPickUpNotification {
         this.orderItemRepository = orderItemRepository;
     }
 
-    public void pickAndProcess(String orderRef) {
+    public void pickAndProcess(String orderRef, Long itemId) {
         try {
             orderRepository.findOrderByOrderRef(orderRef)
                     .ifPresentOrElse(order -> {
@@ -53,8 +53,8 @@ public class MerchantAcceptAndPickUpNotification {
                                     merReq.put("TypeId", merchant);
                                     JSONObject merRes = dataAccessService.pickAndProcess(merReq);
                                     List<JSONObject> orderItems = new ArrayList<>();
-                                    orderItemRepository.findOrderItemsByOrderIdAndMerchantId(order.getOrderId(), merchant)
-                                            .forEach(orderItem -> {
+                                    orderItemRepository.findOrderItemByItemIdAndMerchantId(itemId, merchant)
+                                            .ifPresent(orderItem -> {
                                                 JSONObject itemPay = new JSONObject();
                                                 JSONObject prodReq = new JSONObject();
                                                 prodReq.put("Type", "PRODUCT");
@@ -75,7 +75,7 @@ public class MerchantAcceptAndPickUpNotification {
                                     orderPay.put("orderItems", orderItems);
 
                                     orderPay.put("email", merRes.getString("email"));
-                                    orderPay.put("subject", "New Order Ref : " + order.getOrderRef());
+                                    orderPay.put("subject", "Accepted for PickUp  Item ID : " + itemId.toString());
                                     orderPay.put("templates", "merchant-new-order.ftl");
                                     //Send to Merchant
                                     globalMethods.processEmailWithTemplate(orderPay);
@@ -83,7 +83,7 @@ public class MerchantAcceptAndPickUpNotification {
                                 });
                         orderPay.put("orderItems", customerOrderItems);
                         orderPay.put("email", cusRes.getString("email"));
-                        orderPay.put("subject", "New Order Ref : " + order.getOrderRef());
+                        orderPay.put("subject", "Accepted for PickUp  Item ID: " + itemId.toString());
                         orderPay.put("templates", "merchant-new-order.ftl");
                         //Send to Customer
                         globalMethods.processEmailWithTemplate(orderPay);
