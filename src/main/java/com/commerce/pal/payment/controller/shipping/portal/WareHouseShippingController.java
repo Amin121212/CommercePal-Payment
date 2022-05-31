@@ -2,6 +2,7 @@ package com.commerce.pal.payment.controller.shipping.portal;
 
 import com.commerce.pal.payment.model.shipping.ItemMessengerDelivery;
 import com.commerce.pal.payment.model.shipping.ItemShipmentStatus;
+import com.commerce.pal.payment.module.shipping.notification.process.MessengerAssignmentNotification;
 import com.commerce.pal.payment.repo.payment.OrderItemRepository;
 import com.commerce.pal.payment.repo.payment.OrderRepository;
 import com.commerce.pal.payment.repo.shipping.ItemMessengerDeliveryRepository;
@@ -30,6 +31,7 @@ public class WareHouseShippingController {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final ItemShipmentStatusRepository itemShipmentStatusRepository;
+    private final MessengerAssignmentNotification messengerAssignmentNotification;
     private final ItemMessengerDeliveryRepository itemMessengerDeliveryRepository;
 
     @Autowired
@@ -37,24 +39,24 @@ public class WareHouseShippingController {
                                        OrderRepository orderRepository,
                                        OrderItemRepository orderItemRepository,
                                        ItemShipmentStatusRepository itemShipmentStatusRepository,
+                                       MessengerAssignmentNotification messengerAssignmentNotification,
                                        ItemMessengerDeliveryRepository itemMessengerDeliveryRepository) {
         this.globalMethods = globalMethods;
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.itemShipmentStatusRepository = itemShipmentStatusRepository;
+        this.messengerAssignmentNotification = messengerAssignmentNotification;
         this.itemMessengerDeliveryRepository = itemMessengerDeliveryRepository;
     }
 
     // Assign the Items to Specific WareHouse
     // Filter Paid orders by status
-    @RequestMapping(value = "/assign-messenger-pick-merchant", method = RequestMethod.POST)
-    public ResponseEntity<?> assignMessengerPickMerchant(@RequestBody String req) {
+    @RequestMapping(value = "/assign-messenger-to-delivery", method = RequestMethod.POST)
+    public ResponseEntity<?> assignMessengerToDelivery(@RequestBody String req) {
         JSONObject responseMap = new JSONObject();
         try {
-
             JSONObject request = new JSONObject(req);
-            orderItemRepository.findById(
-                            request.getLong("ItemId"))
+            orderItemRepository.findById(request.getLong("OrderItemId"))
                     .ifPresentOrElse(orderItem -> {
                         orderItem.setShipmentStatus(AssignMessengerPickAtMerchant);
                         orderItem.setShipmentUpdateDate(Timestamp.from(Instant.now()));
@@ -76,11 +78,11 @@ public class WareHouseShippingController {
                         itemMessengerDelivery.setCustomerId(0l);
                         switch (request.getString("DeliveryType")) {
                             case "MC":
-                                itemMessengerDelivery.setMessengerId(orderItem.getMerchantId());
+                                itemMessengerDelivery.setMerchantId(orderItem.getMerchantId());
                                 itemMessengerDelivery.setCustomerId(orderRepository.findById(orderItem.getItemId()).get().getCustomerId());
                                 break;
                             case "MW":
-                                itemMessengerDelivery.setMessengerId(orderItem.getMerchantId());
+                                itemMessengerDelivery.setMerchantId(orderItem.getMerchantId());
                                 itemMessengerDelivery.setWareHouseId(request.getLong("WareHouseId"));
                                 break;
                             case "WC":
@@ -89,13 +91,19 @@ public class WareHouseShippingController {
                                 break;
                         }
                         String validationCode = globalMethods.generateValidationCode();
+                        String deliveryCode = globalMethods.generateValidationCode();
                         itemMessengerDelivery.setValidationCode(globalMethods.encryptCode(validationCode));
                         itemMessengerDelivery.setValidationStatus(0);
+                        itemMessengerDelivery.setDeliveryCode(globalMethods.encryptCode(deliveryCode));
+                        itemMessengerDelivery.setDeliveryStatus(0);
                         itemMessengerDelivery.setStatus(0);
                         itemMessengerDelivery.setCreatedDate(Timestamp.from(Instant.now()));
                         itemMessengerDeliveryRepository.save(itemMessengerDelivery);
+                        JSONObject delivery = new JSONObject();
+                        delivery.put("PickingCode", validationCode);
+                        delivery.put("DeliveryCode", deliveryCode);
                         // Send Notification to Respective Users
-                        //merchantAcceptAndPickUpNotification.pickAndProcess(orderItem.getOrderId().toString());
+                        messengerAssignmentNotification.pickAndProcess(itemMessengerDelivery, delivery);
                         responseMap.put("statusCode", ResponseCodes.SUCCESS)
                                 .put("statusDescription", "Success")
                                 .put("statusMessage", "Success");

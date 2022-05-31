@@ -2,10 +2,7 @@ package com.commerce.pal.payment.model.shipping;
 
 import lombok.*;
 
-import javax.persistence.Basic;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.Objects;
@@ -15,6 +12,7 @@ import java.util.Objects;
 public class ItemMessengerDelivery {
     @Id
     @Column(name = "Id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Basic
     @Column(name = "OrderItemId")
@@ -43,6 +41,15 @@ public class ItemMessengerDelivery {
     @Basic
     @Column(name = "ValidationDate")
     private Timestamp validationDate;
+    @Basic
+    @Column(name = "DeliveryCode")
+    private String deliveryCode;
+    @Basic
+    @Column(name = "DeliveryStatus")
+    private Integer deliveryStatus;
+    @Basic
+    @Column(name = "DeliveryDate")
+    private Timestamp deliveryDate;
     @Basic
     @Column(name = "ItemPickUpPhoto")
     private String itemPickUpPhoto;

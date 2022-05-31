@@ -32,4 +32,11 @@ public class StatusCodes {
     public static final String FromMerchantToWareHouseToCustomer = "M-W-C";
     public static final String FromMerchantToWareHouseToWareHouseToCustomer = "M-W-W-C";
 
+
+    /*
+    DELIVERY TYPE
+     */
+    public static final String MerchantToCustomer = "MC";
+    public static final String MerchantToWareHouse = "MW";
+    public static final String WareHouseToCustomer = "WC";
 }
