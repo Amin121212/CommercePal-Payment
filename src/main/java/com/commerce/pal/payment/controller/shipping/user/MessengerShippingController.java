@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 
 import static com.commerce.pal.payment.util.StatusCodes.*;
@@ -60,6 +62,112 @@ public class MessengerShippingController {
         this.merchantAcceptAndPickUpNotification = merchantAcceptAndPickUpNotification;
     }
 
+
+    @RequestMapping(value = {"/filter-delivery"}, method = {RequestMethod.GET}, produces = {"application/json"})
+    @ResponseBody
+    public ResponseEntity<?> filterDeliveryStatus(@RequestHeader("Authorization") String accessToken,
+                                                  @RequestParam("status") Integer status) {
+        JSONObject responseMap = new JSONObject();
+        JSONObject valTokenReq = new JSONObject();
+        valTokenReq.put("AccessToken", accessToken)
+                .put("UserType", "M");
+        JSONObject valTokenBdy = validateAccessToken.pickAndReturnAll(valTokenReq);
+        if (valTokenBdy.getString("Status").equals("00")) {
+            JSONObject userDetails = valTokenBdy.getJSONObject("UserDetails");
+            JSONObject messengerInfo = userDetails.getJSONObject("messengerInfo");
+            Long messengerId = Long.valueOf(messengerInfo.getInt("userId"));
+
+            List<Integer> deliveryStatus = new ArrayList<>();
+            if (status.equals(0)) {
+                deliveryStatus.add(0);
+                deliveryStatus.add(1);
+                deliveryStatus.add(3);
+            } else {
+                deliveryStatus.add(status);
+            }
+            List<JSONObject> deliveryList = new ArrayList<>();
+
+            itemMessengerDeliveryRepository.findItemMessengerDeliveriesByMessengerIdAndStatusIn(
+                    messengerId, globalMethods.convertListToIntegerArray(deliveryStatus)
+            ).forEach(itemMessengerDelivery -> {
+                JSONObject delivery = new JSONObject();
+                delivery.put("DeliveryType", itemMessengerDelivery.getDeliveryType());
+                delivery.put("PickingDate", itemMessengerDelivery.getPickingDate());
+                delivery.put("DeliveryId", itemMessengerDelivery.getId());
+                delivery.put("ItemOrderId", itemMessengerDelivery.getOrderItemId());
+                delivery.put("AssignedDate", itemMessengerDelivery.getCreatedDate());
+                delivery.put("MerchantId", itemMessengerDelivery.getMerchantId());
+                delivery.put("CustomerId", itemMessengerDelivery.getCustomerId());
+                delivery.put("WareHouseId", itemMessengerDelivery.getWareHouseId());
+                orderItemRepository.findById(itemMessengerDelivery.getOrderItemId())
+                        .ifPresent(orderItem -> {
+                            delivery.put("ItemOrderRef", orderItem.getSubOrderNumber());
+                        });
+                deliveryList.add(delivery);
+            });
+            responseMap.put("statusCode", ResponseCodes.SUCCESS)
+                    .put("statusDescription", "success")
+                    .put("deliveryList", deliveryList)
+                    .put("statusMessage", "Request Successful");
+        } else {
+            responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                    .put("statusDescription", "Merchant Does not exists")
+                    .put("statusMessage", "Merchant Does not exists");
+        }
+        return ResponseEntity.ok(responseMap.toString());
+    }
+
+    @RequestMapping(value = {"/delivery-item"}, method = {RequestMethod.GET}, produces = {"application/json"})
+    @ResponseBody
+    public ResponseEntity<?> deliveryItem(@RequestHeader("Authorization") String accessToken,
+                                          @RequestParam("DeliveryId") Long DeliveryId) {
+        JSONObject responseMap = new JSONObject();
+        JSONObject valTokenReq = new JSONObject();
+        valTokenReq.put("AccessToken", accessToken)
+                .put("UserType", "M");
+        JSONObject valTokenBdy = validateAccessToken.pickAndReturnAll(valTokenReq);
+        if (valTokenBdy.getString("Status").equals("00")) {
+            JSONObject userDetails = valTokenBdy.getJSONObject("UserDetails");
+            JSONObject messengerInfo = userDetails.getJSONObject("messengerInfo");
+            Long messengerId = Long.valueOf(messengerInfo.getInt("userId"));
+
+            JSONObject delivery = new JSONObject();
+            itemMessengerDeliveryRepository.findItemMessengerDeliveryByIdAndMessengerId(
+                    messengerId, DeliveryId
+            ).ifPresentOrElse(itemMessengerDelivery -> {
+                delivery.put("DeliveryType", itemMessengerDelivery.getDeliveryType());
+                delivery.put("PickingDate", itemMessengerDelivery.getPickingDate());
+                delivery.put("DeliveryId", itemMessengerDelivery.getId());
+                delivery.put("ItemOrderId", itemMessengerDelivery.getOrderItemId());
+                delivery.put("AssignedDate", itemMessengerDelivery.getCreatedDate());
+                delivery.put("MerchantId", itemMessengerDelivery.getMerchantId());
+                delivery.put("CustomerId", itemMessengerDelivery.getCustomerId());
+                delivery.put("WareHouseId", itemMessengerDelivery.getWareHouseId());
+                orderItemRepository.findById(itemMessengerDelivery.getOrderItemId())
+                        .ifPresent(orderItem -> {
+                            delivery.put("ItemOrderRef", orderItem.getSubOrderNumber());
+                            delivery.put("QrCodeNumber", orderItem.getQrCodeNumber());
+                            orderRepository.findById(orderItem.getOrderId())
+                                    .ifPresent(order -> {
+
+                                    });
+                        });
+            }, () -> {
+
+            });
+            responseMap.put("statusCode", ResponseCodes.SUCCESS)
+                    .put("statusDescription", "success")
+                    .put("deliveryData", delivery)
+                    .put("statusMessage", "Request Successful");
+        } else {
+            responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                    .put("statusDescription", "Merchant Does not exists")
+                    .put("statusMessage", "Merchant Does not exists");
+        }
+        return ResponseEntity.ok(responseMap.toString());
+    }
+
+
     // Confirm Customer Delivery
     @RequestMapping(value = "/generate-otp-code", method = RequestMethod.POST)
     public ResponseEntity<?> generateOtpCode(@RequestHeader("Authorization") String accessToken,
@@ -76,7 +184,7 @@ public class MessengerShippingController {
                 Long messengerId = Long.valueOf(messengerInfo.getInt("userId"));
                 JSONObject request = new JSONObject(req);
 
-                String[] deliveryTypes = {"MC"};
+                String[] deliveryTypes = {"MC", "MW"};
                 itemMessengerDeliveryRepository.findItemMessengerDeliveryByOrderItemIdAndMessengerIdAndDeliveryTypeIn(request.getLong("OrderItemId"), messengerId, deliveryTypes
                 ).ifPresentOrElse(itemMessengerDelivery -> {
                     orderItemRepository.findById(request.getLong("OrderItemId"))

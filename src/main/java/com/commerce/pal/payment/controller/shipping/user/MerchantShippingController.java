@@ -163,6 +163,7 @@ public class MerchantShippingController {
                                 request.getLong("ItemId"), merchantId)
                         .ifPresentOrElse(orderItem -> {
                             orderItem.setShipmentStatus(AcceptReadyForPickUp);
+                            orderItem.setMerchantPickingDate(request.getString("MerchantPickingDate"));
                             orderItem.setShipmentUpdateDate(Timestamp.from(Instant.now()));
 
                             ItemShipmentStatus itemShipmentStatus = new ItemShipmentStatus();

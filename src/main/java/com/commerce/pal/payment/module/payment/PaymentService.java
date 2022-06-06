@@ -1,5 +1,6 @@
 package com.commerce.pal.payment.module.payment;
 
+import com.commerce.pal.payment.integ.payment.cash.AgentCashProcessing;
 import com.commerce.pal.payment.integ.payment.financials.FinancialPayment;
 import com.commerce.pal.payment.integ.payment.sahay.SahayPayment;
 import com.commerce.pal.payment.model.payment.PalPayment;
@@ -25,6 +26,7 @@ public class PaymentService {
     private final GlobalMethods globalMethods;
     private final OrderRepository orderRepository;
     private final FinancialPayment financialPayment;
+    private final AgentCashProcessing agentCashProcessing;
     private final PalPaymentRepository palPaymentRepository;
 
     @Autowired
@@ -32,11 +34,13 @@ public class PaymentService {
                           GlobalMethods globalMethods,
                           OrderRepository orderRepository,
                           FinancialPayment financialPayment,
+                          AgentCashProcessing agentCashProcessing,
                           PalPaymentRepository palPaymentRepository) {
         this.sahayPayment = sahayPayment;
         this.globalMethods = globalMethods;
         this.orderRepository = orderRepository;
         this.financialPayment = financialPayment;
+        this.agentCashProcessing = agentCashProcessing;
         this.palPaymentRepository = palPaymentRepository;
     }
 
@@ -69,7 +73,7 @@ public class PaymentService {
                                 respBdy.set(financialPayment.pickAndProcess(payment.get()));
                                 break;
                             case "AGENT-CASH":
-                                respBdy.set(financialPayment.pickAndProcess(payment.get()));
+                                respBdy.set(agentCashProcessing.pickAndProcess(payment.get()));
                                 break;
                             default:
                                 respBdy.get().put("statusCode", ResponseCodes.SYSTEM_ERROR)

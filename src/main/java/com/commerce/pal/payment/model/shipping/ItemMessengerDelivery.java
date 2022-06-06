@@ -33,6 +33,9 @@ public class ItemMessengerDelivery {
     @Column(name = "CustomerId")
     private Long customerId;
     @Basic
+    @Column(name = "PickingDate")
+    private Timestamp pickingDate;
+    @Basic
     @Column(name = "ValidationCode")
     private String validationCode;
     @Basic

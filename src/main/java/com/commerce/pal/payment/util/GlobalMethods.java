@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.List;
 import java.util.Random;
 
 @Log
@@ -45,5 +46,12 @@ public class GlobalMethods {
 
     public String deCryptCode(String code) {
         return code;
+    }
+
+    public Integer[] convertListToIntegerArray(List<Integer> list) {
+        Integer[] arr = new Integer[list.size()];
+        for (int i = 0; i < list.size(); i++)
+            arr[i] = list.get(i);
+        return arr;
     }
 }

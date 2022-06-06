@@ -80,6 +80,9 @@ public class OrderItem {
     @Column(name = "ShipmentUpdateDate")
     private Timestamp shipmentUpdateDate;
     @Basic
+    @Column(name = "MerchantPickingDate")
+    private String merchantPickingDate;
+    @Basic
     @Column(name = "AssignedWareHouseId")
     private Integer assignedWareHouseId;
     @Basic
