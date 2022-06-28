@@ -2,6 +2,7 @@ package com.commerce.pal.payment.module.shipping.notification.process;
 
 import com.commerce.pal.payment.model.shipping.ItemMessengerDelivery;
 import com.commerce.pal.payment.module.DataAccessService;
+import com.commerce.pal.payment.repo.LoginValidationRepository;
 import com.commerce.pal.payment.repo.payment.OrderItemRepository;
 import com.commerce.pal.payment.repo.payment.OrderRepository;
 import com.commerce.pal.payment.util.GlobalMethods;
@@ -20,16 +21,19 @@ public class MessengerAssignmentNotification {
     private final OrderRepository orderRepository;
     private final DataAccessService dataAccessService;
     private final OrderItemRepository orderItemRepository;
+    private final LoginValidationRepository loginValidationRepository;
 
     @Autowired
     public MessengerAssignmentNotification(GlobalMethods globalMethods,
                                            OrderRepository orderRepository,
                                            DataAccessService dataAccessService,
-                                           OrderItemRepository orderItemRepository) {
+                                           OrderItemRepository orderItemRepository,
+                                           LoginValidationRepository loginValidationRepository) {
         this.globalMethods = globalMethods;
         this.orderRepository = orderRepository;
         this.dataAccessService = dataAccessService;
         this.orderItemRepository = orderItemRepository;
+        this.loginValidationRepository = loginValidationRepository;
     }
 
     public void pickAndProcess(ItemMessengerDelivery itemDelivery, JSONObject req) {
@@ -64,6 +68,16 @@ public class MessengerAssignmentNotification {
             emailPayload.put("EmailDestination", mesRes.getString("email"));
             emailPayload.put("EmailSubject", getDeliveryType(payload.getString("DeliveryType")) + "-" + payload.getString("OrderRef"));
             emailPayload.put("EmailMessage", getDeliveryType(payload.getString("DeliveryType")) + "-" + payload.getString("OrderRef"));
+
+            loginValidationRepository.findLoginValidationByEmailAddress(mesRes.getString("email"))
+                    .ifPresent(user -> {
+                        JSONObject pushPayload = new JSONObject();
+                        pushPayload.put("UserId", user.getUserOneSignalId() != null ? user.getUserOneSignalId() : "5c66ca50-c009-480f-a200-72c244d74ff4");
+                        pushPayload.put("Header", "Assigned Item : " + payload.getString("OrderRef"));
+                        pushPayload.put("Message", getDeliveryType(payload.getString("DeliveryType")) + "-" + payload.getString("OrderRef"));
+                        pushPayload.put("data", payload);
+                        globalMethods.sendPushNotification(pushPayload);
+                    });
             globalMethods.processEmailWithoutTemplate(emailPayload);
             switch (payload.getString("DeliveryType")) {
                 case "MC":

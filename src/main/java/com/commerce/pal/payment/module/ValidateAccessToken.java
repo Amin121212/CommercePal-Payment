@@ -37,6 +37,7 @@ public class ValidateAccessToken {
                 JSONObject resBody = new JSONObject(resp.getString("ResponseBody"));
                 if (resBody.getString("statusCode").equals("000")) {
                     JSONObject userDetails = resBody.getJSONObject("Details");
+                    respBdy.put("OneSignalToken", userDetails.getString("oneSignalToken"));
                     if (rqBdy.getString("UserType").equals("A")) {
                         if (resBody.getString("IsAgent").equals("YES")) {
                             respBdy.put("Status", "00")

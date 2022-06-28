@@ -18,7 +18,7 @@ public class ResponseCodes {
     public static final String INVALID_OLD_PIN = "011";
     public static final String SYSTEM_ERROR = "500";
     public static final String SYSTEM_TIMEOUT = "999";
-    public static final String TRANSACTION_FAILED = "800";
+    public static final String TRANSACTION_FAILED = "999";
     public static final String RECORD_NOT_FOUND = "801";
     public static final String CBS_TIMEOUT = "802";
 
@@ -73,7 +73,6 @@ public class ResponseCodes {
     public static final String HOST_CONNECTION_DOWN = "91";
     //public static final String ACKOWLEDGEMENT = "77";
     public static final String UNABLE_TOFETCH_LIMITS = "61";
-    //public static final String TRANSACTION_FAILED = "999";
     public static final String MISSING_TRANSACTION_IDENTIFIER = "88";
     public static final String MISSING_CUSTOMER_IDENTIFIER = "65";
     public static final String MERCHANT_TO_CUSTOMER = "M2C";

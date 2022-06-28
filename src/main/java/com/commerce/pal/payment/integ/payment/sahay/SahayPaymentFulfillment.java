@@ -93,7 +93,7 @@ public class SahayPaymentFulfillment {
                             // Process Payment
                             processSuccessPayment.pickAndProcess(payment);
                         } else {
-                            respBdy.put("statusCode", ResponseCodes.NOT_EXIST)
+                            respBdy.put("statusCode", ResponseCodes.TRANSACTION_FAILED)
                                     .put("statusDescription", "failed")
                                     .put("statusMessage", "Request failed");
 
@@ -104,20 +104,21 @@ public class SahayPaymentFulfillment {
                             palPaymentRepository.save(payment);
                         }
                     } else {
-                        respBdy.put("statusCode", ResponseCodes.NOT_EXIST)
+                        respBdy.put("statusCode", ResponseCodes.TRANSACTION_FAILED)
                                 .put("statusDescription", "failed")
                                 .put("statusMessage", "Request failed");
                     }
                 }
             }, () -> {
-                respBdy.put("statusCode", ResponseCodes.SYSTEM_ERROR)
+                respBdy.put("statusCode", ResponseCodes.TRANSACTION_FAILED)
                         .put("statusDescription", "failed")
                         .put("statusMessage", "Request failed");
             });
         } catch (Exception ex) {
-            respBdy.put("statusCode", ResponseCodes.SYSTEM_ERROR)
+            log.log(Level.WARNING, ex.getMessage());
+            respBdy.put("statusCode", ResponseCodes.TRANSACTION_FAILED)
                     .put("statusDescription", "failed")
-                    .put("statusMessage", "Request failed");
+                    .put("statusMessage", ex.getMessage());
         }
         return respBdy;
     }

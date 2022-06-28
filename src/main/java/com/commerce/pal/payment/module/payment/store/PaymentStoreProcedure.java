@@ -17,7 +17,7 @@ public class PaymentStoreProcedure {
     @PersistenceContext
     private EntityManager entityManager;
 
-    public JSONObject processOrderPayment(JSONObject reqBody){
+    public JSONObject processOrderPayment(JSONObject reqBody) {
         JSONObject transResponse = new JSONObject();
         try {
             StoredProcedureQuery query = entityManager.createStoredProcedureQuery("ExecuteOrderPayment");
@@ -62,5 +62,41 @@ public class PaymentStoreProcedure {
         }
         return transResponse;
 
+    }
+
+    public JSONObject agentCashPayment(JSONObject reqBody) {
+        JSONObject transResponse = new JSONObject();
+        try {
+            StoredProcedureQuery query = entityManager.createStoredProcedureQuery("ExecuteAgentCashPayment");
+            query.registerStoredProcedureParameter("TransRef", String.class, ParameterMode.IN);
+            query.registerStoredProcedureParameter("AgentEmail", String.class, ParameterMode.IN);
+            query.registerStoredProcedureParameter("Currency", String.class, ParameterMode.IN);
+            query.registerStoredProcedureParameter("Amount", String.class, ParameterMode.IN);
+            query.registerStoredProcedureParameter("PaymentNarration", String.class, ParameterMode.IN);
+
+            query.setParameter("TransRef", reqBody.getString("TransRef"));
+            query.setParameter("AgentEmail", reqBody.getString("AgentEmail"));
+            query.setParameter("Currency", reqBody.getString("Currency"));
+            query.setParameter("Amount", reqBody.getString("Amount"));
+            query.setParameter("PaymentNarration", reqBody.getString("PaymentNarration"));
+
+
+            query.registerStoredProcedureParameter("TransactionStatus", String.class, ParameterMode.OUT);
+            query.registerStoredProcedureParameter("Balance", String.class, ParameterMode.OUT);
+            query.registerStoredProcedureParameter("Narration", String.class, ParameterMode.OUT);
+
+            query.execute();
+
+            transResponse.put("TransactionStatus", query.getOutputParameterValue("TransactionStatus"));
+            transResponse.put("Balance", query.getOutputParameterValue("Balance"));
+            transResponse.put("Narration", query.getOutputParameterValue("Narration"));
+            transResponse.put("Status", "00");
+            transResponse.put("Message", "The request was processed successfully");
+        } catch (Exception ex) {
+            log.log(Level.WARNING, "processOrderPayment CLASS : " + ex.getMessage());
+            transResponse.put("Status", "101");
+            transResponse.put("Message", ex.getMessage());
+        }
+        return transResponse;
     }
 }

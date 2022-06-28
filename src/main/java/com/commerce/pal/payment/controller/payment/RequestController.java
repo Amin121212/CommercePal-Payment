@@ -1,5 +1,6 @@
 package com.commerce.pal.payment.controller.payment;
 
+import com.commerce.pal.payment.integ.payment.cash.AgentCashProcessing;
 import com.commerce.pal.payment.integ.payment.sahay.SahayCustomerValidation;
 import com.commerce.pal.payment.integ.payment.sahay.SahayPaymentFulfillment;
 import com.commerce.pal.payment.module.payment.PaymentService;
@@ -23,20 +24,22 @@ import java.util.logging.Level;
 public class RequestController {
     private final PaymentService paymentService;
     private final ValidateAccessToken validateAccessToken;
+    private final AgentCashProcessing agentCashProcessing;
     private final ProcessSuccessPayment processSuccessPayment;
     private final SahayCustomerValidation sahayCustomerValidation;
     private final SahayPaymentFulfillment sahayPaymentFulfillment;
 
-
     @Autowired
     public RequestController(PaymentService paymentService,
                              ValidateAccessToken validateAccessToken,
+                             AgentCashProcessing agentCashProcessing,
                              ProcessSuccessPayment processSuccessPayment,
                              SahayCustomerValidation sahayCustomerValidation,
                              SahayPaymentFulfillment sahayPaymentFulfillment) {
         this.paymentService = paymentService;
 
         this.validateAccessToken = validateAccessToken;
+        this.agentCashProcessing = agentCashProcessing;
         this.processSuccessPayment = processSuccessPayment;
         this.sahayCustomerValidation = sahayCustomerValidation;
         this.sahayPaymentFulfillment = sahayPaymentFulfillment;
@@ -67,6 +70,9 @@ public class RequestController {
                         break;
                     case "SAHAY-CONFIRM-PAYMENT":
                         responseBody = sahayPaymentFulfillment.pickAndProcess(requestObject);
+                        break;
+                    case "AGENT-CASH-FULFILLMENT":
+                        responseBody = agentCashProcessing.processFulfillment(requestObject);
                         break;
                     default:
                         responseBody.put("statusCode", ResponseCodes.REQUEST_NOT_ACCEPTED)

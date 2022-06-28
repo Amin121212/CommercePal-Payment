@@ -1,6 +1,7 @@
 package com.commerce.pal.payment.util;
 
 import com.commerce.pal.payment.integ.notification.EmailClient;
+import com.commerce.pal.payment.integ.notification.push.OneSignal;
 import lombok.extern.java.Log;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,9 @@ public class GlobalMethods {
     @Autowired
     private EmailClient emailClient;
 
+    @Autowired
+    private OneSignal oneSignal;
+
     public String generateTrans() {
         String ref = Timestamp.from(Instant.now()).toString();
         ref = IDGenerator.getInstance("SB").getRRN();
@@ -32,6 +36,13 @@ public class GlobalMethods {
         emailClient.emailSender(payload.getString("EmailMessage"),
                 payload.getString("EmailDestination"),
                 payload.getString("EmailSubject"));
+    }
+
+    public void sendPushNotification(JSONObject payload) {
+        oneSignal.pickAndProcess(payload.getString("UserId"),
+                payload.getString("Header"),
+                payload.getString("Message"),
+                payload.getJSONObject("data"));
     }
 
     public String generateValidationCode() {

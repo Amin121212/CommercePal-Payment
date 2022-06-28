@@ -165,7 +165,7 @@ public class PortalShippingController {
                         orderItem.setFinalizingWareHouseId(request.getInt("FinalizingWareHouseId"));
                         orderItem.setShipmentTypeComments(request.getString("ShipmentTypeComments"));
                         orderItemRepository.save(orderItem);
-                        responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                        responseMap.put("statusCode", ResponseCodes.SUCCESS)
                                 .put("statusDescription", "Request Saved successfully")
                                 .put("statusMessage", "Request Saved successfully");
                     }, () -> {

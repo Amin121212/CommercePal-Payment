@@ -2,6 +2,8 @@ package com.commerce.pal.payment.integ.payment.cash;
 
 import com.commerce.pal.payment.model.payment.AgentCashPayment;
 import com.commerce.pal.payment.model.payment.PalPayment;
+import com.commerce.pal.payment.module.payment.ProcessSuccessPayment;
+import com.commerce.pal.payment.module.payment.store.PaymentStoreProcedure;
 import com.commerce.pal.payment.repo.payment.AgentCashPaymentRepository;
 import com.commerce.pal.payment.repo.payment.PalPaymentRepository;
 import com.commerce.pal.payment.util.GlobalMethods;
@@ -21,13 +23,19 @@ import java.util.logging.Level;
 public class AgentCashProcessing {
     private final GlobalMethods globalMethods;
     private final PalPaymentRepository palPaymentRepository;
+    private final ProcessSuccessPayment processSuccessPayment;
+    private final PaymentStoreProcedure paymentStoreProcedure;
     private final AgentCashPaymentRepository agentCashPaymentRepository;
 
     public AgentCashProcessing(GlobalMethods globalMethods,
                                PalPaymentRepository palPaymentRepository,
+                               ProcessSuccessPayment processSuccessPayment,
+                               PaymentStoreProcedure paymentStoreProcedure,
                                AgentCashPaymentRepository agentCashPaymentRepository) {
         this.globalMethods = globalMethods;
         this.palPaymentRepository = palPaymentRepository;
+        this.processSuccessPayment = processSuccessPayment;
+        this.paymentStoreProcedure = paymentStoreProcedure;
         this.agentCashPaymentRepository = agentCashPaymentRepository;
     }
 
@@ -69,6 +77,64 @@ public class AgentCashProcessing {
             emailPayload.put("EmailSubject", "Order : [" + payment.getOrderRef() + "] - Agent Cash Payment Code");
             emailPayload.put("EmailMessage", "Validation Code : " + validationCode);
             globalMethods.processEmailWithoutTemplate(emailPayload);
+
+        } catch (Exception ex) {
+            log.log(Level.WARNING, ex.getMessage());
+            respBdy.put("statusCode", ResponseCodes.SYSTEM_ERROR)
+                    .put("statusDescription", "failed")
+                    .put("statusMessage", "Request failed");
+        }
+        return respBdy;
+    }
+
+    public JSONObject processFulfillment(JSONObject reqBdy) {
+        JSONObject respBdy = new JSONObject();
+        try {
+            palPaymentRepository.findPalPaymentByOrderRefAndTransRefAndStatus(
+                    reqBdy.getString("OrderRef"), reqBdy.getString("TransRef"), 1
+            ).ifPresentOrElse(payment -> {
+                agentCashPaymentRepository.findAgentCashPaymentByOrderRefAndPaymentRefAndStatus(
+                        payment.getOrderRef(), payment.getTransRef(), 0
+                ).ifPresentOrElse(agentCashPayment -> {
+                    JSONObject payRes = paymentStoreProcedure.agentCashPayment(reqBdy);
+                    if (payRes.getString("Status").equals("00")) {
+                        if (payRes.getString("TransactionStatus").equals("0")) {
+                            agentCashPayment.setProcessingAgentId(reqBdy.getLong("AgentId"));
+                            agentCashPayment.setProcessingDate(Timestamp.from(Instant.now()));
+                            payment.setStatus(3);
+                            payment.setFinalResponse("000");
+                            payment.setFinalResponseMessage("Success Agent Payment");
+                            payment.setFinalResponseDate(Timestamp.from(Instant.now()));
+                            palPaymentRepository.save(payment);
+
+                            respBdy.put("statusCode", ResponseCodes.SUCCESS)
+                                    .put("balance", payRes.getString("Balance"))
+                                    .put("statusDescription", "Success")
+                                    .put("statusMessage", "Success");
+
+                            // Process Payment
+                            processSuccessPayment.pickAndProcess(payment);
+                        } else {
+                            respBdy.put("statusCode", ResponseCodes.TRANSACTION_FAILED)
+                                    .put("balance", payRes.getString("Balance"))
+                                    .put("statusDescription", payRes.getString("Narration"))
+                                    .put("statusMessage", "Request failed");
+                        }
+                    } else {
+                        respBdy.put("statusCode", ResponseCodes.TRANSACTION_FAILED)
+                                .put("statusDescription", payRes.getString("Message"))
+                                .put("statusMessage", "Request failed");
+                    }
+                }, () -> {
+                    respBdy.put("statusCode", ResponseCodes.SYSTEM_ERROR)
+                            .put("statusDescription", "failed")
+                            .put("statusMessage", "Request failed");
+                });
+            }, () -> {
+                respBdy.put("statusCode", ResponseCodes.SYSTEM_ERROR)
+                        .put("statusDescription", "failed")
+                        .put("statusMessage", "Request failed");
+            });
 
         } catch (Exception ex) {
             log.log(Level.WARNING, ex.getMessage());

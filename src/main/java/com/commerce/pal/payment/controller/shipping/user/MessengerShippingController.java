@@ -4,6 +4,7 @@ import com.commerce.pal.payment.model.shipping.ItemShipmentStatus;
 import com.commerce.pal.payment.module.DataAccessService;
 import com.commerce.pal.payment.module.ValidateAccessToken;
 import com.commerce.pal.payment.module.shipping.notification.process.MerchantAcceptAndPickUpNotification;
+import com.commerce.pal.payment.repo.LoginValidationRepository;
 import com.commerce.pal.payment.repo.payment.OrderItemRepository;
 import com.commerce.pal.payment.repo.payment.OrderRepository;
 import com.commerce.pal.payment.repo.shipping.ItemMessengerDeliveryRepository;
@@ -37,6 +38,7 @@ public class MessengerShippingController {
     private final OrderItemRepository orderItemRepository;
     private final ValidateAccessToken validateAccessToken;
     private final ShipmentStatusRepository shipmentStatusRepository;
+    private final LoginValidationRepository loginValidationRepository;
     private final ItemShipmentStatusRepository itemShipmentStatusRepository;
     private final ItemMessengerDeliveryRepository itemMessengerDeliveryRepository;
     private final MerchantAcceptAndPickUpNotification merchantAcceptAndPickUpNotification;
@@ -48,6 +50,7 @@ public class MessengerShippingController {
                                        OrderItemRepository orderItemRepository,
                                        ValidateAccessToken validateAccessToken,
                                        ShipmentStatusRepository shipmentStatusRepository,
+                                       LoginValidationRepository loginValidationRepository,
                                        ItemShipmentStatusRepository itemShipmentStatusRepository,
                                        ItemMessengerDeliveryRepository itemMessengerDeliveryRepository,
                                        MerchantAcceptAndPickUpNotification merchantAcceptAndPickUpNotification) {
@@ -57,6 +60,7 @@ public class MessengerShippingController {
         this.orderItemRepository = orderItemRepository;
         this.validateAccessToken = validateAccessToken;
         this.shipmentStatusRepository = shipmentStatusRepository;
+        this.loginValidationRepository = loginValidationRepository;
         this.itemShipmentStatusRepository = itemShipmentStatusRepository;
         this.itemMessengerDeliveryRepository = itemMessengerDeliveryRepository;
         this.merchantAcceptAndPickUpNotification = merchantAcceptAndPickUpNotification;
@@ -198,6 +202,17 @@ public class MessengerShippingController {
                                         .put("statusDescription", "Success")
                                         .put("ValidCode", validationCode)
                                         .put("statusMessage", "Success");
+
+                                loginValidationRepository.findLoginValidationByEmailAddress(messengerInfo.getString("email"))
+                                        .ifPresent(user -> {
+                                            JSONObject pushPayload = new JSONObject();
+                                            pushPayload.put("UserId", user.getUserOneSignalId() != null ? user.getUserOneSignalId() : "5c66ca50-c009-480f-a200-72c244d74ff4");
+                                            pushPayload.put("Header", "Generate Code for : " + orderItem.getSubOrderNumber());
+                                            pushPayload.put("Message", "Generate Code for : " + orderItem.getSubOrderNumber());
+                                            pushPayload.put("data", pushPayload);
+                                            globalMethods.sendPushNotification(pushPayload);
+                                        });
+
                             }, () -> {
                                 responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
                                         .put("statusDescription", "The Item does not exists")
@@ -250,6 +265,16 @@ public class MessengerShippingController {
                                 responseMap.put("statusCode", ResponseCodes.SUCCESS)
                                         .put("statusDescription", "Success")
                                         .put("statusMessage", "Success");
+
+                                loginValidationRepository.findLoginValidationByEmailAddress(messengerInfo.getString("email"))
+                                        .ifPresent(user -> {
+                                            JSONObject pushPayload = new JSONObject();
+                                            pushPayload.put("UserId", user.getUserOneSignalId() != null ? user.getUserOneSignalId() : "5c66ca50-c009-480f-a200-72c244d74ff4");
+                                            pushPayload.put("Header", "Attach QR Code for : " + orderItem.getSubOrderNumber());
+                                            pushPayload.put("Message", "Attach QR Code for : " + orderItem.getSubOrderNumber());
+                                            pushPayload.put("data", pushPayload);
+                                            globalMethods.sendPushNotification(pushPayload);
+                                        });
                             }, () -> {
                                 responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
                                         .put("statusDescription", "The Item does not exists")
@@ -316,6 +341,16 @@ public class MessengerShippingController {
                                         responseMap.put("statusCode", ResponseCodes.SUCCESS)
                                                 .put("statusDescription", "Success")
                                                 .put("statusMessage", "Success");
+
+                                        loginValidationRepository.findLoginValidationByEmailAddress(messengerInfo.getString("email"))
+                                                .ifPresent(user -> {
+                                                    JSONObject pushPayload = new JSONObject();
+                                                    pushPayload.put("UserId", user.getUserOneSignalId() != null ? user.getUserOneSignalId() : "5c66ca50-c009-480f-a200-72c244d74ff4");
+                                                    pushPayload.put("Header", "Delivered to Customer : " + orderItem.getSubOrderNumber());
+                                                    pushPayload.put("Message", "Delivered to Customer : " + orderItem.getSubOrderNumber());
+                                                    pushPayload.put("data", pushPayload);
+                                                    globalMethods.sendPushNotification(pushPayload);
+                                                });
                                     }, () -> {
                                         responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
                                                 .put("statusDescription", "The Item does not exists")
