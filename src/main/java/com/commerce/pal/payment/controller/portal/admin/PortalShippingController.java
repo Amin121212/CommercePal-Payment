@@ -1,4 +1,4 @@
-package com.commerce.pal.payment.controller.shipping.portal;
+package com.commerce.pal.payment.controller.portal.admin;
 
 import com.commerce.pal.payment.module.DataAccessService;
 import com.commerce.pal.payment.repo.payment.OrderItemRepository;

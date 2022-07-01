@@ -1,4 +1,4 @@
-package com.commerce.pal.payment.controller.order;
+package com.commerce.pal.payment.controller.user.customer;
 
 
 import com.commerce.pal.payment.module.DataAccessService;

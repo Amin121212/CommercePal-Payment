@@ -1,4 +1,4 @@
-package com.commerce.pal.payment.controller.shipping.user;
+package com.commerce.pal.payment.controller.user.messenger;
 
 import com.commerce.pal.payment.model.shipping.ItemShipmentStatus;
 import com.commerce.pal.payment.module.DataAccessService;
@@ -198,10 +198,6 @@ public class MessengerShippingController {
                                 itemMessengerDelivery.setValidationStatus(0);
 
                                 orderItemRepository.save(orderItem);
-                                responseMap.put("statusCode", ResponseCodes.SUCCESS)
-                                        .put("statusDescription", "Success")
-                                        .put("ValidCode", validationCode)
-                                        .put("statusMessage", "Success");
 
                                 loginValidationRepository.findLoginValidationByEmailAddress(messengerInfo.getString("email"))
                                         .ifPresent(user -> {
@@ -209,10 +205,16 @@ public class MessengerShippingController {
                                             pushPayload.put("UserId", user.getUserOneSignalId() != null ? user.getUserOneSignalId() : "5c66ca50-c009-480f-a200-72c244d74ff4");
                                             pushPayload.put("Header", "Generate Code for : " + orderItem.getSubOrderNumber());
                                             pushPayload.put("Message", "Generate Code for : " + orderItem.getSubOrderNumber());
-                                            pushPayload.put("data", pushPayload);
+                                            JSONObject data = new JSONObject();
+                                            data.put("OrderItem", orderItem.getSubOrderNumber());
+                                            pushPayload.put("data", data);
                                             globalMethods.sendPushNotification(pushPayload);
                                         });
 
+                                responseMap.put("statusCode", ResponseCodes.SUCCESS)
+                                        .put("statusDescription", "Success")
+                                        .put("ValidCode", validationCode)
+                                        .put("statusMessage", "Success");
                             }, () -> {
                                 responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
                                         .put("statusDescription", "The Item does not exists")
@@ -272,7 +274,9 @@ public class MessengerShippingController {
                                             pushPayload.put("UserId", user.getUserOneSignalId() != null ? user.getUserOneSignalId() : "5c66ca50-c009-480f-a200-72c244d74ff4");
                                             pushPayload.put("Header", "Attach QR Code for : " + orderItem.getSubOrderNumber());
                                             pushPayload.put("Message", "Attach QR Code for : " + orderItem.getSubOrderNumber());
-                                            pushPayload.put("data", pushPayload);
+                                            JSONObject data = new JSONObject();
+                                            data.put("OrderItem", orderItem.getSubOrderNumber());
+                                            pushPayload.put("data", data);
                                             globalMethods.sendPushNotification(pushPayload);
                                         });
                             }, () -> {
@@ -348,7 +352,9 @@ public class MessengerShippingController {
                                                     pushPayload.put("UserId", user.getUserOneSignalId() != null ? user.getUserOneSignalId() : "5c66ca50-c009-480f-a200-72c244d74ff4");
                                                     pushPayload.put("Header", "Delivered to Customer : " + orderItem.getSubOrderNumber());
                                                     pushPayload.put("Message", "Delivered to Customer : " + orderItem.getSubOrderNumber());
-                                                    pushPayload.put("data", pushPayload);
+                                                    JSONObject data = new JSONObject();
+                                                    data.put("OrderItem", orderItem.getSubOrderNumber());
+                                                    pushPayload.put("data", data);
                                                     globalMethods.sendPushNotification(pushPayload);
                                                 });
                                     }, () -> {

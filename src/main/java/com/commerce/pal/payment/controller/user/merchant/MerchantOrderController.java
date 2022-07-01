@@ -1,4 +1,4 @@
-package com.commerce.pal.payment.controller.order;
+package com.commerce.pal.payment.controller.user.merchant;
 
 import com.commerce.pal.payment.module.DataAccessService;
 import com.commerce.pal.payment.module.ValidateAccessToken;
@@ -56,7 +56,7 @@ public class MerchantOrderController {
 
         if (valTokenBdy.getString("Status").equals("00")) {
             JSONObject userDetails = valTokenBdy.getJSONObject("UserDetails");
-            JSONObject merchantInfo = userDetails.getJSONObject("merchantInfo");// userDetails.getJSONObject("messengerInfo");
+            JSONObject merchantInfo = userDetails.getJSONObject("merchantInfo");
             Long merchantId = Long.valueOf(userDetails.getJSONObject("merchantInfo").getInt("userId"));
             List<Integer> shipmentStatus = new ArrayList<>();
             if (status.equals(10)) {
@@ -90,9 +90,10 @@ public class MerchantOrderController {
                                                 JSONObject prodReq = new JSONObject();
                                                 prodReq.put("Type", "PRODUCT");
                                                 prodReq.put("TypeId", orderItem.getProductLinkingId());
-                                                JSONObject prodRes = dataAccessService.pickAndProcess(prodReq);
+//                                                JSONObject prodRes = dataAccessService.pickAndProcess(prodReq);
                                                 itemPay.put("NoOfProduct", orderItem.getQuantity());
                                                 itemPay.put("ItemOrderRef", orderItem.getSubOrderNumber());
+                                                itemPay.put("ItemId", orderItem.getItemId());
                                                 orderItems.add(itemPay);
                                             });
                                     orderDetails.put("orderItems", orderItems);
@@ -110,7 +111,6 @@ public class MerchantOrderController {
         }
         return ResponseEntity.ok(responseMap.toString());
     }
-
 
     @RequestMapping(value = {"/my-orders"}, method = {RequestMethod.GET}, produces = {"application/json"})
     @ResponseBody

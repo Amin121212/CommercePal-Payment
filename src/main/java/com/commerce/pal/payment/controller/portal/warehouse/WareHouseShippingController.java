@@ -1,4 +1,4 @@
-package com.commerce.pal.payment.controller.shipping.portal;
+package com.commerce.pal.payment.controller.portal.warehouse;
 
 import com.commerce.pal.payment.model.shipping.ItemMessengerDelivery;
 import com.commerce.pal.payment.model.shipping.ItemShipmentStatus;
@@ -79,7 +79,7 @@ public class WareHouseShippingController {
                         switch (request.getString("DeliveryType")) {
                             case "MC":
                                 itemMessengerDelivery.setMerchantId(orderItem.getMerchantId());
-                                itemMessengerDelivery.setCustomerId(orderRepository.findById(orderItem.getItemId()).get().getCustomerId());
+                                itemMessengerDelivery.setCustomerId(orderRepository.findById(orderItem.getOrderId()).get().getCustomerId());
                                 break;
                             case "MW":
                                 itemMessengerDelivery.setMerchantId(orderItem.getMerchantId());
@@ -87,7 +87,7 @@ public class WareHouseShippingController {
                                 break;
                             case "WC":
                                 itemMessengerDelivery.setWareHouseId(request.getLong("WareHouseId"));
-                                itemMessengerDelivery.setCustomerId(orderRepository.findById(orderItem.getItemId()).get().getCustomerId());
+                                itemMessengerDelivery.setCustomerId(orderRepository.findById(orderItem.getOrderId()).get().getCustomerId());
                                 break;
                         }
                         String validationCode = globalMethods.generateValidationCode();

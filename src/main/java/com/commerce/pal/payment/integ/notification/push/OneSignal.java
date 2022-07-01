@@ -30,7 +30,6 @@ public class OneSignal {
             pushBdy.put("Heading", header);
             pushBdy.put("Message", message);
             pushBdy.put("data", data);
-
             RequestBuilder builder = new RequestBuilder("POST");
             builder.addHeader("Content-Type", "application/json")
                     .setBody(pushBdy.toString())

@@ -1,4 +1,4 @@
-package com.commerce.pal.payment.controller.shipping.user;
+package com.commerce.pal.payment.controller.user.merchant;
 
 import com.commerce.pal.payment.model.shipping.ItemShipmentStatus;
 import com.commerce.pal.payment.module.DataAccessService;
@@ -140,9 +140,6 @@ public class MerchantShippingController {
         }
         return ResponseEntity.ok(responseMap.toString());
     }
-
-
-
 
     // Accept Order Item and Item PickUp  Request
     @RequestMapping(value = "/accept-item-pickup", method = RequestMethod.POST)

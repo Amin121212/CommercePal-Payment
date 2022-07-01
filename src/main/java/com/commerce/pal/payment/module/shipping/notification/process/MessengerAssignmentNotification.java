@@ -75,7 +75,9 @@ public class MessengerAssignmentNotification {
                         pushPayload.put("UserId", user.getUserOneSignalId() != null ? user.getUserOneSignalId() : "5c66ca50-c009-480f-a200-72c244d74ff4");
                         pushPayload.put("Header", "Assigned Item : " + payload.getString("OrderRef"));
                         pushPayload.put("Message", getDeliveryType(payload.getString("DeliveryType")) + "-" + payload.getString("OrderRef"));
-                        pushPayload.put("data", payload);
+                        JSONObject data = new JSONObject();
+                        data.put("OrderRef", payload.getString("OrderRef"));
+                        pushPayload.put("data", data);
                         globalMethods.sendPushNotification(pushPayload);
                     });
             globalMethods.processEmailWithoutTemplate(emailPayload);
