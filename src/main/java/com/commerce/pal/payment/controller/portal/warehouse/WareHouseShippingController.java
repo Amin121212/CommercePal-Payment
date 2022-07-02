@@ -58,6 +58,13 @@ public class WareHouseShippingController {
             JSONObject request = new JSONObject(req);
             orderItemRepository.findById(request.getLong("OrderItemId"))
                     .ifPresentOrElse(orderItem -> {
+                        String validationCode = globalMethods.generateValidationCode();
+                        String deliveryCode = globalMethods.generateValidationCode();
+
+                        JSONObject delivery = new JSONObject();
+                        delivery.put("PickingCode", validationCode);
+                        delivery.put("DeliveryCode", deliveryCode);
+
                         orderItem.setShipmentStatus(AssignMessengerPickAtMerchant);
                         orderItem.setShipmentUpdateDate(Timestamp.from(Instant.now()));
 
@@ -68,42 +75,70 @@ public class WareHouseShippingController {
                         itemShipmentStatus.setStatus(1);
                         itemShipmentStatus.setCreatedDate(Timestamp.from(Instant.now()));
                         itemShipmentStatusRepository.save(itemShipmentStatus);
+                        itemMessengerDeliveryRepository.findItemMessengerDeliveryByOrderItemIdAndMessengerId(
+                                orderItem.getItemId(), request.getLong("MessengerId")
+                        ).ifPresentOrElse(itemMessengerDelivery -> {
+                            itemMessengerDelivery.setDeliveryType(request.getString("DeliveryType"));
+                            switch (request.getString("DeliveryType")) {
+                                case "MC":
+                                    itemMessengerDelivery.setMerchantId(orderItem.getMerchantId());
+                                    itemMessengerDelivery.setCustomerId(orderRepository.findById(orderItem.getOrderId()).get().getCustomerId());
+                                    break;
+                                case "MW":
+                                    itemMessengerDelivery.setMerchantId(orderItem.getMerchantId());
+                                    itemMessengerDelivery.setWareHouseId(request.getLong("WareHouseId"));
+                                    break;
+                                case "WC":
+                                    itemMessengerDelivery.setWareHouseId(request.getLong("WareHouseId"));
+                                    itemMessengerDelivery.setCustomerId(orderRepository.findById(orderItem.getOrderId()).get().getCustomerId());
+                                    break;
+                            }
+                            itemMessengerDelivery.setValidationCode(globalMethods.encryptCode(validationCode));
+                            itemMessengerDelivery.setValidationStatus(0);
+                            itemMessengerDelivery.setDeliveryCode(globalMethods.encryptCode(deliveryCode));
+                            itemMessengerDelivery.setDeliveryStatus(0);
+                            itemMessengerDelivery.setCreatedDate(Timestamp.from(Instant.now()));
+                            itemMessengerDeliveryRepository.save(itemMessengerDelivery);
 
-                        ItemMessengerDelivery itemMessengerDelivery = new ItemMessengerDelivery();
-                        itemMessengerDelivery.setOrderItemId(orderItem.getItemId());
-                        itemMessengerDelivery.setDeliveryType(request.getString("DeliveryType"));
-                        itemMessengerDelivery.setMessengerId(request.getLong("MessengerId"));
-                        itemMessengerDelivery.setMerchantId(0l);
-                        itemMessengerDelivery.setWareHouseId(0l);
-                        itemMessengerDelivery.setCustomerId(0l);
-                        switch (request.getString("DeliveryType")) {
-                            case "MC":
-                                itemMessengerDelivery.setMerchantId(orderItem.getMerchantId());
-                                itemMessengerDelivery.setCustomerId(orderRepository.findById(orderItem.getOrderId()).get().getCustomerId());
-                                break;
-                            case "MW":
-                                itemMessengerDelivery.setMerchantId(orderItem.getMerchantId());
-                                itemMessengerDelivery.setWareHouseId(request.getLong("WareHouseId"));
-                                break;
-                            case "WC":
-                                itemMessengerDelivery.setWareHouseId(request.getLong("WareHouseId"));
-                                itemMessengerDelivery.setCustomerId(orderRepository.findById(orderItem.getOrderId()).get().getCustomerId());
-                                break;
-                        }
-                        String validationCode = globalMethods.generateValidationCode();
-                        String deliveryCode = globalMethods.generateValidationCode();
-                        itemMessengerDelivery.setValidationCode(globalMethods.encryptCode(validationCode));
-                        itemMessengerDelivery.setValidationStatus(0);
-                        itemMessengerDelivery.setDeliveryCode(globalMethods.encryptCode(deliveryCode));
-                        itemMessengerDelivery.setDeliveryStatus(0);
-                        itemMessengerDelivery.setStatus(0);
-                        itemMessengerDelivery.setCreatedDate(Timestamp.from(Instant.now()));
-                        itemMessengerDeliveryRepository.save(itemMessengerDelivery);
-                        JSONObject delivery = new JSONObject();
-                        delivery.put("PickingCode", validationCode);
-                        delivery.put("DeliveryCode", deliveryCode);
-                        // Send Notification to Respective Users
-                        messengerAssignmentNotification.pickAndProcess(itemMessengerDelivery, delivery);
+                            // Send Notification to Respective Users
+                            messengerAssignmentNotification.pickAndProcess(itemMessengerDelivery, delivery);
+                        }, () -> {
+
+                            ItemMessengerDelivery itemMessengerDelivery = new ItemMessengerDelivery();
+                            itemMessengerDelivery.setOrderItemId(orderItem.getItemId());
+                            itemMessengerDelivery.setDeliveryType(request.getString("DeliveryType"));
+                            itemMessengerDelivery.setMessengerId(request.getLong("MessengerId"));
+                            itemMessengerDelivery.setMerchantId(0l);
+                            itemMessengerDelivery.setWareHouseId(0l);
+                            itemMessengerDelivery.setCustomerId(0l);
+                            switch (request.getString("DeliveryType")) {
+                                case "MC":
+                                    itemMessengerDelivery.setMerchantId(orderItem.getMerchantId());
+                                    itemMessengerDelivery.setCustomerId(orderRepository.findById(orderItem.getOrderId()).get().getCustomerId());
+                                    break;
+                                case "MW":
+                                    itemMessengerDelivery.setMerchantId(orderItem.getMerchantId());
+                                    itemMessengerDelivery.setWareHouseId(request.getLong("WareHouseId"));
+                                    break;
+                                case "WC":
+                                    itemMessengerDelivery.setWareHouseId(request.getLong("WareHouseId"));
+                                    itemMessengerDelivery.setCustomerId(orderRepository.findById(orderItem.getOrderId()).get().getCustomerId());
+                                    break;
+                            }
+
+                            itemMessengerDelivery.setValidationCode(globalMethods.encryptCode(validationCode));
+                            itemMessengerDelivery.setValidationStatus(0);
+                            itemMessengerDelivery.setDeliveryCode(globalMethods.encryptCode(deliveryCode));
+                            itemMessengerDelivery.setDeliveryStatus(0);
+                            itemMessengerDelivery.setStatus(0);
+                            itemMessengerDelivery.setCreatedDate(Timestamp.from(Instant.now()));
+                            itemMessengerDeliveryRepository.save(itemMessengerDelivery);
+
+                            // Send Notification to Respective Users
+                            messengerAssignmentNotification.pickAndProcess(itemMessengerDelivery, delivery);
+                        });
+
+
                         responseMap.put("statusCode", ResponseCodes.SUCCESS)
                                 .put("statusDescription", "Success")
                                 .put("statusMessage", "Success");

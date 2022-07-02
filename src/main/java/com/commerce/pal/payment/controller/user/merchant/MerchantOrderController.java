@@ -2,6 +2,7 @@ package com.commerce.pal.payment.controller.user.merchant;
 
 import com.commerce.pal.payment.module.DataAccessService;
 import com.commerce.pal.payment.module.ValidateAccessToken;
+import com.commerce.pal.payment.module.order.OrderService;
 import com.commerce.pal.payment.repo.payment.OrderItemRepository;
 import com.commerce.pal.payment.repo.payment.OrderRepository;
 import com.commerce.pal.payment.util.GlobalMethods;
@@ -9,6 +10,7 @@ import com.commerce.pal.payment.util.ResponseCodes;
 import lombok.extern.java.Log;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,6 +23,7 @@ import java.util.List;
 @RequestMapping({"/prime/api/v1/merchant/order"})
 @SuppressWarnings("Duplicates")
 public class MerchantOrderController {
+    private final OrderService orderService;
     private final GlobalMethods globalMethods;
     private final OrderRepository orderRepository;
     private final DataAccessService dataAccessService;
@@ -28,11 +31,13 @@ public class MerchantOrderController {
     private final ValidateAccessToken validateAccessToken;
 
     @Autowired
-    public MerchantOrderController(GlobalMethods globalMethods,
+    public MerchantOrderController(OrderService orderService,
+                                   GlobalMethods globalMethods,
                                    OrderRepository orderRepository,
                                    DataAccessService dataAccessService,
                                    OrderItemRepository orderItemRepository,
                                    ValidateAccessToken validateAccessToken) {
+        this.orderService = orderService;
         this.globalMethods = globalMethods;
         this.orderRepository = orderRepository;
         this.dataAccessService = dataAccessService;
@@ -110,6 +115,20 @@ public class MerchantOrderController {
                     .put("statusMessage", "Merchant Does not exists");
         }
         return ResponseEntity.ok(responseMap.toString());
+    }
+
+    @RequestMapping(value = {"/order-item"}, method = {RequestMethod.GET}, produces = {"application/json"})
+    @ResponseBody
+    public ResponseEntity<?> orderItem(@RequestParam("ItemId") String ItemId) {
+        JSONObject orderItem = orderService.orderItemDetails(Long.valueOf(ItemId));
+        return ResponseEntity.status(HttpStatus.OK).body(orderItem.toString());
+    }
+
+    @RequestMapping(value = {"/product-info"}, method = {RequestMethod.GET}, produces = {"application/json"})
+    @ResponseBody
+    public ResponseEntity<?> getProductInfo(@RequestParam("ItemId") String ItemId) {
+        JSONObject orderItem = orderService.productInfo(Long.valueOf(ItemId));
+        return ResponseEntity.status(HttpStatus.OK).body(orderItem.toString());
     }
 
     @RequestMapping(value = {"/my-orders"}, method = {RequestMethod.GET}, produces = {"application/json"})

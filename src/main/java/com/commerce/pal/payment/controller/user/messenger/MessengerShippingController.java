@@ -3,6 +3,7 @@ package com.commerce.pal.payment.controller.user.messenger;
 import com.commerce.pal.payment.model.shipping.ItemShipmentStatus;
 import com.commerce.pal.payment.module.DataAccessService;
 import com.commerce.pal.payment.module.ValidateAccessToken;
+import com.commerce.pal.payment.module.order.OrderService;
 import com.commerce.pal.payment.module.shipping.notification.process.MerchantAcceptAndPickUpNotification;
 import com.commerce.pal.payment.repo.LoginValidationRepository;
 import com.commerce.pal.payment.repo.payment.OrderItemRepository;
@@ -15,6 +16,7 @@ import com.commerce.pal.payment.util.ResponseCodes;
 import lombok.extern.java.Log;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,6 +24,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 
 import static com.commerce.pal.payment.util.StatusCodes.*;
@@ -32,6 +35,7 @@ import static com.commerce.pal.payment.util.StatusCodes.*;
 @RequestMapping({"/prime/api/v1/messenger/shipping"})
 @SuppressWarnings("Duplicates")
 public class MessengerShippingController {
+    private final OrderService orderService;
     private final GlobalMethods globalMethods;
     private final OrderRepository orderRepository;
     private final DataAccessService dataAccessService;
@@ -44,7 +48,8 @@ public class MessengerShippingController {
     private final MerchantAcceptAndPickUpNotification merchantAcceptAndPickUpNotification;
 
     @Autowired
-    public MessengerShippingController(GlobalMethods globalMethods,
+    public MessengerShippingController(OrderService orderService,
+                                       GlobalMethods globalMethods,
                                        OrderRepository orderRepository,
                                        DataAccessService dataAccessService,
                                        OrderItemRepository orderItemRepository,
@@ -54,6 +59,7 @@ public class MessengerShippingController {
                                        ItemShipmentStatusRepository itemShipmentStatusRepository,
                                        ItemMessengerDeliveryRepository itemMessengerDeliveryRepository,
                                        MerchantAcceptAndPickUpNotification merchantAcceptAndPickUpNotification) {
+        this.orderService = orderService;
         this.globalMethods = globalMethods;
         this.orderRepository = orderRepository;
         this.dataAccessService = dataAccessService;
@@ -67,10 +73,11 @@ public class MessengerShippingController {
     }
 
 
-    @RequestMapping(value = {"/filter-delivery"}, method = {RequestMethod.GET}, produces = {"application/json"})
+    @RequestMapping(value = {"/deliveries"}, method = {RequestMethod.GET}, produces = {"application/json"})
     @ResponseBody
-    public ResponseEntity<?> filterDeliveryStatus(@RequestHeader("Authorization") String accessToken,
-                                                  @RequestParam("status") Integer status) {
+    public ResponseEntity<?> deliveries(@RequestHeader("Authorization") String accessToken,
+                                        @RequestParam("status") Optional<Integer> status,
+                                        @RequestParam("deliveryStatus") Optional<Integer> deliveryStatus) {
         JSONObject responseMap = new JSONObject();
         JSONObject valTokenReq = new JSONObject();
         valTokenReq.put("AccessToken", accessToken)
@@ -81,18 +88,28 @@ public class MessengerShippingController {
             JSONObject messengerInfo = userDetails.getJSONObject("messengerInfo");
             Long messengerId = Long.valueOf(messengerInfo.getInt("userId"));
 
-            List<Integer> deliveryStatus = new ArrayList<>();
-            if (status.equals(0)) {
-                deliveryStatus.add(0);
-                deliveryStatus.add(1);
-                deliveryStatus.add(3);
-            } else {
-                deliveryStatus.add(status);
-            }
+
+            List<Integer> acceptStatus = new ArrayList<>();
+            status.ifPresentOrElse(accStatus -> {
+                acceptStatus.add(accStatus);
+            }, () -> {
+                acceptStatus.add(0);
+                acceptStatus.add(1);
+            });
+
+            List<Integer> delStatus = new ArrayList<>();
+            deliveryStatus.ifPresentOrElse(accStatus -> {
+                delStatus.add(accStatus);
+            }, () -> {
+                delStatus.add(0);
+                delStatus.add(1);
+                delStatus.add(3);
+            });
+
             List<JSONObject> deliveryList = new ArrayList<>();
 
-            itemMessengerDeliveryRepository.findItemMessengerDeliveriesByMessengerIdAndStatusIn(
-                    messengerId, globalMethods.convertListToIntegerArray(deliveryStatus)
+            itemMessengerDeliveryRepository.findItemMessengerDeliveriesByMessengerIdAndStatusInAndDeliveryStatusIn(
+                    messengerId, globalMethods.convertListToIntegerArray(acceptStatus), globalMethods.convertListToIntegerArray(delStatus)
             ).forEach(itemMessengerDelivery -> {
                 JSONObject delivery = new JSONObject();
                 delivery.put("DeliveryType", itemMessengerDelivery.getDeliveryType());
@@ -151,10 +168,6 @@ public class MessengerShippingController {
                         .ifPresent(orderItem -> {
                             delivery.put("ItemOrderRef", orderItem.getSubOrderNumber());
                             delivery.put("QrCodeNumber", orderItem.getQrCodeNumber());
-                            orderRepository.findById(orderItem.getOrderId())
-                                    .ifPresent(order -> {
-
-                                    });
                         });
             }, () -> {
 
@@ -171,6 +184,77 @@ public class MessengerShippingController {
         return ResponseEntity.ok(responseMap.toString());
     }
 
+
+    @RequestMapping(value = "/accept-order-delivery", method = RequestMethod.POST)
+    public ResponseEntity<?> acceptOrderDelivery(@RequestHeader("Authorization") String accessToken,
+                                                 @RequestBody String req) {
+        JSONObject responseMap = new JSONObject();
+        try {
+            JSONObject valTokenReq = new JSONObject();
+            valTokenReq.put("AccessToken", accessToken)
+                    .put("UserType", "M");
+            JSONObject valTokenBdy = validateAccessToken.pickAndReturnAll(valTokenReq);
+            if (valTokenBdy.getString("Status").equals("00")) {
+                JSONObject userDetails = valTokenBdy.getJSONObject("UserDetails");
+                JSONObject messengerInfo = userDetails.getJSONObject("messengerInfo");
+                Long messengerId = Long.valueOf(messengerInfo.getInt("userId"));
+                JSONObject request = new JSONObject(req);
+                itemMessengerDeliveryRepository.findItemMessengerDeliveryByIdAndMessengerId(
+                        request.getLong("DeliveryId"), messengerId
+                ).ifPresentOrElse(itemMessengerDelivery -> {
+                    itemMessengerDelivery.setStatus(request.getInt("Status"));
+                    itemMessengerDelivery.setAcceptedDate(Timestamp.from(Instant.now()));
+                    itemMessengerDelivery.setAcceptanceRemarks(request.getString("Remarks"));
+                    itemMessengerDeliveryRepository.save(itemMessengerDelivery);
+                    responseMap.put("statusCode", ResponseCodes.SUCCESS)
+                            .put("statusDescription", "Success")
+                            .put("statusMessage", "Success");
+                }, () -> {
+                    responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                            .put("statusDescription", "The Delivery is not assigned to this messenger")
+                            .put("statusMessage", "The Delivery is not assigned to this messenger");
+                });
+            } else {
+                responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                        .put("statusDescription", "Error in user validation")
+                        .put("statusMessage", "Error in user validation");
+            }
+        } catch (Exception ex) {
+            responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                    .put("statusDescription", ex.getMessage())
+                    .put("statusMessage", ex.getMessage());
+            log.log(Level.WARNING, ex.getMessage());
+        }
+        return ResponseEntity.ok(responseMap.toString());
+    }
+
+    @RequestMapping(value = {"/order-item"}, method = {RequestMethod.GET}, produces = {"application/json"})
+    @ResponseBody
+    public ResponseEntity<?> orderItem(@RequestParam("ItemId") String ItemId) {
+        JSONObject orderItem = orderService.orderItemDetails(Long.valueOf(ItemId));
+        return ResponseEntity.status(HttpStatus.OK).body(orderItem.toString());
+    }
+
+    @RequestMapping(value = {"/customer-address"}, method = {RequestMethod.GET}, produces = {"application/json"})
+    @ResponseBody
+    public ResponseEntity<?> customerAddress(@RequestParam("ItemId") String ItemId) {
+        JSONObject data = orderService.customerAddress(Long.valueOf(ItemId));
+        return ResponseEntity.status(HttpStatus.OK).body(data.toString());
+    }
+
+    @RequestMapping(value = {"/merchant-address"}, method = {RequestMethod.GET}, produces = {"application/json"})
+    @ResponseBody
+    public ResponseEntity<?> merchantAddress(@RequestParam("ItemId") String ItemId) {
+        JSONObject data = orderService.merchantAddress(Long.valueOf(ItemId));
+        return ResponseEntity.status(HttpStatus.OK).body(data.toString());
+    }
+
+    @RequestMapping(value = {"/product-info"}, method = {RequestMethod.GET}, produces = {"application/json"})
+    @ResponseBody
+    public ResponseEntity<?> getProductInfo(@RequestParam("ItemId") String ItemId) {
+        JSONObject orderItem = orderService.productInfo(Long.valueOf(ItemId));
+        return ResponseEntity.status(HttpStatus.OK).body(orderItem.toString());
+    }
 
     // Confirm Customer Delivery
     @RequestMapping(value = "/generate-otp-code", method = RequestMethod.POST)
@@ -325,7 +409,7 @@ public class MessengerShippingController {
                         .ifPresentOrElse(itemMessengerDelivery -> {
                             orderItemRepository.findById(request.getLong("OrderItemId"))
                                     .ifPresentOrElse(orderItem -> {
-                                        itemMessengerDelivery.setStatus(3);
+                                        itemMessengerDelivery.setDeliveryStatus(3);
                                         itemMessengerDelivery.setUpdatedDate(Timestamp.from(Instant.now()));
                                         itemMessengerDeliveryRepository.save(itemMessengerDelivery);
                                         orderItem.setShipmentStatus(MessengerDeliveredItemToCustomer);

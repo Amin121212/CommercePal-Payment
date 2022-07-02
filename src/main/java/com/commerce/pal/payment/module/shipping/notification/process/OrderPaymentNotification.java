@@ -2,6 +2,7 @@ package com.commerce.pal.payment.module.shipping.notification.process;
 
 import com.commerce.pal.payment.model.shipping.ItemShipmentStatus;
 import com.commerce.pal.payment.module.DataAccessService;
+import com.commerce.pal.payment.repo.LoginValidationRepository;
 import com.commerce.pal.payment.repo.payment.OrderItemRepository;
 import com.commerce.pal.payment.repo.payment.OrderRepository;
 import com.commerce.pal.payment.repo.shipping.ItemShipmentStatusRepository;
@@ -27,17 +28,21 @@ public class OrderPaymentNotification {
     private final OrderRepository orderRepository;
     private final DataAccessService dataAccessService;
     private final OrderItemRepository orderItemRepository;
+    private final LoginValidationRepository loginValidationRepository;
     private final ItemShipmentStatusRepository itemShipmentStatusRepository;
+
 
     public OrderPaymentNotification(GlobalMethods globalMethods,
                                     OrderRepository orderRepository,
                                     DataAccessService dataAccessService,
                                     OrderItemRepository orderItemRepository,
+                                    LoginValidationRepository loginValidationRepository,
                                     ItemShipmentStatusRepository itemShipmentStatusRepository) {
         this.globalMethods = globalMethods;
         this.orderRepository = orderRepository;
         this.dataAccessService = dataAccessService;
         this.orderItemRepository = orderItemRepository;
+        this.loginValidationRepository = loginValidationRepository;
         this.itemShipmentStatusRepository = itemShipmentStatusRepository;
     }
 
@@ -92,6 +97,19 @@ public class OrderPaymentNotification {
                                         merReq.put("Type", "MERCHANT");
                                         merReq.put("TypeId", merchant);
                                         JSONObject merRes = dataAccessService.pickAndProcess(merReq);
+
+
+                                        loginValidationRepository.findLoginValidationByEmailAddress(merRes.getString("email"))
+                                                .ifPresent(user -> {
+                                                    JSONObject pushPayload = new JSONObject();
+                                                    pushPayload.put("UserId", user.getUserOneSignalId() != null ? user.getUserOneSignalId() : "5c66ca50-c009-480f-a200-72c244d74ff4");
+                                                    pushPayload.put("Header", "New Order : " + order.getOrderRef());
+                                                    pushPayload.put("Message", "New Order : " + order.getOrderRef());
+                                                    JSONObject data = new JSONObject();
+                                                    data.put("OrderRef", order.getOrderRef());
+                                                    pushPayload.put("data", data);
+                                                    globalMethods.sendPushNotification(pushPayload);
+                                                });
 
                                         orderPay.put("email", merRes.getString("email"));
                                         orderPay.put("subject", "New Order Ref : " + order.getOrderRef() + " (Merchant)");

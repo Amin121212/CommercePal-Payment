@@ -106,5 +106,4 @@ public class OrderItem {
     @Basic
     @Column(name = "CreatedDate")
     private Timestamp createdDate;
-
 }

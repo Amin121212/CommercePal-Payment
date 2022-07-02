@@ -66,6 +66,16 @@ public class ItemMessengerDelivery {
     @Column(name = "CreatedDate")
     private Timestamp createdDate;
     @Basic
+    @Column(name = "AssignmentDate")
+    private Timestamp assignmentDate;
+    @Basic
+    @Column(name = "AcceptanceRemarks")
+    private String acceptanceRemarks;
+
+    @Basic
+    @Column(name = "AcceptedDate")
+    private Timestamp acceptedDate;
+    @Basic
     @Column(name = "UpdatedDate")
     private Timestamp updatedDate;
 }
