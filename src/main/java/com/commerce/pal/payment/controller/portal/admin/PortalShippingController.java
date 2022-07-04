@@ -98,7 +98,7 @@ public class PortalShippingController {
             orders.add(orderDetails);
         });
         responseMap.put("statusCode", ResponseCodes.SUCCESS)
-                .put("statusDescription", "success")
+                .put("statusDescription", "Request Successful")
                 .put("data", orders)
                 .put("statusMessage", "Request Successful");
         return ResponseEntity.ok(responseMap.toString());
@@ -166,8 +166,8 @@ public class PortalShippingController {
                         orderItem.setShipmentTypeComments(request.getString("ShipmentTypeComments"));
                         orderItemRepository.save(orderItem);
                         responseMap.put("statusCode", ResponseCodes.SUCCESS)
-                                .put("statusDescription", "Request Saved successfully")
-                                .put("statusMessage", "Request Saved successfully");
+                                .put("statusDescription", "Configuration was successfully")
+                                .put("statusMessage", "Configuration was successfully");
                     }, () -> {
                         responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
                                 .put("statusDescription", "Order Item Does not Exists")
