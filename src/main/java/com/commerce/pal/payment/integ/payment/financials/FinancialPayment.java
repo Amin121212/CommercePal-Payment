@@ -43,20 +43,24 @@ public class FinancialPayment {
             JSONObject payload = new JSONObject();
             JSONObject reqBdy = new JSONObject(payment.getRequestPayload());
 
+
             payload.put("FinancialCode", payment.getPaymentAccountType());
             payload.put("UserType", payment.getUserType());
             payload.put("UserId", reqBdy.getLong("UserId"));
+            payload.put("MarkUpId", reqBdy.getLong("MarkUpId"));
             payload.put("OrderRef", payment.getOrderRef());
             payload.put("PaymentRef", payment.getTransRef());
             payload.put("Currency", payment.getCurrency());
+            payload.put("LoanType", reqBdy.getString("LoanType"));
             payload.put("Amount", payment.getAmount().toString());
 
             payment.setRequestPayload(payload.toString());
             palPaymentRepository.save(payment);
 
+            log.log(Level.INFO, payload.toString());
+
             RequestBuilder builder = new RequestBuilder("POST");
-            builder.addHeader("Authorization", AUTH_TOKEN)
-                    .addHeader("Content-Type", "application/json")
+            builder.addHeader("Content-Type", "application/json")
                     .setBody(payload.toString())
                     .setUrl(URL_PAYMENT_REQUEST)
                     .build();
@@ -67,7 +71,7 @@ public class FinancialPayment {
                 JSONObject resBody = new JSONObject(resp.getString("ResponseBody"));
                 payment.setResponsePayload(resBody.toString());
                 payment.setResponseDate(Timestamp.from(Instant.now()));
-                if (resBody.getString("response").equals("000")) {
+                if (resBody.getString("statusCode").equals("000")) {
                     respBdy.put("statusCode", ResponseCodes.SUCCESS)
                             .put("OrderRef", payment.getOrderRef())
                             .put("TransRef", payment.getTransRef())
@@ -80,7 +84,6 @@ public class FinancialPayment {
                     payment.setFinalResponseMessage("PENDING");
                     payment.setFinalResponseDate(Timestamp.from(Instant.now()));
                     palPaymentRepository.save(payment);
-
                 } else {
                     respBdy.put("statusCode", ResponseCodes.NOT_EXIST)
                             .put("statusDescription", "failed")

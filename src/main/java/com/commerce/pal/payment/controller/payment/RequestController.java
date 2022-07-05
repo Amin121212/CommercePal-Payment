@@ -6,6 +6,7 @@ import com.commerce.pal.payment.integ.payment.sahay.SahayPaymentFulfillment;
 import com.commerce.pal.payment.module.payment.PaymentService;
 import com.commerce.pal.payment.module.ValidateAccessToken;
 import com.commerce.pal.payment.module.payment.ProcessSuccessPayment;
+import com.commerce.pal.payment.util.GlobalMethods;
 import com.commerce.pal.payment.util.ResponseCodes;
 import lombok.extern.java.Log;
 import org.json.JSONObject;
@@ -22,6 +23,7 @@ import java.util.logging.Level;
 @CrossOrigin(origins = "*")
 @SuppressWarnings("Duplicates")
 public class RequestController {
+    private final GlobalMethods globalMethods;
     private final PaymentService paymentService;
     private final ValidateAccessToken validateAccessToken;
     private final AgentCashProcessing agentCashProcessing;
@@ -30,12 +32,14 @@ public class RequestController {
     private final SahayPaymentFulfillment sahayPaymentFulfillment;
 
     @Autowired
-    public RequestController(PaymentService paymentService,
+    public RequestController(GlobalMethods globalMethods,
+                             PaymentService paymentService,
                              ValidateAccessToken validateAccessToken,
                              AgentCashProcessing agentCashProcessing,
                              ProcessSuccessPayment processSuccessPayment,
                              SahayCustomerValidation sahayCustomerValidation,
                              SahayPaymentFulfillment sahayPaymentFulfillment) {
+        this.globalMethods = globalMethods;
         this.paymentService = paymentService;
 
         this.validateAccessToken = validateAccessToken;
@@ -57,15 +61,17 @@ public class RequestController {
             valTokenReq.put("AccessToken", accessToken)
                     .put("UserType", requestObject.getString("UserType"));
 
-            JSONObject valTokenBdy = validateAccessToken.pickAndProcess(valTokenReq);
+            JSONObject valTokenBdy = validateAccessToken.pickAndReturnAll(valTokenReq);
 
             if (valTokenBdy.getString("Status").equals("00")) {
                 requestObject.put("UserEmail", valTokenBdy.getString("Email"));
+                requestObject.put("UserId", globalMethods.getUserId(requestObject.getString("UserType"),valTokenBdy.getJSONObject("UserDetails") ));
                 switch (requestObject.getString("ServiceCode")) {
                     case "SAHAY-LOOKUP":
                         responseBody = sahayCustomerValidation.checkCustomer(requestObject.getString("PhoneNumber"));
                         break;
                     case "CHECKOUT":
+                    case "LOAN-REQUEST":
                         responseBody = paymentService.pickAndProcess(requestObject);
                         break;
                     case "SAHAY-CONFIRM-PAYMENT":

@@ -57,7 +57,7 @@ public class PaymentService {
                         payment.get().setTransType("OrderPayment");
                         payment.get().setPaymentType(rqBdy.getString("PaymentType"));
                         payment.get().setPaymentAccountType(rqBdy.getString("PaymentMode"));
-                        payment.get().setAccountNumber(rqBdy.getString("PhoneNumber"));
+                        payment.get().setAccountNumber(rqBdy.getString("UserEmail"));
                         payment.get().setAmount(order.getTotalPrice());
                         payment.get().setCurrency(rqBdy.getString("Currency"));
                         payment.get().setStatus(0);
@@ -65,11 +65,11 @@ public class PaymentService {
                         payment.get().setRequestDate(Timestamp.from(Instant.now()));
                         payment.set(palPaymentRepository.save(payment.get()));
 
-                        switch (rqBdy.getString("PaymentMode")) {
+                        switch (rqBdy.getString("PaymentType")) {
                             case "SAHAY":
                                 respBdy.set(sahayPayment.pickAndProcess(payment.get()));
                                 break;
-                            case "FINANCIAL":
+                            case "FINANCE-INST":
                                 respBdy.set(financialPayment.pickAndProcess(payment.get()));
                                 break;
                             case "AGENT-CASH":

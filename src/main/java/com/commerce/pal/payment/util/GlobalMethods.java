@@ -12,6 +12,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
 import java.util.Random;
+import java.util.logging.Level;
 
 @Log
 @Component
@@ -64,5 +65,27 @@ public class GlobalMethods {
         for (int i = 0; i < list.size(); i++)
             arr[i] = list.get(i);
         return arr;
+    }
+
+    public Long getUserId(String type, JSONObject valTokenBdy) {
+        Long userId = new Long(0L);
+        try {
+            if (type.equals("A")) {
+                JSONObject agentInfo = valTokenBdy.getJSONObject("agentInfo");
+                userId = Long.valueOf(agentInfo.getInt("userId"));
+            } else if (type.equals("B")) {
+                JSONObject businessInfo = valTokenBdy.getJSONObject("businessInfo");
+                userId = Long.valueOf(businessInfo.getInt("userId"));
+            } else if (type.equals("M")) {
+                JSONObject merchantInfo = valTokenBdy.getJSONObject("merchantInfo");
+                userId = Long.valueOf(merchantInfo.getInt("userId"));
+            } else if (type.equals("C")) {
+                JSONObject userDetails = valTokenBdy.getJSONObject("Details");
+                userId = Long.valueOf(userDetails.getInt("userId"));
+            }
+        } catch (Exception ex) {
+            log.log(Level.WARNING, ex.getMessage());
+        }
+        return userId;
     }
 }
