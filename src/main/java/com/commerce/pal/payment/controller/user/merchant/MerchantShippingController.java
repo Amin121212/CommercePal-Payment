@@ -257,8 +257,8 @@ public class MerchantShippingController {
                             });
                 }, () -> {
                     responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
-                            .put("statusDescription", "The Delivery is not assigned to this messenger")
-                            .put("statusMessage", "The Delivery is not assigned to this messenger");
+                            .put("statusDescription", "The Delivery is not assigned to this merchant")
+                            .put("statusMessage", "The Delivery is not assigned to this merchant");
                 });
             } else {
                 responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
