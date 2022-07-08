@@ -43,7 +43,6 @@ public class FinancialPayment {
             JSONObject payload = new JSONObject();
             JSONObject reqBdy = new JSONObject(payment.getRequestPayload());
 
-
             payload.put("FinancialCode", payment.getPaymentAccountType());
             payload.put("UserType", payment.getUserType());
             payload.put("UserId", reqBdy.getLong("UserId"));
@@ -79,7 +78,7 @@ public class FinancialPayment {
                             .put("statusMessage", "Success");
 
                     payment.setStatus(1);
-                    payment.setBillTransRef(payment.getTransRef());
+                    payment.setBillTransRef(resBody.getString("LoanRef"));
                     payment.setFinalResponse("0");
                     payment.setFinalResponseMessage("PENDING");
                     payment.setFinalResponseDate(Timestamp.from(Instant.now()));
