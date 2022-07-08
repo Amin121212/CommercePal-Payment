@@ -51,8 +51,14 @@ public class OrderPaymentNotification {
             orderRepository.findOrderByOrderRef(orderRef)
                     .ifPresentOrElse(order -> {
                         JSONObject cusReq = new JSONObject();
-                        cusReq.put("Type", "CUSTOMER");
-                        cusReq.put("TypeId", order.getCustomerId());
+                        if (order.getSaleType().equals("M2C")) {
+                            cusReq.put("Type", "CUSTOMER");
+                            cusReq.put("TypeId", order.getCustomerId());
+                        } else if (order.getSaleType().equals("M2B")) {
+                            cusReq.put("Type", "BUSINESS");
+                            cusReq.put("TypeId", order.getBusinessId());
+                        }
+
                         JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
 
                         JSONObject orderPay = new JSONObject();

@@ -102,25 +102,4 @@ public class RequestController {
         }
     }
 
-
-    @RequestMapping(value = "/test-request", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
-    public ResponseEntity<?> testRequest(@RequestBody String requestBody) {
-        log.log(Level.INFO, requestBody);
-        JSONObject responseBody = new JSONObject();
-        try {
-            JSONObject requestObject = new JSONObject(requestBody);
-//            processSuccessPayment.pickAndProcess(requestObject.getString("OrderRef"));
-            return ResponseEntity.ok(responseBody.toString());
-
-        } catch (Exception ex) {
-            responseBody.put("statusCode", ResponseCodes.SYSTEM_ERROR)
-                    .put("statusDescription", "failed")
-                    .put("statusMessage", "Request failed");
-            log.log(Level.SEVERE, ex.getMessage());
-            return ResponseEntity.ok(responseBody.toString());
-        }
-    }
-
-
 }

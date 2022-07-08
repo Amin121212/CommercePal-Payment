@@ -1,6 +1,5 @@
 package com.commerce.pal.payment.controller.user.customer;
 
-
 import com.commerce.pal.payment.module.DataAccessService;
 import com.commerce.pal.payment.module.ValidateAccessToken;
 import com.commerce.pal.payment.repo.payment.OrderItemRepository;
@@ -14,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
-
 
 @Log
 @CrossOrigin(origins = {"*"}, maxAge = 3600L)

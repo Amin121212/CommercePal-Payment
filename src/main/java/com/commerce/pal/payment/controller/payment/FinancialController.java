@@ -36,11 +36,12 @@ public class FinancialController {
 
     @RequestMapping(value = {"/order-detail"}, method = {RequestMethod.GET}, produces = {"application/json"})
     @ResponseBody
-    public ResponseEntity<?> orderDetails(@RequestParam("orderRef") String orderRef) {
+    public ResponseEntity<?> orderDetails(@RequestBody String requestBody) {
         JSONObject responseMap = new JSONObject();
 
         JSONObject orderDetails = new JSONObject();
-        orderRepository.findOrderByOrderRef(orderRef)
+        JSONObject requestObject = new JSONObject(requestBody);
+        orderRepository.findOrderByOrderRef(requestObject.getString("OrderRef"))
                 .ifPresent(order -> {
                     orderDetails.put("OrderRef", order.getOrderRef());
                     orderDetails.put("OrderDate", order.getOrderDate());

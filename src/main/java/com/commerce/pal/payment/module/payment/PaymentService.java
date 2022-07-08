@@ -47,7 +47,8 @@ public class PaymentService {
     public JSONObject pickAndProcess(JSONObject rqBdy) {
         AtomicReference<JSONObject> respBdy = new AtomicReference<>(new JSONObject());
         try {
-            orderRepository.findOrderByOrderRef(rqBdy.getString("OrderRef"))
+            orderRepository.findOrderByOrderRefAndIsUserAddressAssigned(
+                            rqBdy.getString("OrderRef"), 1)
                     .ifPresentOrElse(order -> {
                         AtomicReference<PalPayment> payment = new AtomicReference<>(new PalPayment());
                         payment.get().setUserType(rqBdy.getString("UserType"));
