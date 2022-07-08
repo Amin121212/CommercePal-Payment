@@ -103,7 +103,7 @@ public class BusinessController {
         return ResponseEntity.ok(responseMap.toString());
     }
 
-    @RequestMapping(value = "/get-loan-request", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/get-loan-request", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity<?> businessGetLoan(@RequestHeader("Authorization") String accessToken) {
         JSONObject responseBody = new JSONObject();
