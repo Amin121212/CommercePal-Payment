@@ -4,14 +4,20 @@ import com.commerce.pal.payment.module.DataAccessService;
 import com.commerce.pal.payment.module.ValidateAccessToken;
 import com.commerce.pal.payment.repo.payment.OrderItemRepository;
 import com.commerce.pal.payment.repo.payment.OrderRepository;
+import com.commerce.pal.payment.util.HttpProcessor;
 import com.commerce.pal.payment.util.ResponseCodes;
 import lombok.extern.java.Log;
+import org.asynchttpclient.RequestBuilder;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 
 @Log
 @CrossOrigin(origins = {"*"}, maxAge = 3600L)
@@ -19,15 +25,23 @@ import java.util.List;
 @RequestMapping({"/prime/api/v1/business/order"})
 @SuppressWarnings("Duplicates")
 public class BusinessController {
+
+    @Value(value = "${org.commerce.pal.financial.business.loan}")
+    private String LOAN_URL;
+
+    private final HttpProcessor httpProcessor;
     private final OrderRepository orderRepository;
     private final DataAccessService dataAccessService;
     private final OrderItemRepository orderItemRepository;
     private final ValidateAccessToken validateAccessToken;
 
-    public BusinessController(OrderRepository orderRepository,
+    @Autowired
+    public BusinessController(HttpProcessor httpProcessor,
+                              OrderRepository orderRepository,
                               DataAccessService dataAccessService,
                               OrderItemRepository orderItemRepository,
                               ValidateAccessToken validateAccessToken) {
+        this.httpProcessor = httpProcessor;
         this.orderRepository = orderRepository;
         this.dataAccessService = dataAccessService;
         this.orderItemRepository = orderItemRepository;
@@ -88,4 +102,49 @@ public class BusinessController {
 
         return ResponseEntity.ok(responseMap.toString());
     }
+
+    @RequestMapping(value = "/get-loan-request", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<?> businessGetLoan(@RequestHeader("Authorization") String accessToken) {
+        JSONObject responseBody = new JSONObject();
+        try {
+            JSONObject valTokenReq = new JSONObject();
+            valTokenReq.put("AccessToken", accessToken)
+                    .put("UserType", "B");
+
+            JSONObject valTokenBdy = validateAccessToken.pickAndReturnAll(valTokenReq);
+
+            if (valTokenBdy.getString("Status").equals("00")) {
+                JSONObject userDetails = valTokenBdy.getJSONObject("UserDetails");
+                Long businessId = Long.valueOf(userDetails.getJSONObject("businessInfo").getInt("userId"));
+
+                JSONObject payload = new JSONObject();
+                payload.put("BusinessId", businessId.toString());
+                RequestBuilder builder = new RequestBuilder("POST");
+                builder.addHeader("Content-Type", "application/json")
+                        .setBody(payload.toString())
+                        .setUrl(LOAN_URL)
+                        .build();
+                JSONObject resp = httpProcessor.jsonRequestProcessor(builder);
+                if (resp.getString("StatusCode").equals("200")) {
+                    responseBody = new JSONObject(resp.getString("ResponseBody"));
+                } else {
+                    responseBody.put("statusCode", ResponseCodes.SYSTEM_ERROR)
+                            .put("statusDescription", "failed")
+                            .put("statusMessage", "Request failed");
+                }
+            } else {
+                responseBody.put("statusCode", ResponseCodes.SYSTEM_ERROR)
+                        .put("statusDescription", "failed")
+                        .put("statusMessage", "Request failed");
+            }
+        } catch (Exception ex) {
+            responseBody.put("statusCode", "401")
+                    .put("statusDescription", ex.getMessage())
+                    .put("statusMessage", ex.getMessage());
+            log.log(Level.SEVERE, ex.getMessage());
+        }
+        return ResponseEntity.ok(responseBody.toString());
+    }
+
 }
