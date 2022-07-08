@@ -1,16 +1,21 @@
 package com.commerce.pal.payment.controller.payment;
 
 import com.commerce.pal.payment.module.DataAccessService;
+import com.commerce.pal.payment.module.payment.ProcessSuccessPayment;
 import com.commerce.pal.payment.repo.payment.OrderItemRepository;
 import com.commerce.pal.payment.repo.payment.OrderRepository;
+import com.commerce.pal.payment.repo.payment.PalPaymentRepository;
 import com.commerce.pal.payment.util.ResponseCodes;
 import lombok.extern.java.Log;
+import org.asynchttpclient.RequestBuilder;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -24,14 +29,20 @@ public class FinancialController {
     private final OrderRepository orderRepository;
     private final DataAccessService dataAccessService;
     private final OrderItemRepository orderItemRepository;
+    private final PalPaymentRepository palPaymentRepository;
+    private final ProcessSuccessPayment processSuccessPayment;
 
     @Autowired
     public FinancialController(OrderRepository orderRepository,
                                DataAccessService dataAccessService,
-                               OrderItemRepository orderItemRepository) {
+                               OrderItemRepository orderItemRepository,
+                               PalPaymentRepository palPaymentRepository,
+                               ProcessSuccessPayment processSuccessPayment) {
         this.orderRepository = orderRepository;
         this.dataAccessService = dataAccessService;
         this.orderItemRepository = orderItemRepository;
+        this.palPaymentRepository = palPaymentRepository;
+        this.processSuccessPayment = processSuccessPayment;
     }
 
     @RequestMapping(value = {"/order-detail"}, method = {RequestMethod.GET}, produces = {"application/json"})
@@ -77,16 +88,49 @@ public class FinancialController {
         log.log(Level.INFO, requestBody);
         JSONObject responseBody = new JSONObject();
         try {
-            JSONObject requestObject = new JSONObject(requestBody);
-//            processSuccessPayment.pickAndProcess(requestObject.getString("OrderRef"));
-            return ResponseEntity.ok(responseBody.toString());
+            JSONObject reqBody = new JSONObject(requestBody);
+            palPaymentRepository.findPalPaymentByOrderRefAndTransRefAndStatus(
+                    reqBody.getString("OrderRef"), reqBody.getString("TransRef"), 1
+            ).ifPresentOrElse(payment -> {
+                payment.setResponsePayload(reqBody.toString());
+                payment.setResponseDate(Timestamp.from(Instant.now()));
+                if (reqBody.getString("PaymentStatus").equals("000")) {
+                    responseBody.put("statusCode", ResponseCodes.SUCCESS)
+                            .put("OrderRef", payment.getOrderRef())
+                            .put("TransRef", payment.getTransRef())
+                            .put("statusDescription", "Success")
+                            .put("statusMessage", "Success");
+
+                    payment.setStatus(3);
+                    payment.setFinalResponse("000");
+                    payment.setFinalResponseMessage(reqBody.getString("PaymentDescription"));
+                    payment.setFinalResponseDate(Timestamp.from(Instant.now()));
+                    palPaymentRepository.save(payment);
+
+                    // Process Payment
+                    processSuccessPayment.pickAndProcess(payment);
+                } else {
+                    responseBody.put("statusCode", ResponseCodes.TRANSACTION_FAILED)
+                            .put("statusDescription", "failed")
+                            .put("statusMessage", "Request failed");
+                    payment.setStatus(5);
+                    payment.setFinalResponse("999");
+                    payment.setFinalResponseMessage(reqBody.getString("PaymentDescription"));
+                    payment.setFinalResponseDate(Timestamp.from(Instant.now()));
+                    palPaymentRepository.save(payment);
+                }
+            }, () -> {
+                responseBody.put("statusCode", ResponseCodes.TRANSACTION_FAILED)
+                        .put("statusDescription", "failed")
+                        .put("statusMessage", "Request failed");
+            });
         } catch (Exception ex) {
             responseBody.put("statusCode", ResponseCodes.SYSTEM_ERROR)
-                    .put("statusDescription", "failed")
-                    .put("statusMessage", "Request failed");
+                    .put("statusDescription", ex.getMessage())
+                    .put("statusMessage", ex.getMessage());
             log.log(Level.SEVERE, ex.getMessage());
-            return ResponseEntity.ok(responseBody.toString());
         }
+        return ResponseEntity.ok(responseBody.toString());
     }
 
 

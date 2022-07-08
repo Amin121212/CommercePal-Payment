@@ -71,8 +71,8 @@ public class ProcessSuccessPayment {
                         JSONObject orderPayment = new JSONObject();
                         BigDecimal orderAmount = new BigDecimal(order.getTotalPrice().doubleValue() - order.getTax().doubleValue() - order.getTax().doubleValue());
                         orderPayment.put("TransRef", order.getOrderRef());
-                        orderPayment.put("PaymentType", "SAHAY");
-                        orderPayment.put("PaymentAccountType", "SAHAY");
+                        orderPayment.put("PaymentType", payment.getPaymentType());
+                        orderPayment.put("PaymentAccountType", payment.getPaymentAccountType());
                         orderPayment.put("CountryCode", order.getCountryCode());
                         orderPayment.put("Currency", order.getCurrency());
                         orderPayment.put("TotalAmount", order.getTotalPrice().toString());
