@@ -2,8 +2,12 @@ package com.commerce.pal.payment.controller.user.business;
 
 import com.commerce.pal.payment.module.DataAccessService;
 import com.commerce.pal.payment.module.ValidateAccessToken;
+import com.commerce.pal.payment.module.order.OrderService;
+import com.commerce.pal.payment.repo.LoginValidationRepository;
 import com.commerce.pal.payment.repo.payment.OrderItemRepository;
 import com.commerce.pal.payment.repo.payment.OrderRepository;
+import com.commerce.pal.payment.repo.shipping.ItemMessengerDeliveryRepository;
+import com.commerce.pal.payment.util.GlobalMethods;
 import com.commerce.pal.payment.util.HttpProcessor;
 import com.commerce.pal.payment.util.ResponseCodes;
 import lombok.extern.java.Log;
@@ -29,23 +33,35 @@ public class BusinessController {
     @Value(value = "${org.commerce.pal.financial.business.loan}")
     private String LOAN_URL;
 
+    private final OrderService orderService;
+    private final GlobalMethods globalMethods;
     private final HttpProcessor httpProcessor;
     private final OrderRepository orderRepository;
     private final DataAccessService dataAccessService;
     private final OrderItemRepository orderItemRepository;
     private final ValidateAccessToken validateAccessToken;
+    private final LoginValidationRepository loginValidationRepository;
+    private final ItemMessengerDeliveryRepository itemMessengerDeliveryRepository;
 
     @Autowired
-    public BusinessController(HttpProcessor httpProcessor,
+    public BusinessController(OrderService orderService,
+                              GlobalMethods globalMethods,
+                              HttpProcessor httpProcessor,
                               OrderRepository orderRepository,
                               DataAccessService dataAccessService,
                               OrderItemRepository orderItemRepository,
-                              ValidateAccessToken validateAccessToken) {
+                              ValidateAccessToken validateAccessToken,
+                              LoginValidationRepository loginValidationRepository,
+                              ItemMessengerDeliveryRepository itemMessengerDeliveryRepository) {
+        this.orderService = orderService;
+        this.globalMethods = globalMethods;
         this.httpProcessor = httpProcessor;
         this.orderRepository = orderRepository;
         this.dataAccessService = dataAccessService;
         this.orderItemRepository = orderItemRepository;
         this.validateAccessToken = validateAccessToken;
+        this.loginValidationRepository = loginValidationRepository;
+        this.itemMessengerDeliveryRepository = itemMessengerDeliveryRepository;
     }
 
     @RequestMapping(value = {"/order-detail"}, method = {RequestMethod.GET}, produces = {"application/json"})
@@ -145,6 +161,72 @@ public class BusinessController {
             log.log(Level.SEVERE, ex.getMessage());
         }
         return ResponseEntity.ok(responseBody.toString());
+    }
+
+
+    @RequestMapping(value = "/generate-otp-code", method = RequestMethod.POST)
+    public ResponseEntity<?> generateOtpCode(@RequestHeader("Authorization") String accessToken,
+                                             @RequestBody String req) {
+        JSONObject responseMap = new JSONObject();
+        try {
+            JSONObject valTokenReq = new JSONObject();
+            valTokenReq.put("AccessToken", accessToken)
+                    .put("UserType", "B");
+            JSONObject valTokenBdy = validateAccessToken.pickAndReturnAll(valTokenReq);
+            if (valTokenBdy.getString("Status").equals("00")) {
+                JSONObject userDetails = valTokenBdy.getJSONObject("UserDetails");
+                JSONObject businessInfo = userDetails.getJSONObject("businessInfo");
+                Long businessId = Long.valueOf(businessInfo.getInt("userId"));
+                JSONObject request = new JSONObject(req);
+
+                itemMessengerDeliveryRepository.findItemMessengerDeliveryByOrderItemIdAndCustomerId(request.getLong("OrderItemId"), businessId
+                ).ifPresentOrElse(itemMessengerDelivery -> {
+                    orderItemRepository.findById(request.getLong("OrderItemId"))
+                            .ifPresentOrElse(orderItem -> {
+                                String validationCode = globalMethods.generateValidationCode();
+                                itemMessengerDelivery.setValidationCode(globalMethods.encryptCode(validationCode));
+                                itemMessengerDelivery.setValidationStatus(0);
+
+                                orderItemRepository.save(orderItem);
+
+                                loginValidationRepository.findLoginValidationByEmailAddress(businessInfo.getString("email"))
+                                        .ifPresent(user -> {
+                                            JSONObject pushPayload = new JSONObject();
+                                            pushPayload.put("UserId", user.getUserOneSignalId() != null ? user.getUserOneSignalId() : "5c66ca50-c009-480f-a200-72c244d74ff4");
+                                            pushPayload.put("Header", "Generate Code for : " + orderItem.getSubOrderNumber());
+                                            pushPayload.put("Message", "Generate Code for : " + orderItem.getSubOrderNumber());
+                                            JSONObject data = new JSONObject();
+                                            data.put("OrderItem", orderItem.getSubOrderNumber());
+                                            pushPayload.put("data", data);
+                                            globalMethods.sendPushNotification(pushPayload);
+                                        });
+
+                                responseMap.put("statusCode", ResponseCodes.SUCCESS)
+                                        .put("statusDescription", "Success")
+                                        .put("ValidCode", validationCode)
+                                        .put("statusMessage", "Success");
+                            }, () -> {
+                                responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                                        .put("statusDescription", "The Item does not exists")
+                                        .put("statusMessage", "The Item does not exists");
+                            });
+                }, () -> {
+                    responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                            .put("statusDescription", "The Delivery is not assigned to this messenger")
+                            .put("statusMessage", "The Delivery is not assigned to this messenger");
+                });
+            } else {
+                responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                        .put("statusDescription", "Error in user validation")
+                        .put("statusMessage", "Error in user validation");
+            }
+        } catch (Exception ex) {
+            responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                    .put("statusDescription", "Error in user validation")
+                    .put("statusMessage", "Error in user validation");
+            log.log(Level.WARNING, ex.getMessage());
+        }
+        return ResponseEntity.ok(responseMap.toString());
     }
 
 }

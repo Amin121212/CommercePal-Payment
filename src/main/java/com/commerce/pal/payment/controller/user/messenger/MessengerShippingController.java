@@ -120,6 +120,7 @@ public class MessengerShippingController {
                 delivery.put("MerchantId", itemMessengerDelivery.getMerchantId());
                 delivery.put("CustomerId", itemMessengerDelivery.getCustomerId());
                 delivery.put("WareHouseId", itemMessengerDelivery.getWareHouseId());
+                delivery.put("DeliveryStatus", itemMessengerDelivery.getDeliveryStatus());
                 orderItemRepository.findById(itemMessengerDelivery.getOrderItemId())
                         .ifPresent(orderItem -> {
                             delivery.put("ItemOrderRef", orderItem.getSubOrderNumber());
@@ -451,6 +452,84 @@ public class MessengerShippingController {
                                     .put("statusDescription", "The Delivery is not assigned to this messenger")
                                     .put("statusMessage", "The Delivery is not assigned to this messenger");
                         });
+            } else {
+                responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                        .put("statusDescription", "Error in user validation")
+                        .put("statusMessage", "Error in user validation");
+            }
+        } catch (Exception ex) {
+            responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                    .put("statusDescription", "Error in user validation")
+                    .put("statusMessage", "Error in user validation");
+            log.log(Level.WARNING, ex.getMessage());
+        }
+        return ResponseEntity.ok(responseMap.toString());
+    }
+
+    @RequestMapping(value = "/validate-business-code", method = RequestMethod.POST)
+    public ResponseEntity<?> validatePickUpCode(@RequestHeader("Authorization") String accessToken,
+                                                @RequestBody String req) {
+        JSONObject responseMap = new JSONObject();
+        try {
+            JSONObject valTokenReq = new JSONObject();
+            valTokenReq.put("AccessToken", accessToken)
+                    .put("UserType", "M");
+            JSONObject valTokenBdy = validateAccessToken.pickAndReturnAll(valTokenReq);
+            if (valTokenBdy.getString("Status").equals("00")) {
+                JSONObject userDetails = valTokenBdy.getJSONObject("UserDetails");
+                JSONObject messengerInfo = userDetails.getJSONObject("messengerInfo");
+                Long messenger = Long.valueOf(messengerInfo.getInt("userId"));
+                JSONObject request = new JSONObject(req);
+
+                String[] deliveryTypes = {"MC", "MW"};
+                itemMessengerDeliveryRepository.findItemMessengerDeliveryByOrderItemIdAndMerchantIdAndDeliveryTypeIn(request.getLong("OrderItemId"), messenger, deliveryTypes
+                ).ifPresentOrElse(itemMessengerDelivery -> {
+                    orderItemRepository.findById(request.getLong("OrderItemId"))
+                            .ifPresentOrElse(orderItem -> {
+                                if (request.getString("ValidCode").equals(globalMethods.deCryptCode(itemMessengerDelivery.getValidationCode()))) {
+                                    itemMessengerDelivery.setDeliveryStatus(1);
+                                    itemMessengerDelivery.setValidationStatus(1);
+                                    itemMessengerDelivery.setValidationDate(Timestamp.from(Instant.now()));
+                                    itemMessengerDeliveryRepository.save(itemMessengerDelivery);
+
+                                    ItemShipmentStatus itemShipmentStatus = new ItemShipmentStatus();
+                                    if (itemMessengerDelivery.getDeliveryType().equals("MC")) {
+                                        orderItem.setShipmentStatus(MessengerPickedMerchantToCustomer);
+                                        itemShipmentStatus.setShipmentStatus(MessengerPickedMerchantToCustomer);
+                                    } else {
+                                        orderItem.setShipmentStatus(MessengerPickedMerchantToWareHouse);
+                                        itemShipmentStatus.setShipmentStatus(MessengerPickedMerchantToWareHouse);
+                                    }
+                                    orderItem.setShipmentUpdateDate(Timestamp.from(Instant.now()));
+                                    orderItemRepository.save(orderItem);
+
+                                    itemShipmentStatus.setItemId(orderItem.getItemId());
+                                    itemShipmentStatus.setComments(request.getString("Comments"));
+                                    itemShipmentStatus.setStatus(1);
+                                    itemShipmentStatus.setCreatedDate(Timestamp.from(Instant.now()));
+                                    itemShipmentStatusRepository.save(itemShipmentStatus);
+
+                                    responseMap.put("statusCode", ResponseCodes.SUCCESS)
+                                            .put("statusDescription", "success")
+                                            .put("statusMessage", "success");
+
+                                    // Send Notification of Acceptance
+                                    // merchantAcceptAndPickUpNotification.pickAndProcess(orderItem.getOrderId().toString());
+                                } else {
+                                    responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                                            .put("statusDescription", "The code is not valid")
+                                            .put("statusMessage", "The code is not valid");
+                                }
+                            }, () -> {
+                                responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                                        .put("statusDescription", "The Item does not exists")
+                                        .put("statusMessage", "The Item does not exists");
+                            });
+                }, () -> {
+                    responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                            .put("statusDescription", "The Delivery is not assigned to this messenger")
+                            .put("statusMessage", "The Delivery is not assigned to this messenger");
+                });
             } else {
                 responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
                         .put("statusDescription", "Error in user validation")
