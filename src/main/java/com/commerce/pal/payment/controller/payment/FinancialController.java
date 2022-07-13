@@ -45,7 +45,7 @@ public class FinancialController {
         this.processSuccessPayment = processSuccessPayment;
     }
 
-    @RequestMapping(value = {"/order-detail"}, method = {RequestMethod.GET}, produces = {"application/json"})
+    @RequestMapping(value = {"/order-detail"}, method = {RequestMethod.POST}, produces = {"application/json"})
     @ResponseBody
     public ResponseEntity<?> orderDetails(@RequestBody String requestBody) {
         JSONObject responseMap = new JSONObject();
