@@ -84,8 +84,8 @@ public class PaymentService {
                         }
                     }, () -> {
                         respBdy.get().put("statusCode", ResponseCodes.SYSTEM_ERROR)
-                                .put("statusDescription", "failed")
-                                .put("statusMessage", "Request failed");
+                                .put("statusDescription", "Order has to be assigned shipment address")
+                                .put("statusMessage", "Order has to be assigned shipment address");
                     });
             //payment.set
         } catch (Exception ex) {
