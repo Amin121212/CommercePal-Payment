@@ -96,14 +96,12 @@ public class BusinessController {
                         List<JSONObject> orderItems = new ArrayList<>();
                         orderItemRepository.findOrderItemsByOrderId(order.getOrderId())
                                 .forEach(orderItem -> {
-                                    JSONObject itemPay = new JSONObject();
                                     JSONObject prodReq = new JSONObject();
                                     prodReq.put("Type", "PRODUCT-AND-SUB");
                                     prodReq.put("TypeId", orderItem.getProductLinkingId());
                                     prodReq.put("SubProductId", orderItem.getSubProductId());
                                     JSONObject prodRes = dataAccessService.pickAndProcess(prodReq);
-                                    itemPay.put("NoOfProduct", orderItem.getQuantity());
-                                    itemPay.put("ItemOrderRef", orderItem.getSubOrderNumber());
+                                    JSONObject itemPay = orderService.orderItemDetails(orderItem.getItemId());
                                     itemPay.put("Product", prodRes);
                                     orderItems.add(itemPay);
                                 });
