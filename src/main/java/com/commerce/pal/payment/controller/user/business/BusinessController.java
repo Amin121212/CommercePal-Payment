@@ -161,7 +161,6 @@ public class BusinessController {
         return ResponseEntity.ok(responseBody.toString());
     }
 
-
     @RequestMapping(value = "/generate-otp-code", method = RequestMethod.POST)
     public ResponseEntity<?> generateOtpCode(@RequestHeader("Authorization") String accessToken,
                                              @RequestBody String req) {
@@ -184,9 +183,7 @@ public class BusinessController {
                                 String validationCode = globalMethods.generateValidationCode();
                                 itemMessengerDelivery.setValidationCode(globalMethods.encryptCode(validationCode));
                                 itemMessengerDelivery.setValidationStatus(0);
-
                                 orderItemRepository.save(orderItem);
-
                                 loginValidationRepository.findLoginValidationByEmailAddress(businessInfo.getString("email"))
                                         .ifPresent(user -> {
                                             JSONObject pushPayload = new JSONObject();
@@ -198,7 +195,6 @@ public class BusinessController {
                                             pushPayload.put("data", data);
                                             globalMethods.sendPushNotification(pushPayload);
                                         });
-
                                 responseMap.put("statusCode", ResponseCodes.SUCCESS)
                                         .put("statusDescription", "Success")
                                         .put("ValidCode", validationCode)
@@ -221,7 +217,7 @@ public class BusinessController {
         } catch (Exception ex) {
             responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
                     .put("statusDescription", "Error in user validation")
-                    .put("statusMessage", "Error in user validation");
+                    .put("statusMessage", ex.getMessage());
             log.log(Level.WARNING, ex.getMessage());
         }
         return ResponseEntity.ok(responseMap.toString());

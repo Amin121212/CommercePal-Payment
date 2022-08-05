@@ -82,7 +82,12 @@ public class WareHouseShippingController {
                             switch (request.getString("DeliveryType")) {
                                 case "MC":
                                     itemMessengerDelivery.setMerchantId(orderItem.getMerchantId());
-                                    itemMessengerDelivery.setCustomerId(orderRepository.findById(orderItem.getOrderId()).get().getCustomerId());
+
+                                    itemMessengerDelivery.setCustomerId(
+                                            orderRepository.findById(orderItem.getOrderId()).get().getSaleType() == "M2C" ?
+                                                    orderRepository.findById(orderItem.getOrderId()).get().getCustomerId() :
+                                                    orderRepository.findById(orderItem.getOrderId()).get().getBusinessId()
+                                    );
                                     break;
                                 case "MW":
                                     itemMessengerDelivery.setMerchantId(orderItem.getMerchantId());
@@ -90,7 +95,11 @@ public class WareHouseShippingController {
                                     break;
                                 case "WC":
                                     itemMessengerDelivery.setWareHouseId(request.getLong("WareHouseId"));
-                                    itemMessengerDelivery.setCustomerId(orderRepository.findById(orderItem.getOrderId()).get().getCustomerId());
+                                    itemMessengerDelivery.setCustomerId(
+                                            orderRepository.findById(orderItem.getOrderId()).get().getSaleType() == "M2C" ?
+                                                    orderRepository.findById(orderItem.getOrderId()).get().getCustomerId() :
+                                                    orderRepository.findById(orderItem.getOrderId()).get().getBusinessId()
+                                    );
                                     break;
                             }
                             itemMessengerDelivery.setValidationCode(globalMethods.encryptCode(validationCode));
@@ -114,7 +123,11 @@ public class WareHouseShippingController {
                             switch (request.getString("DeliveryType")) {
                                 case "MC":
                                     itemMessengerDelivery.setMerchantId(orderItem.getMerchantId());
-                                    itemMessengerDelivery.setCustomerId(orderRepository.findById(orderItem.getOrderId()).get().getCustomerId());
+                                    itemMessengerDelivery.setCustomerId(
+                                            orderRepository.findById(orderItem.getOrderId()).get().getSaleType() == "M2C" ?
+                                                    orderRepository.findById(orderItem.getOrderId()).get().getCustomerId() :
+                                                    orderRepository.findById(orderItem.getOrderId()).get().getBusinessId()
+                                    );
                                     break;
                                 case "MW":
                                     itemMessengerDelivery.setMerchantId(orderItem.getMerchantId());
@@ -122,7 +135,11 @@ public class WareHouseShippingController {
                                     break;
                                 case "WC":
                                     itemMessengerDelivery.setWareHouseId(request.getLong("WareHouseId"));
-                                    itemMessengerDelivery.setCustomerId(orderRepository.findById(orderItem.getOrderId()).get().getCustomerId());
+                                    itemMessengerDelivery.setCustomerId(
+                                            orderRepository.findById(orderItem.getOrderId()).get().getSaleType() == "M2C" ?
+                                                    orderRepository.findById(orderItem.getOrderId()).get().getCustomerId() :
+                                                    orderRepository.findById(orderItem.getOrderId()).get().getBusinessId()
+                                    );
                                     break;
                             }
 
