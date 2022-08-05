@@ -66,6 +66,7 @@ public class PortalShippingController {
                 cusReq.put("TypeId", order.getCustomerId());
                 JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
                 orderDetails.put("CustomerName", cusRes.getString("firstName"));
+
             } else {
                 JSONObject cusReq = new JSONObject();
                 cusReq.put("Type", "BUSINESS");
@@ -78,6 +79,8 @@ public class PortalShippingController {
             orderDetails.put("OrderDate", order.getOrderDate());
             orderDetails.put("Order", order.getOrderRef());
             orderDetails.put("OrderId", order.getOrderId());
+            orderDetails.put("SaleType", order.getSaleType());
+            orderDetails.put("PaymentMethod", order.getPaymentMethod());
 
             List<JSONObject> orderItems = new ArrayList<>();
             orderItemRepository.findOrderItemsByOrderId(order.getOrderId())
