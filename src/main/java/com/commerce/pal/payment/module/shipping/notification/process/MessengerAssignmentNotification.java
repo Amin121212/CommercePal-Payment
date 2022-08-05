@@ -44,6 +44,7 @@ public class MessengerAssignmentNotification {
                         orderRepository.findById(orderItem.getOrderId())
                                 .ifPresent(order -> {
                                     req.put("OrderRef", order.getOrderRef());
+                                    req.put("SaleType", order.getSaleType());
                                 });
                     });
             req.put("MessengerId", itemDelivery.getMessengerId());
@@ -92,19 +93,31 @@ public class MessengerAssignmentNotification {
                         emailPayload.put("EmailMessage", getDeliveryType(payload.getString("DeliveryType")) + "-" + payload.getString("OrderRef"));
                         globalMethods.processEmailWithoutTemplate(emailPayload);
 
-                        JSONObject cusReq = new JSONObject();
-                        cusReq.put("Type", "CUSTOMER");
-                        cusReq.put("TypeId", payload.getLong("CustomerId"));
-                        JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
-                        emailPayload.put("EmailDestination", cusRes.getString("email"));
-                        emailPayload.put("EmailMessage", getDeliveryType(payload.getString("DeliveryType")) + "-" + payload.getString("OrderRef"));
-                        globalMethods.processEmailWithoutTemplate(emailPayload);
+                        if (payload.getString("SaleType").equals("M2C")) {
+                            JSONObject cusReq = new JSONObject();
+                            cusReq.put("Type", "CUSTOMER");
+                            cusReq.put("TypeId", payload.getLong("CustomerId"));
+                            JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
+                            emailPayload.put("EmailDestination", cusRes.getString("email"));
+                            emailPayload.put("EmailMessage", getDeliveryType(payload.getString("DeliveryType")) + "-" + payload.getString("OrderRef"));
+                            globalMethods.processEmailWithoutTemplate(emailPayload);
+                        } else {
+                            JSONObject cusReq = new JSONObject();
+                            cusReq.put("Type", "BUSINESS");
+                            cusReq.put("TypeId", payload.getLong("CustomerId"));
+                            JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
+                            emailPayload.put("EmailDestination", cusRes.getString("email"));
+                            emailPayload.put("EmailMessage", getDeliveryType(payload.getString("DeliveryType")) + "-" + payload.getString("OrderRef"));
+                            globalMethods.processEmailWithoutTemplate(emailPayload);
+                        }
+
                     } catch (Exception ex) {
 
                     }
                     break;
                 case "MW":
                     try {
+
                         JSONObject merReq = new JSONObject();
                         merReq.put("Type", "MERCHANT");
                         merReq.put("TypeId", payload.getLong("MerchantId"));
@@ -112,18 +125,29 @@ public class MessengerAssignmentNotification {
                         emailPayload.put("EmailMessage", getDeliveryType(payload.getString("DeliveryType")) + "-" + payload.getString("OrderRef"));
                         emailPayload.put("EmailDestination", merRes.getString("email"));
                         globalMethods.processEmailWithoutTemplate(emailPayload);
+
                     } catch (Exception ex) {
                     }
                     break;
                 case "WC":
                     try {
-                        JSONObject cusReq = new JSONObject();
-                        cusReq.put("Type", "CUSTOMER");
-                        cusReq.put("TypeId", payload.getLong("CustomerId"));
-                        JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
-                        emailPayload.put("EmailDestination", cusRes.getString("email"));
-                        emailPayload.put("EmailMessage", getDeliveryType(payload.getString("DeliveryType")) + "-" + payload.getString("OrderRef"));
-                        globalMethods.processEmailWithoutTemplate(emailPayload);
+                        if (payload.getString("SaleType").equals("M2C")) {
+                            JSONObject cusReq = new JSONObject();
+                            cusReq.put("Type", "CUSTOMER");
+                            cusReq.put("TypeId", payload.getLong("CustomerId"));
+                            JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
+                            emailPayload.put("EmailDestination", cusRes.getString("email"));
+                            emailPayload.put("EmailMessage", getDeliveryType(payload.getString("DeliveryType")) + "-" + payload.getString("OrderRef"));
+                            globalMethods.processEmailWithoutTemplate(emailPayload);
+                        } else {
+                            JSONObject cusReq = new JSONObject();
+                            cusReq.put("Type", "BUSINESS");
+                            cusReq.put("TypeId", payload.getLong("CustomerId"));
+                            JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
+                            emailPayload.put("EmailDestination", cusRes.getString("email"));
+                            emailPayload.put("EmailMessage", getDeliveryType(payload.getString("DeliveryType")) + "-" + payload.getString("OrderRef"));
+                            globalMethods.processEmailWithoutTemplate(emailPayload);
+                        }
                     } catch (Exception ex) {
 
                     }

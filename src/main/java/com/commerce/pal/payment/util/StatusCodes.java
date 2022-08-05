@@ -19,9 +19,9 @@ public class StatusCodes {
      */
     public static final Integer BUTTONS_TO_SHOW = 3;
     public static final Integer INITIAL_PAGE = 0;
-    public static final Integer MIN_PAGE_SIZE = 5;
+    public static final Integer MIN_PAGE_SIZE = 10;
     public static final Integer MEDIUM_PAGE_SIZE = 7;
-    public static final Integer MAX_PAGE_SIZE = 10;
+    public static final Integer MAX_PAGE_SIZE = 20;
     public static final Integer USSD_MAX_PAGE_SIZE=20;
     public static final Integer MAX_PAGE_SIZE_DASHBOARDS = 5;
 
