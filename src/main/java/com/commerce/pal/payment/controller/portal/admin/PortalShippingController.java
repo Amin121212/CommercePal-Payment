@@ -60,11 +60,20 @@ public class PortalShippingController {
                 PAYMENT_SUCCESS, PAYMENT_SUCCESS, PageRequest.of(evalPage, MIN_PAGE_SIZE)
         ).forEach(order -> {
             JSONObject orderDetails = new JSONObject();
-            JSONObject cusReq = new JSONObject();
-            cusReq.put("Type", "CUSTOMER");
-            cusReq.put("TypeId", order.getCustomerId());
-            JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
-            orderDetails.put("CustomerName", cusRes.getString("firstName"));
+            if (order.getSaleType().equals("M2C")) {
+                JSONObject cusReq = new JSONObject();
+                cusReq.put("Type", "CUSTOMER");
+                cusReq.put("TypeId", order.getCustomerId());
+                JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
+                orderDetails.put("CustomerName", cusRes.getString("firstName"));
+            } else {
+                JSONObject cusReq = new JSONObject();
+                cusReq.put("Type", "BUSINESS");
+                cusReq.put("TypeId", order.getBusinessId());
+                JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
+                orderDetails.put("CustomerName", cusRes.getString("firstName"));
+            }
+
             orderDetails.put("OrderRef", order.getOrderRef());
             orderDetails.put("OrderDate", order.getOrderDate());
             orderDetails.put("Order", order.getOrderRef());
