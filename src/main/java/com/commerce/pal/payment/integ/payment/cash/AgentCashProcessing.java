@@ -96,9 +96,14 @@ public class AgentCashProcessing {
                 agentCashPaymentRepository.findAgentCashPaymentByOrderRefAndPaymentRefAndStatus(
                         payment.getOrderRef(), payment.getTransRef(), 0
                 ).ifPresentOrElse(agentCashPayment -> {
+                    reqBdy.put("Currency", agentCashPayment.getCurrency());
+                    reqBdy.put("Amount", agentCashPayment.getAmount().toString());
+                    reqBdy.put("PaymentNarration", "Agent Cash Payment");
                     JSONObject payRes = paymentStoreProcedure.agentCashPayment(reqBdy);
                     if (payRes.getString("Status").equals("00")) {
                         if (payRes.getString("TransactionStatus").equals("0")) {
+                            agentCashPayment.setStatus(3);
+                            agentCashPayment.setResponsePayload(payRes.toString());
                             agentCashPayment.setProcessingAgentId(reqBdy.getLong("AgentId"));
                             agentCashPayment.setProcessingDate(Timestamp.from(Instant.now()));
                             payment.setStatus(3);
