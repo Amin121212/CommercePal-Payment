@@ -76,7 +76,7 @@ public class OrderPaymentNotification {
                                                 prodReq.put("Type", "PRODUCT");
                                                 prodReq.put("TypeId", orderItem.getProductLinkingId());
                                                 JSONObject productBdy = dataAccessService.pickAndProcess(prodReq);
-                                                itemPay.put("ProductName", productBdy.getString("ProductName"));
+                                                itemPay.put("ProductName", productBdy.getString("productName"));
                                                 itemPay.put("ProductImage", productBdy.getString("webImage"));
                                                 itemPay.put("NoOfProduct", orderItem.getQuantity());
                                                 itemPay.put("ItemOrderRef", orderItem.getSubOrderNumber());
