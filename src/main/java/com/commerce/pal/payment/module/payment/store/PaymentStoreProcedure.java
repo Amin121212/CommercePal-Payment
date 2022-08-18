@@ -99,4 +99,34 @@ public class PaymentStoreProcedure {
         }
         return transResponse;
     }
+
+    public JSONObject merchantItemSettlement(JSONObject reqBody) {
+        JSONObject transResponse = new JSONObject();
+        try {
+            StoredProcedureQuery query = entityManager.createStoredProcedureQuery("ExecuteMerchantPayment");
+            query.registerStoredProcedureParameter("TransRef", String.class, ParameterMode.IN);
+            query.registerStoredProcedureParameter("ItemId", String.class, ParameterMode.IN);
+            query.registerStoredProcedureParameter("PaymentNarration", String.class, ParameterMode.IN);
+            query.setParameter("TransRef", reqBody.getString("TransRef"));
+            query.setParameter("ItemId", reqBody.getString("ItemId"));
+            query.setParameter("PaymentNarration", reqBody.getString("PaymentNarration"));
+
+            query.registerStoredProcedureParameter("TransactionStatus", String.class, ParameterMode.OUT);
+            query.registerStoredProcedureParameter("Balance", String.class, ParameterMode.OUT);
+            query.registerStoredProcedureParameter("Narration", String.class, ParameterMode.OUT);
+
+            query.execute();
+
+            transResponse.put("TransactionStatus", query.getOutputParameterValue("TransactionStatus"));
+            transResponse.put("Balance", query.getOutputParameterValue("Balance"));
+            transResponse.put("Narration", query.getOutputParameterValue("Narration"));
+            transResponse.put("Status", "00");
+            transResponse.put("Message", "The request was processed successfully");
+        } catch (Exception ex) {
+            log.log(Level.WARNING, "Merchant Item Settlement CLASS : " + ex.getMessage());
+            transResponse.put("Status", "101");
+            transResponse.put("Message", ex.getMessage());
+        }
+        return transResponse;
+    }
 }

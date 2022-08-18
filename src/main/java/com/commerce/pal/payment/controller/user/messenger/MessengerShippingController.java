@@ -185,7 +185,6 @@ public class MessengerShippingController {
         return ResponseEntity.ok(responseMap.toString());
     }
 
-
     @RequestMapping(value = "/accept-order-delivery", method = RequestMethod.POST)
     public ResponseEntity<?> acceptOrderDelivery(@RequestHeader("Authorization") String accessToken,
                                                  @RequestBody String req) {

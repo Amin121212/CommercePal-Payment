@@ -3,6 +3,7 @@ package com.commerce.pal.payment.controller.user.merchant;
 import com.commerce.pal.payment.model.shipping.ItemShipmentStatus;
 import com.commerce.pal.payment.module.DataAccessService;
 import com.commerce.pal.payment.module.ValidateAccessToken;
+import com.commerce.pal.payment.module.payment.store.PaymentStoreProcedure;
 import com.commerce.pal.payment.module.shipping.notification.process.MerchantAcceptAndPickUpNotification;
 import com.commerce.pal.payment.repo.payment.OrderItemRepository;
 import com.commerce.pal.payment.repo.payment.OrderRepository;
@@ -37,6 +38,7 @@ public class MerchantShippingController {
     private final DataAccessService dataAccessService;
     private final OrderItemRepository orderItemRepository;
     private final ValidateAccessToken validateAccessToken;
+    private final PaymentStoreProcedure paymentStoreProcedure;
     private final ShipmentStatusRepository shipmentStatusRepository;
     private final ItemShipmentStatusRepository itemShipmentStatusRepository;
     private final ItemMessengerDeliveryRepository itemMessengerDeliveryRepository;
@@ -48,6 +50,7 @@ public class MerchantShippingController {
                                       DataAccessService dataAccessService,
                                       OrderItemRepository orderItemRepository,
                                       ValidateAccessToken validateAccessToken,
+                                      PaymentStoreProcedure paymentStoreProcedure,
                                       ShipmentStatusRepository shipmentStatusRepository,
                                       ItemShipmentStatusRepository itemShipmentStatusRepository,
                                       ItemMessengerDeliveryRepository itemMessengerDeliveryRepository,
@@ -57,6 +60,7 @@ public class MerchantShippingController {
         this.dataAccessService = dataAccessService;
         this.orderItemRepository = orderItemRepository;
         this.validateAccessToken = validateAccessToken;
+        this.paymentStoreProcedure = paymentStoreProcedure;
         this.shipmentStatusRepository = shipmentStatusRepository;
         this.itemShipmentStatusRepository = itemShipmentStatusRepository;
         this.itemMessengerDeliveryRepository = itemMessengerDeliveryRepository;
@@ -67,7 +71,7 @@ public class MerchantShippingController {
     @RequestMapping(value = {"/filter-order"}, method = {RequestMethod.GET}, produces = {"application/json"})
     @ResponseBody
     public ResponseEntity<?> filterOrder(@RequestHeader("Authorization") String accessToken,
-                                           @RequestParam("status") Integer status) {
+                                         @RequestParam("status") Integer status) {
         JSONObject responseMap = new JSONObject();
         JSONObject valTokenReq = new JSONObject();
         valTokenReq.put("AccessToken", accessToken)
@@ -243,6 +247,14 @@ public class MerchantShippingController {
                                             .put("statusDescription", "success")
                                             .put("statusMessage", "success");
 
+                                    // Process Payment
+                                    String transRef = globalMethods.generateTrans();
+                                    String payNar = "Settlement of Sub Order [" + orderItem.getSubOrderNumber() + "]";
+                                    JSONObject reqBody = new JSONObject();
+                                    reqBody.put("TransRef", transRef);
+                                    reqBody.put("ItemId", orderItem.getItemId().toString());
+                                    reqBody.put("PaymentNarration", payNar);
+                                    paymentStoreProcedure.merchantItemSettlement(reqBody);
                                     // Send Notification of Acceptance
                                     // merchantAcceptAndPickUpNotification.pickAndProcess(orderItem.getOrderId().toString());
                                 } else {
