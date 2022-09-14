@@ -46,10 +46,10 @@ public class AgentOrderController {
 
     @RequestMapping(value = {"/order-detail"}, method = {RequestMethod.POST}, produces = {"application/json"})
     @ResponseBody
-    public ResponseEntity<?> orderDetails(@RequestHeader("Authorization") String accessToken) {
+    public ResponseEntity<?> orderDetails(@RequestHeader("Authorization") String accessToken,@RequestBody String req) {
         JSONObject responseMap = new JSONObject();
-        JSONObject reqBdy = new JSONObject();
-        
+        JSONObject reqBdy = new JSONObject(req);
+
         JSONObject valTokenReq = new JSONObject();
         valTokenReq.put("AccessToken", accessToken)
                 .put("UserType", "B");
