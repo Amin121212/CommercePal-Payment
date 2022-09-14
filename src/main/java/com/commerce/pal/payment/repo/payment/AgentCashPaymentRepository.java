@@ -8,4 +8,6 @@ import java.util.Optional;
 public interface AgentCashPaymentRepository extends JpaRepository<AgentCashPayment, Long> {
 
     Optional<AgentCashPayment> findAgentCashPaymentByOrderRefAndPaymentRefAndStatus(String orderRef, String transRef, Integer status);
+
+    Optional<AgentCashPayment> findAgentCashPaymentByPaymentRef(String ref);
 }

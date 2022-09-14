@@ -3,6 +3,7 @@ package com.commerce.pal.payment.controller.user.agent;
 import com.commerce.pal.payment.module.DataAccessService;
 import com.commerce.pal.payment.module.ValidateAccessToken;
 import com.commerce.pal.payment.module.order.OrderService;
+import com.commerce.pal.payment.repo.payment.AgentCashPaymentRepository;
 import com.commerce.pal.payment.repo.payment.OrderItemRepository;
 import com.commerce.pal.payment.repo.payment.OrderRepository;
 import com.commerce.pal.payment.util.GlobalMethods;
@@ -28,6 +29,7 @@ public class AgentOrderController {
     private final DataAccessService dataAccessService;
     private final OrderItemRepository orderItemRepository;
     private final ValidateAccessToken validateAccessToken;
+    private final AgentCashPaymentRepository agentCashPaymentRepository;
 
     @Autowired
     public AgentOrderController(OrderService orderService,
@@ -35,18 +37,20 @@ public class AgentOrderController {
                                 OrderRepository orderRepository,
                                 DataAccessService dataAccessService,
                                 OrderItemRepository orderItemRepository,
-                                ValidateAccessToken validateAccessToken) {
+                                ValidateAccessToken validateAccessToken,
+                                AgentCashPaymentRepository agentCashPaymentRepository) {
         this.orderService = orderService;
         this.globalMethods = globalMethods;
         this.orderRepository = orderRepository;
         this.dataAccessService = dataAccessService;
         this.orderItemRepository = orderItemRepository;
         this.validateAccessToken = validateAccessToken;
+        this.agentCashPaymentRepository = agentCashPaymentRepository;
     }
 
     @RequestMapping(value = {"/order-detail"}, method = {RequestMethod.POST}, produces = {"application/json"})
     @ResponseBody
-    public ResponseEntity<?> orderDetails(@RequestHeader("Authorization") String accessToken,@RequestBody String req) {
+    public ResponseEntity<?> orderDetails(@RequestHeader("Authorization") String accessToken, @RequestBody String req) {
         JSONObject responseMap = new JSONObject();
         JSONObject reqBdy = new JSONObject(req);
 
@@ -61,18 +65,22 @@ public class AgentOrderController {
 //            JSONObject businessInfo = userDetails.getJSONObject("businessInfo");
 //            Long businessId = Long.valueOf(userDetails.getJSONObject("businessInfo").getInt("userId"));
             JSONObject orderDetails = new JSONObject();
-            orderRepository.findOrderByOrderRef(reqBdy.getString("TransRef"))
-                    .ifPresent(order -> {
-                        orderDetails.put("OrderRef", order.getOrderRef());
-                        orderDetails.put("OrderDate", order.getOrderDate());
-                        orderDetails.put("DeliveryPrice", order.getDeliveryPrice());
-                        orderDetails.put("TotalPrice", order.getTotalPrice());
-                        orderDetails.put("PaymentStatus", order.getPaymentStatus());
-                        orderDetails.put("PaymentDate", order.getPaymentDate());
-                        orderDetails.put("PaymentMethod", order.getPaymentMethod());
-                        orderDetails.put("Discount", order.getDiscount());
-                        orderDetails.put("DeliveryPrice", order.getDeliveryPrice());
+            agentCashPaymentRepository.findAgentCashPaymentByPaymentRef(reqBdy.getString("TransRef"))
+                    .ifPresent(orderInfo -> {
+                        orderRepository.findOrderByOrderRef(orderInfo.getOrderRef())
+                                .ifPresent(order -> {
+                                    orderDetails.put("OrderRef", order.getOrderRef());
+                                    orderDetails.put("OrderDate", order.getOrderDate());
+                                    orderDetails.put("DeliveryPrice", order.getDeliveryPrice());
+                                    orderDetails.put("TotalPrice", order.getTotalPrice());
+                                    orderDetails.put("PaymentStatus", order.getPaymentStatus());
+                                    orderDetails.put("PaymentDate", order.getPaymentDate());
+                                    orderDetails.put("PaymentMethod", order.getPaymentMethod());
+                                    orderDetails.put("Discount", order.getDiscount());
+                                    orderDetails.put("DeliveryPrice", order.getDeliveryPrice());
+                                });
                     });
+
 
             responseMap.put("statusCode", ResponseCodes.SUCCESS)
                     .put("statusDescription", "success")
