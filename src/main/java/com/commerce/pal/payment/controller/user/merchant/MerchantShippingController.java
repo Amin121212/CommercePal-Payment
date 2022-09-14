@@ -3,7 +3,7 @@ package com.commerce.pal.payment.controller.user.merchant;
 import com.commerce.pal.payment.model.shipping.ItemShipmentStatus;
 import com.commerce.pal.payment.module.DataAccessService;
 import com.commerce.pal.payment.module.ValidateAccessToken;
-import com.commerce.pal.payment.module.payment.store.PaymentStoreProcedure;
+import com.commerce.pal.payment.module.database.PaymentStoreProcedure;
 import com.commerce.pal.payment.module.shipping.notification.process.MerchantAcceptAndPickUpNotification;
 import com.commerce.pal.payment.repo.payment.OrderItemRepository;
 import com.commerce.pal.payment.repo.payment.OrderRepository;
@@ -254,7 +254,14 @@ public class MerchantShippingController {
                                     reqBody.put("TransRef", transRef);
                                     reqBody.put("ItemId", orderItem.getItemId().toString());
                                     reqBody.put("PaymentNarration", payNar);
-                                    paymentStoreProcedure.merchantItemSettlement(reqBody);
+
+                                    JSONObject payRes = paymentStoreProcedure.merchantItemSettlement(reqBody);
+                                    responseMap.put("statusCode", ResponseCodes.SUCCESS)
+                                            .put("balance", payRes.getString("Balance"))
+                                            .put("transRef", transRef)
+                                            .put("statusDescription", "Success")
+                                            .put("statusMessage", "Success");
+
                                     // Send Notification of Acceptance
                                     // merchantAcceptAndPickUpNotification.pickAndProcess(orderItem.getOrderId().toString());
                                 } else {

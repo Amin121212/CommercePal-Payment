@@ -1,13 +1,11 @@
 package com.commerce.pal.payment.module.payment;
 
 import com.commerce.pal.payment.model.payment.PalPayment;
-import com.commerce.pal.payment.model.shipping.ItemShipmentStatus;
-import com.commerce.pal.payment.module.payment.store.PaymentStoreProcedure;
+import com.commerce.pal.payment.module.database.PaymentStoreProcedure;
 import com.commerce.pal.payment.module.shipping.notification.process.OrderPaymentNotification;
 import com.commerce.pal.payment.repo.payment.OrderItemRepository;
 import com.commerce.pal.payment.repo.payment.OrderRepository;
 import com.commerce.pal.payment.repo.payment.PalPaymentRepository;
-import com.commerce.pal.payment.repo.shipping.ItemShipmentStatusRepository;
 import lombok.extern.java.Log;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;

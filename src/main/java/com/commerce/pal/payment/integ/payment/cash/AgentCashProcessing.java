@@ -3,7 +3,7 @@ package com.commerce.pal.payment.integ.payment.cash;
 import com.commerce.pal.payment.model.payment.AgentCashPayment;
 import com.commerce.pal.payment.model.payment.PalPayment;
 import com.commerce.pal.payment.module.payment.ProcessSuccessPayment;
-import com.commerce.pal.payment.module.payment.store.PaymentStoreProcedure;
+import com.commerce.pal.payment.module.database.PaymentStoreProcedure;
 import com.commerce.pal.payment.repo.payment.AgentCashPaymentRepository;
 import com.commerce.pal.payment.repo.payment.PalPaymentRepository;
 import com.commerce.pal.payment.util.GlobalMethods;
@@ -75,7 +75,7 @@ public class AgentCashProcessing {
             JSONObject emailPayload = new JSONObject();
             emailPayload.put("EmailDestination", payment.getUserEmail());
             emailPayload.put("EmailSubject", "Order : [" + payment.getOrderRef() + "] - Agent Cash Payment Code");
-            emailPayload.put("EmailMessage", "Validation Code : " + validationCode);
+            emailPayload.put("EmailMessage", "Trans Ref " + agentCash.get().getPaymentRef() + " and Validation Code : " + validationCode);
             globalMethods.processEmailWithoutTemplate(emailPayload);
 
         } catch (Exception ex) {

@@ -1,4 +1,4 @@
-package com.commerce.pal.payment.controller.user.customer;
+package com.commerce.pal.payment.controller.user.agent;
 
 import com.commerce.pal.payment.module.DataAccessService;
 import com.commerce.pal.payment.module.ValidateAccessToken;
@@ -19,9 +19,9 @@ import java.util.List;
 @Log
 @CrossOrigin(origins = {"*"}, maxAge = 3600L)
 @RestController
-@RequestMapping({"/prime/api/v1/customer/order"})
+@RequestMapping({"/prime/api/v1/agent/order"})
 @SuppressWarnings("Duplicates")
-public class CustomerOrderController {
+public class AgentOrderController {
     private final OrderService orderService;
     private final GlobalMethods globalMethods;
     private final OrderRepository orderRepository;
@@ -30,12 +30,12 @@ public class CustomerOrderController {
     private final ValidateAccessToken validateAccessToken;
 
     @Autowired
-    public CustomerOrderController(OrderService orderService,
-                                   GlobalMethods globalMethods,
-                                   OrderRepository orderRepository,
-                                   DataAccessService dataAccessService,
-                                   OrderItemRepository orderItemRepository,
-                                   ValidateAccessToken validateAccessToken) {
+    public AgentOrderController(OrderService orderService,
+                                GlobalMethods globalMethods,
+                                OrderRepository orderRepository,
+                                DataAccessService dataAccessService,
+                                OrderItemRepository orderItemRepository,
+                                ValidateAccessToken validateAccessToken) {
         this.orderService = orderService;
         this.globalMethods = globalMethods;
         this.orderRepository = orderRepository;
@@ -49,8 +49,7 @@ public class CustomerOrderController {
     public ResponseEntity<?> orderDetails(@RequestHeader("Authorization") String accessToken) {
         JSONObject responseMap = new JSONObject();
         JSONObject reqBdy = new JSONObject();
-
-        List<JSONObject> orders = new ArrayList<>();
+        
         JSONObject valTokenReq = new JSONObject();
         valTokenReq.put("AccessToken", accessToken)
                 .put("UserType", "B");
@@ -59,12 +58,11 @@ public class CustomerOrderController {
 
         if (valTokenBdy.getString("Status").equals("00")) {
             JSONObject userDetails = valTokenBdy.getJSONObject("UserDetails");
-            JSONObject businessInfo = userDetails.getJSONObject("businessInfo");
+//            JSONObject businessInfo = userDetails.getJSONObject("businessInfo");
 //            Long businessId = Long.valueOf(userDetails.getJSONObject("businessInfo").getInt("userId"));
-
+            JSONObject orderDetails = new JSONObject();
             orderRepository.findOrderByOrderRef(reqBdy.getString("TransRef"))
                     .ifPresent(order -> {
-                        JSONObject orderDetails = new JSONObject();
                         orderDetails.put("OrderRef", order.getOrderRef());
                         orderDetails.put("OrderDate", order.getOrderDate());
                         orderDetails.put("DeliveryPrice", order.getDeliveryPrice());
@@ -74,27 +72,17 @@ public class CustomerOrderController {
                         orderDetails.put("PaymentMethod", order.getPaymentMethod());
                         orderDetails.put("Discount", order.getDiscount());
                         orderDetails.put("DeliveryPrice", order.getDeliveryPrice());
-                        List<JSONObject> orderItems = new ArrayList<>();
-                        orderItemRepository.findOrderItemsByOrderId(order.getOrderId())
-                                .forEach(orderItem -> {
-                                    JSONObject prodReq = new JSONObject();
-                                    prodReq.put("Type", "PRODUCT-AND-SUB");
-                                    prodReq.put("TypeId", orderItem.getProductLinkingId());
-                                    prodReq.put("SubProductId", orderItem.getSubProductId());
-                                    JSONObject prodRes = dataAccessService.pickAndProcess(prodReq);
-                                    JSONObject itemPay = orderService.orderItemDetails(orderItem.getItemId());
-                                    itemPay.put("Product", prodRes);
-                                    orderItems.add(itemPay);
-                                });
-                        orderDetails.put("orderItems", orderItems);
-                        orders.add(orderDetails);
                     });
-        }
-        responseMap.put("statusCode", ResponseCodes.SUCCESS)
-                .put("statusDescription", "success")
-                .put("data", orders)
-                .put("statusMessage", "Request Successful");
 
+            responseMap.put("statusCode", ResponseCodes.SUCCESS)
+                    .put("statusDescription", "success")
+                    .put("data", orderDetails)
+                    .put("statusMessage", "Request Successful");
+        } else {
+            responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                    .put("statusDescription", "Merchant Does not exists")
+                    .put("statusMessage", "Merchant Does not exists");
+        }
         return ResponseEntity.ok(responseMap.toString());
     }
 
