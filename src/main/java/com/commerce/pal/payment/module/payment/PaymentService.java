@@ -68,12 +68,16 @@ public class PaymentService {
 
                         switch (rqBdy.getString("PaymentType")) {
                             case "SAHAY":
+                                payment.get().setAccountNumber(rqBdy.getString("PhoneNumber"));
+                                payment.set(palPaymentRepository.save(payment.get()));
                                 respBdy.set(sahayPayment.pickAndProcess(payment.get()));
                                 break;
                             case "FINANCE-INST":
                                 respBdy.set(financialPayment.pickAndProcess(payment.get()));
                                 break;
                             case "AGENT-CASH":
+                                payment.get().setAccountNumber(rqBdy.getString("PhoneNumber"));
+                                payment.set(palPaymentRepository.save(payment.get()));
                                 respBdy.set(agentCashProcessing.pickAndProcess(payment.get()));
                                 break;
                             default:

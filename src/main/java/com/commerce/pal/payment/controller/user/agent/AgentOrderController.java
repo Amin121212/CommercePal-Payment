@@ -62,8 +62,8 @@ public class AgentOrderController {
 
         if (valTokenBdy.getString("Status").equals("00")) {
             JSONObject userDetails = valTokenBdy.getJSONObject("UserDetails");
-//            JSONObject businessInfo = userDetails.getJSONObject("businessInfo");
-//            Long businessId = Long.valueOf(userDetails.getJSONObject("businessInfo").getInt("userId"));
+            JSONObject agentInfo = userDetails.getJSONObject("agentInfo");
+            Long agentId = Long.valueOf(userDetails.getJSONObject("agentInfo").getInt("userId"));
             JSONObject orderDetails = new JSONObject();
             agentCashPaymentRepository.findAgentCashPaymentByPaymentRef(reqBdy.getString("TransRef"))
                     .ifPresent(orderInfo -> {
@@ -80,7 +80,6 @@ public class AgentOrderController {
                                     orderDetails.put("DeliveryPrice", order.getDeliveryPrice());
                                 });
                     });
-
 
             responseMap.put("statusCode", ResponseCodes.SUCCESS)
                     .put("statusDescription", "success")
