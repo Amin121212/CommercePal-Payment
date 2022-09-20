@@ -44,6 +44,21 @@ public class MerchantWithdrawal {
     @Column(name = "RequestDate")
     private Timestamp requestDate;
     @Basic
+    @Column(name = "VerifiedBy")
+    private Integer verifiedBy;
+    @Basic
+    @Column(name = "VerificationComment")
+    private String verificationComment;
+    @Basic
+    @Column(name = "VerificationDate")
+    private Timestamp verificationDate;
+    @Basic
+    @Column(name = "ResponsePayload")
+    private String responsePayload;
+    @Basic
+    @Column(name = "BillTransRef")
+    private String billTransRef;
+    @Basic
     @Column(name = "ResponseStatus")
     private Integer responseStatus;
     @Basic

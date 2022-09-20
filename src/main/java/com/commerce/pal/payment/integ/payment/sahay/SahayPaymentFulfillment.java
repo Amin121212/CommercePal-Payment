@@ -55,6 +55,7 @@ public class SahayPaymentFulfillment {
                     payload.put("TransRef", payment.getTransRef());
                     payload.put("BillerReference", payment.getBillTransRef());
                     payload.put("Code", reqBdy.getString("otp"));
+                    payload.put("AccountType", "SAHAY");
 
                     payment.setRequestPayload(payload.toString());
                     palPaymentRepository.save(payment);
@@ -79,7 +80,7 @@ public class SahayPaymentFulfillment {
                         resBody.put("responseDescription", "Success");
                         if (resBody.getString("response").equals("000")) {
                             respBdy.put("statusCode", ResponseCodes.SUCCESS)
-                                    .put("OrderRef", payment.getOrderRef())
+                                    .put("sahayRef", payment.getOrderRef())
                                     .put("TransRef", payment.getTransRef())
                                     .put("statusDescription", "Success")
                                     .put("statusMessage", "Success");

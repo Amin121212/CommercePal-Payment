@@ -133,17 +133,19 @@ public class PaymentStoreProcedure {
     public JSONObject merchantWithdrawal(JSONObject reqBody) {
         JSONObject transResponse = new JSONObject();
         try {
-            StoredProcedureQuery query = entityManager.createStoredProcedureQuery("ExecuteAgentCashPayment");
+            StoredProcedureQuery query = entityManager.createStoredProcedureQuery("ExecuteMerchantWithdrawal");
             query.registerStoredProcedureParameter("TransRef", String.class, ParameterMode.IN);
-            query.registerStoredProcedureParameter("AgentEmail", String.class, ParameterMode.IN);
+            query.registerStoredProcedureParameter("MerchantEmail", String.class, ParameterMode.IN);
             query.registerStoredProcedureParameter("Currency", String.class, ParameterMode.IN);
             query.registerStoredProcedureParameter("Amount", String.class, ParameterMode.IN);
+            query.registerStoredProcedureParameter("WithdrawalMethod", String.class, ParameterMode.IN);
             query.registerStoredProcedureParameter("PaymentNarration", String.class, ParameterMode.IN);
 
             query.setParameter("TransRef", reqBody.getString("TransRef"));
-            query.setParameter("AgentEmail", reqBody.getString("UserEmail"));
+            query.setParameter("MerchantEmail", reqBody.getString("UserEmail"));
             query.setParameter("Currency", reqBody.getString("Currency"));
             query.setParameter("Amount", reqBody.getString("Amount"));
+            query.setParameter("WithdrawalMethod", reqBody.getString("WithdrawalMethod"));
             query.setParameter("PaymentNarration", reqBody.getString("PaymentNarration"));
 
 

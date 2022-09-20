@@ -66,6 +66,11 @@ public class MerchantTransactionController {
                 withdrawal.get().setStatus(0);
                 withdrawal.get().setRequestDate(Timestamp.from(Instant.now()));
                 withdrawal.get().setResponseStatus(0);
+                withdrawal.get().setBillTransRef("Failed");
+                withdrawal.get().setResponsePayload("Pending");
+                withdrawal.get().setResponseStatus(0);
+                withdrawal.get().setResponseDescription("Pending");
+                withdrawal.get().setResponseDate(Timestamp.from(Instant.now()));
                 withdrawal.set(merchantWithdrawalRepository.save(withdrawal.get()));
 
                 JSONObject merchWth = new JSONObject();
