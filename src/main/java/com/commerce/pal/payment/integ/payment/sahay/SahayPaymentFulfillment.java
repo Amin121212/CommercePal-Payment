@@ -69,16 +69,11 @@ public class SahayPaymentFulfillment {
 
                     JSONObject resp = httpProcessor.jsonRequestProcessor(builder);
                     log.log(Level.INFO, resp.toString());
-                    //TODO - Remove on Prod
-                    resp.put("StatusCode", "200");
 
                     if (resp.getString("StatusCode").equals("200")) {
                         JSONObject resBody = new JSONObject(resp.getString("ResponseBody"));
                         payment.setResponsePayload(resBody.toString());
                         payment.setResponseDate(Timestamp.from(Instant.now()));
-                        //TODO - Remove on Prod
-                        resBody.put("response", "000");
-                        resBody.put("responseDescription", "Success");
                         if (resBody.getString("response").equals("000")) {
                             respBdy.put("statusCode", ResponseCodes.SUCCESS)
                                     .put("sahayRef", payment.getOrderRef())
