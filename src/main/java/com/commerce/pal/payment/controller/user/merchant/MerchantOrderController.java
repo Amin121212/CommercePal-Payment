@@ -86,7 +86,6 @@ public class MerchantOrderController {
                                         cusReq.put("TypeId", order.getCustomerId());
                                         JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
                                         orderDetails.put("CustomerName", cusRes.getString("firstName"));
-
                                     } else {
                                         JSONObject cusReq = new JSONObject();
                                         cusReq.put("Type", "BUSINESS");

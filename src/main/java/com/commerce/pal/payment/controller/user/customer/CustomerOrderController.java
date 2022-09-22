@@ -46,9 +46,9 @@ public class CustomerOrderController {
 
     @RequestMapping(value = {"/order-detail"}, method = {RequestMethod.POST}, produces = {"application/json"})
     @ResponseBody
-    public ResponseEntity<?> orderDetails(@RequestHeader("Authorization") String accessToken) {
+    public ResponseEntity<?> orderDetails(@RequestHeader("Authorization") String accessToken, @RequestBody String req) {
         JSONObject responseMap = new JSONObject();
-        JSONObject reqBdy = new JSONObject();
+        JSONObject reqBdy = new JSONObject(req);
 
         List<JSONObject> orders = new ArrayList<>();
         JSONObject valTokenReq = new JSONObject();
@@ -58,11 +58,11 @@ public class CustomerOrderController {
         JSONObject valTokenBdy = validateAccessToken.pickAndReturnAll(valTokenReq);
 
         if (valTokenBdy.getString("Status").equals("00")) {
-            JSONObject userDetails = valTokenBdy.getJSONObject("UserDetails");
-            JSONObject businessInfo = userDetails.getJSONObject("businessInfo");
+//            JSONObject userDetails = valTokenBdy.getJSONObject("UserDetails");
+//            JSONObject businessInfo = userDetails.getJSONObject("businessInfo");
 //            Long businessId = Long.valueOf(userDetails.getJSONObject("businessInfo").getInt("userId"));
 
-            orderRepository.findOrderByOrderRef(reqBdy.getString("TransRef"))
+            orderRepository.findOrderByOrderRef(reqBdy.getString("OrderRef"))
                     .ifPresent(order -> {
                         JSONObject orderDetails = new JSONObject();
                         orderDetails.put("OrderRef", order.getOrderRef());
