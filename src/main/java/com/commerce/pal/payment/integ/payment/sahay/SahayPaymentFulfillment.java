@@ -52,8 +52,8 @@ public class SahayPaymentFulfillment {
                             .put("statusMessage", "Request failed");
                 } else {
                     JSONObject payload = new JSONObject();
-                    payload.put("TransRef", payment.getTransRef());
-                    payload.put("BillerReference", payment.getBillTransRef());
+                    payload.put("TransRef", payment.getBillTransRef());
+                    payload.put("BillerReference", payment.getTransRef());
                     payload.put("Code", reqBdy.getString("otp"));
                     payload.put("AccountType", "SAHAY");
 
