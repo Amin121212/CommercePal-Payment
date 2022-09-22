@@ -68,6 +68,7 @@ public class SahayPaymentFulfillment {
                             .build();
 
                     JSONObject resp = httpProcessor.jsonRequestProcessor(builder);
+                    log.log(Level.INFO, resp.toString());
                     //TODO - Remove on Prod
                     resp.put("StatusCode", "200");
 
