@@ -54,6 +54,7 @@ public class MerchantPaymentController {
                 merReq.put("TypeId", merchantWithdrawal.getMerchantId());
                 JSONObject merRes = dataAccessService.pickAndProcess(merReq);
                 merBdy.put("MerchantInfo", merRes);
+                merBdy.put("RequestId", merchantWithdrawal.getId());
                 merBdy.put("TransRef", merchantWithdrawal.getTransRef());
                 merBdy.put("WithdrawalMethod", merchantWithdrawal.getWithdrawalMethod());
                 merBdy.put("WithdrawalType", merchantWithdrawal.getWithdrawalType());
