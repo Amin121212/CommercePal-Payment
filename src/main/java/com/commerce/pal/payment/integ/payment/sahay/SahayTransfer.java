@@ -57,6 +57,8 @@ public class SahayTransfer {
                 payload.put("PhoneNumber", merchantWithdrawal.getAccount());
                 payload.put("BillerReference", merchantWithdrawal.getTransRef());
                 payload.put("Amount", merchantWithdrawal.getAmount().toString());
+                payload.put("AccountNumber", merchantWithdrawal.getAccount());
+                payload.put("AccountType", "SAHAY");
 
                 RequestBuilder builder = new RequestBuilder("POST");
                 builder.addHeader("Authorization", "Bearer " + accessToken)
