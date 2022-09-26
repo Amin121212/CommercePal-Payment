@@ -45,7 +45,8 @@ public class OrderService {
                 orderItem.put("TotalAmount", item.getTotalAmount());
                 orderItem.put("QrCodeNumber", item.getQrCodeNumber());
                 orderItem.put("CreatedDate", item.getCreatedDate());
-                orderItem.put("ShipmentStatus", shipmentStatusRepository.findById(item.getShipmentStatus()).get().getDescription());
+                orderItem.put("ShipmentStatus", item.getShipmentStatus());
+                orderItem.put("ShipmentStatusWord", shipmentStatusRepository.findById(item.getShipmentStatus()).get().getDescription());
             });
         } catch (Exception ex) {
             log.log(Level.WARNING, ex.getMessage());

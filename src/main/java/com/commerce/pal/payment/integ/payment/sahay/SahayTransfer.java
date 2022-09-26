@@ -87,6 +87,8 @@ public class SahayTransfer {
                         merchantWithdrawalRepository.save(merchantWithdrawal);
 
                     } else {
+                        //todo
+                        //Auto reversal
                         respBdy.put("statusCode", ResponseCodes.NOT_EXIST)
                                 .put("statusDescription", "failed")
                                 .put("statusMessage", "Request failed");
