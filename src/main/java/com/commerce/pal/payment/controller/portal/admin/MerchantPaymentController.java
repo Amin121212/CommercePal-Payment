@@ -115,7 +115,7 @@ public class MerchantPaymentController {
                                 merchantWithdrawal.setBillTransRef("Failed");
                                 merchantWithdrawal.setResponsePayload(payRes.toString());
                                 merchantWithdrawal.setResponseStatus(1);
-                                merchantWithdrawal.setResponseDescription(payRes.getString("Narration"));
+                                merchantWithdrawal.setResponseDescription(payRes.getString("Message"));
                                 merchantWithdrawal.setResponseDate(Timestamp.from(Instant.now()));
                                 merchantWithdrawalRepository.save(merchantWithdrawal);
                             }

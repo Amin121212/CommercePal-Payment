@@ -142,7 +142,7 @@ public class PaymentStoreProcedure {
             query.registerStoredProcedureParameter("PaymentNarration", String.class, ParameterMode.IN);
 
             query.setParameter("TransRef", reqBody.getString("TransRef"));
-            query.setParameter("MerchantEmail", reqBody.getString("UserEmail"));
+            query.setParameter("MerchantEmail", reqBody.getString("MerchantEmail"));
             query.setParameter("Currency", reqBody.getString("Currency"));
             query.setParameter("Amount", reqBody.getString("Amount"));
             query.setParameter("WithdrawalMethod", reqBody.getString("WithdrawalMethod"));
