@@ -75,7 +75,7 @@ public class MerchantOrderController {
                 shipmentStatus.add(status);
             }
             List<JSONObject> orders = new ArrayList<>();
-            orderItemRepository.findByMerchantIdAndUserShipmentStatus(merchantId, shipmentStatus)
+            orderItemRepository.findByMerchantIdAndUserShipmentStatusOrderByCreatedDateDesc(merchantId, shipmentStatus)
                     .forEach(orderItemParent -> {
                         orderRepository.findOrderByOrderId(orderItemParent)
                                 .ifPresent(order -> {
