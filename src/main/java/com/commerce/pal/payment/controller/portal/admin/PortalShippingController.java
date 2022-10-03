@@ -10,6 +10,7 @@ import lombok.extern.java.Log;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -199,6 +200,19 @@ public class PortalShippingController {
             log.log(Level.WARNING, ex.getMessage());
         }
         return ResponseEntity.ok(responseMap.toString());
+    }
+
+    @RequestMapping(value = {"/banks"}, method = {RequestMethod.GET}, produces = {"application/json"})
+    @ResponseBody
+    public ResponseEntity<?> bankList() {
+        List<JSONObject> wareHouse = new ArrayList<>();
+        wareHouseRepository.findAll().forEach(wareHouse1 -> {
+            JSONObject one = new JSONObject();
+            one.put("name", wareHouse1.getWareHouseName());
+            one.put("id", wareHouse1.getId());
+            wareHouse.add(one);
+        });
+        return ResponseEntity.status(HttpStatus.OK).body(wareHouse.toString());
     }
 
 
