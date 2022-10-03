@@ -59,55 +59,58 @@ public class PortalShippingController {
         orderRepository.findOrdersByStatusAndPaymentStatusOrderByOrderIdDesc(
                 PAYMENT_SUCCESS, PAYMENT_SUCCESS, PageRequest.of(evalPage, MIN_PAGE_SIZE)
         ).forEach(order -> {
-            JSONObject orderDetails = new JSONObject();
-            if (order.getSaleType().equals("M2C")) {
-                JSONObject cusReq = new JSONObject();
-                cusReq.put("Type", "CUSTOMER");
-                cusReq.put("TypeId", order.getCustomerId());
-                JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
-                orderDetails.put("CustomerName", cusRes.getString("firstName"));
+            try {
+                JSONObject orderDetails = new JSONObject();
+                if (order.getSaleType().equals("M2C")) {
+                    JSONObject cusReq = new JSONObject();
+                    cusReq.put("Type", "CUSTOMER");
+                    cusReq.put("TypeId", order.getCustomerId());
+                    JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
+                    orderDetails.put("CustomerName", cusRes.getString("firstName"));
+                } else {
+                    JSONObject cusReq = new JSONObject();
+                    cusReq.put("Type", "BUSINESS");
+                    cusReq.put("TypeId", order.getBusinessId());
+                    JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
+                    orderDetails.put("CustomerName", cusRes.getString("firstName"));
+                }
 
-            } else {
-                JSONObject cusReq = new JSONObject();
-                cusReq.put("Type", "BUSINESS");
-                cusReq.put("TypeId", order.getBusinessId());
-                JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
-                orderDetails.put("CustomerName", cusRes.getString("firstName"));
+                orderDetails.put("OrderRef", order.getOrderRef());
+                orderDetails.put("OrderDate", order.getOrderDate());
+                orderDetails.put("Order", order.getOrderRef());
+                orderDetails.put("OrderId", order.getOrderId());
+                orderDetails.put("SaleType", order.getSaleType());
+                orderDetails.put("PaymentMethod", order.getPaymentMethod());
+
+                List<JSONObject> orderItems = new ArrayList<>();
+                orderItemRepository.findOrderItemsByOrderId(order.getOrderId())
+                        .forEach(orderItem -> {
+                            JSONObject itemPay = new JSONObject();
+                            JSONObject prodReq = new JSONObject();
+                            prodReq.put("Type", "PRODUCT");
+                            prodReq.put("TypeId", orderItem.getProductLinkingId());
+                            JSONObject prodRes = dataAccessService.pickAndProcess(prodReq);
+
+                            JSONObject subProdReq = new JSONObject();
+                            subProdReq.put("Type", "SUB-PRODUCT");
+                            subProdReq.put("TypeId", orderItem.getSubProductId());
+                            JSONObject subProdRes = dataAccessService.pickAndProcess(subProdReq);
+
+                            itemPay.put("OrderItemId", orderItem.getItemId());
+                            itemPay.put("NoOfProduct", orderItem.getQuantity());
+                            itemPay.put("ItemOrderRef", orderItem.getSubOrderNumber());
+                            itemPay.put("ShippingStatus", orderItem.getShipmentStatus());
+
+                            itemPay.put("productDetails", prodRes);
+                            itemPay.put("subProductDetails", subProdRes);
+
+                            orderItems.add(itemPay);
+                        });
+                orderDetails.put("orderItems", orderItems);
+                orders.add(orderDetails);
+            } catch (Exception ex) {
+                log.log(Level.WARNING, "OrderId [" + order.getOrderId() + "]" +  ex.getMessage());
             }
-
-            orderDetails.put("OrderRef", order.getOrderRef());
-            orderDetails.put("OrderDate", order.getOrderDate());
-            orderDetails.put("Order", order.getOrderRef());
-            orderDetails.put("OrderId", order.getOrderId());
-            orderDetails.put("SaleType", order.getSaleType());
-            orderDetails.put("PaymentMethod", order.getPaymentMethod());
-
-            List<JSONObject> orderItems = new ArrayList<>();
-            orderItemRepository.findOrderItemsByOrderId(order.getOrderId())
-                    .forEach(orderItem -> {
-                        JSONObject itemPay = new JSONObject();
-                        JSONObject prodReq = new JSONObject();
-                        prodReq.put("Type", "PRODUCT");
-                        prodReq.put("TypeId", orderItem.getProductLinkingId());
-                        JSONObject prodRes = dataAccessService.pickAndProcess(prodReq);
-
-                        JSONObject subProdReq = new JSONObject();
-                        subProdReq.put("Type", "SUB-PRODUCT");
-                        subProdReq.put("TypeId", orderItem.getSubProductId());
-                        JSONObject subProdRes = dataAccessService.pickAndProcess(subProdReq);
-
-                        itemPay.put("OrderItemId", orderItem.getItemId());
-                        itemPay.put("NoOfProduct", orderItem.getQuantity());
-                        itemPay.put("ItemOrderRef", orderItem.getSubOrderNumber());
-                        itemPay.put("ShippingStatus", orderItem.getShipmentStatus());
-
-                        itemPay.put("productDetails", prodRes);
-                        itemPay.put("subProductDetails", subProdRes);
-
-                        orderItems.add(itemPay);
-                    });
-            orderDetails.put("orderItems", orderItems);
-            orders.add(orderDetails);
         });
         responseMap.put("statusCode", ResponseCodes.SUCCESS)
                 .put("statusDescription", "Request Successful")
