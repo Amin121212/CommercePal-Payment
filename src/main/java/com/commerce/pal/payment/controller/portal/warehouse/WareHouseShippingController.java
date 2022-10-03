@@ -91,10 +91,10 @@ public class WareHouseShippingController {
                                     break;
                                 case "MW":
                                     itemMessengerDelivery.setMerchantId(orderItem.getMerchantId());
-                                    itemMessengerDelivery.setWareHouseId(request.getLong("WareHouseId"));
+                                    itemMessengerDelivery.setWareHouseId(Long.valueOf(orderItem.getAssignedWareHouseId()));
                                     break;
                                 case "WC":
-                                    itemMessengerDelivery.setWareHouseId(request.getLong("WareHouseId"));
+                                    itemMessengerDelivery.setWareHouseId(Long.valueOf(orderItem.getAssignedWareHouseId()));
                                     itemMessengerDelivery.setCustomerId(
                                             orderRepository.findById(orderItem.getOrderId()).get().getSaleType() == "M2C" ?
                                                     orderRepository.findById(orderItem.getOrderId()).get().getCustomerId() :

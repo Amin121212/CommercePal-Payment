@@ -3,6 +3,7 @@ package com.commerce.pal.payment.controller.portal.admin;
 import com.commerce.pal.payment.module.DataAccessService;
 import com.commerce.pal.payment.repo.payment.OrderItemRepository;
 import com.commerce.pal.payment.repo.payment.OrderRepository;
+import com.commerce.pal.payment.repo.portal.WareHouseRepository;
 import com.commerce.pal.payment.repo.shipping.ShipmentStatusRepository;
 import com.commerce.pal.payment.util.ResponseCodes;
 import lombok.extern.java.Log;
@@ -30,16 +31,19 @@ public class PortalShippingController {
     private final OrderRepository orderRepository;
     private final DataAccessService dataAccessService;
     private final OrderItemRepository orderItemRepository;
+    private final WareHouseRepository wareHouseRepository;
     private final ShipmentStatusRepository shipmentStatusRepository;
 
     @Autowired
     public PortalShippingController(OrderRepository orderRepository,
                                     DataAccessService dataAccessService,
                                     OrderItemRepository orderItemRepository,
+                                    WareHouseRepository wareHouseRepository,
                                     ShipmentStatusRepository shipmentStatusRepository) {
         this.orderRepository = orderRepository;
         this.dataAccessService = dataAccessService;
         this.orderItemRepository = orderItemRepository;
+        this.wareHouseRepository = wareHouseRepository;
         this.shipmentStatusRepository = shipmentStatusRepository;
     }
 
@@ -196,6 +200,8 @@ public class PortalShippingController {
         }
         return ResponseEntity.ok(responseMap.toString());
     }
+
+
 
 
 }
