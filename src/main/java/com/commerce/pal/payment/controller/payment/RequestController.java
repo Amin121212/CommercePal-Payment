@@ -81,7 +81,7 @@ public class RequestController {
                     case "ES-BANK-LOOKUP":
                         responseBody = ethioSwithAccount.bankCheck();
                         break;
-                    case "ES-LOOKUP":
+                    case "ES-ACCOUNT-LOOKUP":
                         responseBody = ethioSwithAccount.accountCheck(requestObject);
                         break;
                     case "CHECKOUT":
