@@ -51,7 +51,7 @@ public class EthioSwithAccount {
                 if (resp.getString("response").equals("00")) {
                     respBdy.put("statusCode", ResponseCodes.SUCCESS)
                             .put("statusDescription", "Success")
-                            .put("banksBdy", new JSONArray(resp.getString("banksBdy")))
+                            .put("banksBdy", resp.getJSONArray("banksBdy"))
                             .put("statusMessage", "Success");
                 } else {
                     respBdy.put("statusCode", ResponseCodes.SYSTEM_ERROR)
