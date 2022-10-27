@@ -48,7 +48,7 @@ public class EthioSwithAccount {
                         .build();
 
                 JSONObject resp = new JSONObject(httpProcessor.processProperRequest(builder));
-                if (resp.getString("response").equals("000")) {
+                if (resp.getString("response").equals("00")) {
                     respBdy.put("statusCode", ResponseCodes.SUCCESS)
                             .put("statusDescription", "Success")
                             .put("banksBdy", new JSONArray(resp.getString("banksBdy")))
