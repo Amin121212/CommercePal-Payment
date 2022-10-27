@@ -85,7 +85,7 @@ public class EthioSwithAccount {
                 RequestBuilder builder = new RequestBuilder("POST");
                 builder.addHeader("Authorization", "Bearer " + accessToken)
                         .addHeader("Content-Type", "application/json")
-                        .setUrl(URL_CHECK_BANK)
+                        .setUrl(URL_CHECK_ACCOUNT)
                         .setBody(accCheck.toString())
                         .build();
 
