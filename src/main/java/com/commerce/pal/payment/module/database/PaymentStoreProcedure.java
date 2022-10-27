@@ -113,15 +113,18 @@ public class PaymentStoreProcedure {
 
             query.registerStoredProcedureParameter("TransactionStatus", String.class, ParameterMode.OUT);
             query.registerStoredProcedureParameter("Balance", String.class, ParameterMode.OUT);
+            query.registerStoredProcedureParameter("ComBalance", String.class, ParameterMode.OUT);
             query.registerStoredProcedureParameter("Narration", String.class, ParameterMode.OUT);
 
             query.execute();
 
             transResponse.put("TransactionStatus", query.getOutputParameterValue("TransactionStatus"));
             transResponse.put("Balance", query.getOutputParameterValue("Balance"));
+            transResponse.put("ComBalance", query.getOutputParameterValue("ComBalance"));
             transResponse.put("Narration", query.getOutputParameterValue("Narration"));
             transResponse.put("Status", "00");
             transResponse.put("Message", "The request was processed successfully");
+
         } catch (Exception ex) {
             log.log(Level.WARNING, "Merchant Item Settlement CLASS : " + ex.getMessage());
             transResponse.put("Status", "101");

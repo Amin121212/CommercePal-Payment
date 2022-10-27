@@ -1,6 +1,8 @@
 package com.commerce.pal.payment.controller.payment;
 
 import com.commerce.pal.payment.integ.payment.cash.AgentCashProcessing;
+import com.commerce.pal.payment.integ.payment.ethio.EthioFundsTransfer;
+import com.commerce.pal.payment.integ.payment.ethio.EthioSwithAccount;
 import com.commerce.pal.payment.integ.payment.sahay.SahayCustomerValidation;
 import com.commerce.pal.payment.integ.payment.sahay.SahayPaymentFulfillment;
 import com.commerce.pal.payment.module.payment.PaymentService;
@@ -25,6 +27,8 @@ import java.util.logging.Level;
 public class RequestController {
     private final GlobalMethods globalMethods;
     private final PaymentService paymentService;
+    private final EthioSwithAccount ethioSwithAccount;
+    private final EthioFundsTransfer ethioFundsTransfer;
     private final ValidateAccessToken validateAccessToken;
     private final AgentCashProcessing agentCashProcessing;
     private final ProcessSuccessPayment processSuccessPayment;
@@ -34,6 +38,8 @@ public class RequestController {
     @Autowired
     public RequestController(GlobalMethods globalMethods,
                              PaymentService paymentService,
+                             EthioSwithAccount ethioSwithAccount,
+                             EthioFundsTransfer ethioFundsTransfer,
                              ValidateAccessToken validateAccessToken,
                              AgentCashProcessing agentCashProcessing,
                              ProcessSuccessPayment processSuccessPayment,
@@ -41,6 +47,8 @@ public class RequestController {
                              SahayPaymentFulfillment sahayPaymentFulfillment) {
         this.globalMethods = globalMethods;
         this.paymentService = paymentService;
+        this.ethioSwithAccount = ethioSwithAccount;
+        this.ethioFundsTransfer = ethioFundsTransfer;
 
         this.validateAccessToken = validateAccessToken;
         this.agentCashProcessing = agentCashProcessing;
@@ -65,10 +73,16 @@ public class RequestController {
 
             if (valTokenBdy.getString("Status").equals("00")) {
                 requestObject.put("UserEmail", valTokenBdy.getString("Email"));
-                requestObject.put("UserId", globalMethods.getUserId(requestObject.getString("UserType"),valTokenBdy.getJSONObject("UserDetails") ));
+                requestObject.put("UserId", globalMethods.getUserId(requestObject.getString("UserType"), valTokenBdy.getJSONObject("UserDetails")));
                 switch (requestObject.getString("ServiceCode")) {
                     case "SAHAY-LOOKUP":
                         responseBody = sahayCustomerValidation.checkCustomer(requestObject.getString("PhoneNumber"));
+                        break;
+                    case "ES-BANK-LOOKUP":
+                        responseBody = ethioSwithAccount.bankCheck();
+                        break;
+                    case "ES-LOOKUP":
+                        responseBody = ethioSwithAccount.accountCheck(requestObject);
                         break;
                     case "CHECKOUT":
                     case "LOAN-REQUEST":

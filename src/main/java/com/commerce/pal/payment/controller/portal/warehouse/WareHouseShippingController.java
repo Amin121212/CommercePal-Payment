@@ -112,7 +112,6 @@ public class WareHouseShippingController {
                             // Send Notification to Respective Users
                             messengerAssignmentNotification.pickAndProcess(itemMessengerDelivery, delivery);
                         }, () -> {
-
                             ItemMessengerDelivery itemMessengerDelivery = new ItemMessengerDelivery();
                             itemMessengerDelivery.setOrderItemId(orderItem.getItemId());
                             itemMessengerDelivery.setDeliveryType(request.getString("DeliveryType"));

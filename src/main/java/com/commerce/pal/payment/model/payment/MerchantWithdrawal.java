@@ -29,6 +29,9 @@ public class MerchantWithdrawal {
     @Column(name = "Account")
     private String account;
     @Basic
+    @Column(name = "AccountPayload")
+    private String accountPayload;
+    @Basic
     @Column(name = "Amount")
     private BigDecimal amount;
     @Basic

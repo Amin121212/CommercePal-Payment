@@ -1,5 +1,6 @@
 package com.commerce.pal.payment.controller.portal.admin;
 
+import com.commerce.pal.payment.integ.payment.ethio.EthioFundsTransfer;
 import com.commerce.pal.payment.integ.payment.sahay.SahayTransfer;
 import com.commerce.pal.payment.module.DataAccessService;
 import com.commerce.pal.payment.module.database.PaymentStoreProcedure;
@@ -26,16 +27,19 @@ import java.util.logging.Level;
 public class MerchantPaymentController {
     private final SahayTransfer sahayTransfer;
     private final DataAccessService dataAccessService;
+    private final EthioFundsTransfer ethioFundsTransfer;
     private final PaymentStoreProcedure paymentStoreProcedure;
     private final MerchantWithdrawalRepository merchantWithdrawalRepository;
 
     @Autowired
     public MerchantPaymentController(SahayTransfer sahayTransfer,
                                      DataAccessService dataAccessService,
+                                     EthioFundsTransfer ethioFundsTransfer,
                                      PaymentStoreProcedure paymentStoreProcedure,
                                      MerchantWithdrawalRepository merchantWithdrawalRepository) {
         this.sahayTransfer = sahayTransfer;
         this.dataAccessService = dataAccessService;
+        this.ethioFundsTransfer = ethioFundsTransfer;
         this.paymentStoreProcedure = paymentStoreProcedure;
         this.merchantWithdrawalRepository = merchantWithdrawalRepository;
     }
@@ -110,7 +114,15 @@ public class MerchantPaymentController {
                             reqBody.put("PaymentNarration", payNar);
                             JSONObject payRes = paymentStoreProcedure.merchantWithdrawal(reqBody);
                             if (payRes.getString("Status").equals("00")) {
-                                responseMap.set(sahayTransfer.pickAndProcess(merchantWithdrawal));
+                                switch (merchantWithdrawal.getWithdrawalMethod()) {
+                                    case "SAHAY-SWFT":
+                                        responseMap.set(sahayTransfer.pickAndProcess(merchantWithdrawal));
+                                        break;
+                                    case "SAHAY-SESFT":
+                                        responseMap.set(ethioFundsTransfer.pickAndProcess(merchantWithdrawal));
+                                        break;
+                                }
+
                             } else {
                                 merchantWithdrawal.setBillTransRef("Failed");
                                 merchantWithdrawal.setResponsePayload(payRes.toString());

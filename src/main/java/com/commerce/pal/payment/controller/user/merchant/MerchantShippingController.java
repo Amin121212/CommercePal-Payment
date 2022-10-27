@@ -258,6 +258,7 @@ public class MerchantShippingController {
                                     JSONObject payRes = paymentStoreProcedure.merchantItemSettlement(reqBody);
                                     responseMap.put("statusCode", ResponseCodes.SUCCESS)
                                             .put("balance", payRes.getString("Balance"))
+                                            .put("comBalance", payRes.getString("ComBalance"))
                                             .put("transRef", transRef)
                                             .put("statusDescription", "Success")
                                             .put("statusMessage", "Success");
@@ -276,8 +277,8 @@ public class MerchantShippingController {
                             });
                 }, () -> {
                     responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
-                            .put("statusDescription", "The Delivery is not assigned to this merchant")
-                            .put("statusMessage", "The Delivery is not assigned to this merchant");
+                            .put("statusDescription", "The Delivery is not assigned to this merchant/messenger")
+                            .put("statusMessage", "The Delivery is not assigned to this merchant/messenger");
                 });
             } else {
                 responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
