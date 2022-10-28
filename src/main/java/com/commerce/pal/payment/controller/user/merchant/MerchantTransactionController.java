@@ -117,6 +117,8 @@ public class MerchantTransactionController {
                                             break;
                                     }
                                     if (accountPayload.getString("statusCode").equals(ResponseCodes.SUCCESS)) {
+                                        accountPayload.put("PhoneNumber", merchantInfo.getString("ownerPhoneNumber"));
+
                                         String validationCode = globalMethods.generateValidationCode();
                                         String transRef = globalMethods.generateTrans();
                                         AtomicReference<MerchantWithdrawal> withdrawal = new AtomicReference<>(new MerchantWithdrawal());

@@ -52,11 +52,17 @@ public class EthioFundsTransfer {
                 merchantWithdrawalRepository.save(merchantWithdrawal);
             } else {
                 JSONObject payload = new JSONObject();
-                payload.put("PhoneNumber", merchantWithdrawal.getAccount());
+                JSONObject accountPayload = new JSONObject(merchantWithdrawal.getAccountPayload());
                 payload.put("BillerReference", merchantWithdrawal.getTransRef());
                 payload.put("Amount", merchantWithdrawal.getAmount().toString());
                 payload.put("AccountNumber", merchantWithdrawal.getAccount());
                 payload.put("AccountType", "ETHIO-SWITCH");
+                payload.put("TransactionType", "FTTES");
+                payload.put("InstId", accountPayload.getString("InstId"));
+                payload.put("AccountName", accountPayload.getString("customerName"));
+                payload.put("PhoneNumber", accountPayload.getString("PhoneNumber"));
+                payload.put("ReceiverNumber", accountPayload.getString("PhoneNumber"));
+                payload.put("ReceiverName", accountPayload.getString("customerName"));
 
                 RequestBuilder builder = new RequestBuilder("POST");
                 builder.addHeader("Authorization", "Bearer " + accessToken)
