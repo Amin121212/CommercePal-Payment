@@ -11,6 +11,9 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Level;
 
 @Log
@@ -49,9 +52,23 @@ public class EthioSwithAccount {
 
                 JSONObject resp = new JSONObject(httpProcessor.processProperRequest(builder));
                 if (resp.getString("response").equals("00")) {
+                    JSONArray bankList = resp.getJSONArray("banksBdy");
+                    List<JSONObject> weeklyData = new ArrayList<>();
+                    for (Integer ie = 0; ie < bankList.length(); ie++) {
+                        JSONObject weekly = new JSONObject();
+                        JSONObject json_array = bankList.optJSONObject(ie);
+                        Iterator<?> keys = json_array.keys();
+                        while (keys.hasNext()) {
+                            String key = (String) keys.next();
+                            weekly.put("InstId", key);
+                            weekly.put("InstName", json_array.get(key));
+                        }
+                        weeklyData.add(weekly);
+                    }
+
                     respBdy.put("statusCode", ResponseCodes.SUCCESS)
                             .put("statusDescription", "Success")
-                            .put("banksBdy", resp.getJSONArray("banksBdy"))
+                            .put("data", weeklyData)
                             .put("statusMessage", "Success");
                 } else {
                     respBdy.put("statusCode", ResponseCodes.SYSTEM_ERROR)
