@@ -113,7 +113,7 @@ public class MerchantTransactionController {
                                             accountPayload = ethioSwithAccount.accountCheck(request);
                                             break;
                                         case "SAHAY-SWFT":
-                                            accountPayload = sahayCustomerValidation.checkCustomer(request.getString("Account"))
+                                            accountPayload = sahayCustomerValidation.checkCustomer(request.getString("Account"));
                                             break;
                                     }
                                     if (accountPayload.getString("statusCode").equals(ResponseCodes.SUCCESS)) {
