@@ -2,10 +2,10 @@ package com.commerce.pal.payment.util;
 
 import com.commerce.pal.payment.integ.notification.EmailClient;
 import com.commerce.pal.payment.integ.notification.push.OneSignal;
+import com.commerce.pal.payment.module.database.AccountService;
 import lombok.extern.java.Log;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.sql.Timestamp;
@@ -17,11 +17,18 @@ import java.util.logging.Level;
 @Log
 @Component
 public class GlobalMethods {
+
     @Autowired
     private EmailClient emailClient;
 
     @Autowired
     private OneSignal oneSignal;
+
+    private final AccountService accountService;
+    @Autowired
+    public GlobalMethods(AccountService accountService) {
+        this.accountService = accountService;
+    }
 
     public String generateTrans() {
         String ref = Timestamp.from(Instant.now()).toString();
@@ -37,6 +44,10 @@ public class GlobalMethods {
         emailClient.emailSender(payload.getString("EmailMessage"),
                 payload.getString("EmailDestination"),
                 payload.getString("EmailSubject"));
+    }
+
+    public String getAccountBalance(String account) {
+        return accountService.getAccountBalance(account);
     }
 
     public void sendPushNotification(JSONObject payload) {

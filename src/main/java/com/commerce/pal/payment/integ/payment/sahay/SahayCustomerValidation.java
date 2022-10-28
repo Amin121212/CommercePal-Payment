@@ -58,6 +58,7 @@ public class SahayCustomerValidation {
                         respBdy.put("statusCode", ResponseCodes.SUCCESS)
                                 .put("statusDescription", "Success")
                                 .put("customerName", resBody.getString("customerName"))
+                                .put("InsName", "Sahay - Wallet")
                                 .put("statusMessage", "Success");
                     } else {
                         respBdy.put("statusCode", ResponseCodes.NOT_EXIST)
