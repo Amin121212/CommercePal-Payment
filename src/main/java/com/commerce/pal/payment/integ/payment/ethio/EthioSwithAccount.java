@@ -79,7 +79,7 @@ public class EthioSwithAccount {
             } else {
                 JSONObject accCheck = new JSONObject();
                 accCheck.put("InstId", reqBdy.getString("InstId"));
-                accCheck.put("AccountNumber", reqBdy.getString("Account"));
+                accCheck.put("Account", reqBdy.getString("Account"));
                 accCheck.put("CustomerType", 500);
 
                 RequestBuilder builder = new RequestBuilder("POST");
