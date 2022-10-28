@@ -57,7 +57,7 @@ public class EthioFundsTransfer {
                 payload.put("AccountType", "ETHIO-SWITCH");
                 payload.put("InstId", accountPayload.getString("InstId"));
                 payload.put("AccountNumber", merchantWithdrawal.getAccount());
-                payload.put("Amount", merchantWithdrawal.getAmount().toString());
+                payload.put("Amount", String.format("%.0f", merchantWithdrawal.getAmount()));
                 payload.put("AccountName", accountPayload.getString("customerName"));
                 payload.put("PhoneNumber", accountPayload.getString("PhoneNumber"));
                 payload.put("ReceiverNumber", accountPayload.getString("PhoneNumber"));
