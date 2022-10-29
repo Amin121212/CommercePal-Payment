@@ -2,6 +2,7 @@ package com.commerce.pal.payment.util.specification;
 
 
 import com.commerce.pal.payment.model.payment.OrderItem;
+import com.commerce.pal.payment.model.payment.Transaction;
 import com.commerce.pal.payment.util.specification.utils.SearchCriteria;
 import com.commerce.pal.payment.util.specification.utils.SpecificationQueryCriteriaConsumer;
 import lombok.extern.java.Log;
@@ -35,4 +36,29 @@ public class SpecificationsDao {
 
         return entityManager.createQuery(query).getResultList();
     }
+
+    public List<Transaction> getTransactions(final List<SearchCriteria> params, Integer page) {
+        Integer transPageSize = 20;
+        final CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        final CriteriaQuery<Transaction> query = builder.createQuery(Transaction.class);
+        final Root r = query.from(Transaction.class);
+
+        Predicate predicate = builder.conjunction();
+        SpecificationQueryCriteriaConsumer searchTrans = new SpecificationQueryCriteriaConsumer(predicate, builder, r);
+        params.stream().forEach(searchTrans);
+        predicate = searchTrans.getPredicate();
+        query.where(predicate);
+        query.orderBy((builder.desc(r.get("id"))));
+
+        /*
+        https://stackoverflow.com/questions/60703308/implementing-pagination-using-entity-manager-in-spring
+        https://stackoverflow.com/questions/9321916/jpa-criteriabuilder-how-to-use-in-comparison-operator
+        https://stackoverflow.com/questions/51583079/criteria-api-in-with-arraylist
+         */
+        return entityManager.createQuery(query)
+                .setMaxResults( transPageSize)
+                .getResultList();
+    }
+
+
 }

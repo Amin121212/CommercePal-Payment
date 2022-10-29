@@ -6,6 +6,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
@@ -27,9 +28,14 @@ public class SpecificationQueryCriteriaConsumer implements Consumer<SearchCriter
     @Override
     public void accept(SearchCriteria param) {
         try {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
             if (param.getOperation().equalsIgnoreCase(">")) {
                 predicate = builder.and(predicate, builder.greaterThanOrEqualTo(r.get(param.getKey()), param.getValue().toString()));
-            } else if (param.getOperation().equalsIgnoreCase("<")) {
+            } else if (param.getOperation().equalsIgnoreCase(">D")) {
+                predicate = builder.and(predicate, builder.greaterThanOrEqualTo(r.get(param.getKey()), dateFormat.parse(param.getValue().toString())));
+            } else if (param.getOperation().equalsIgnoreCase("<D")) {
+                predicate = builder.and(predicate, builder.lessThanOrEqualTo(r.get(param.getKey()), dateFormat.parse(param.getValue().toString())));
+            }else if (param.getOperation().equalsIgnoreCase("<")) {
                 predicate = builder.and(predicate, builder.lessThanOrEqualTo(r.get(param.getKey()), param.getValue().toString()));
             } else if (param.getOperation().equalsIgnoreCase(":")) {
                 if (r.get(param.getKey()).getJavaType() == String.class) {
