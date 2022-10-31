@@ -226,7 +226,11 @@ public class MerchantTransactionController {
                         page.set(value);
                     });
                     accountType.ifPresentOrElse(value -> {
-                        params.add(new SearchCriteria("account", ":", value));
+                        if (value.equals("COMMISSION")) {
+                            params.add(new SearchCriteria("account", ":", merchantInfo.getString("commissionAccount")));
+                        } else {
+                            params.add(new SearchCriteria("account", ":", merchantInfo.getString("tillNumber")));
+                        }
                     }, () -> {
                         params.add(new SearchCriteria("account", ":", merchantInfo.getString("tillNumber")));
                     });
