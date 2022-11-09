@@ -414,13 +414,14 @@ public class MessengerShippingController {
                                     itemMessengerDelivery.setDeliveryStatus(3);
                                     orderItemRepository.save(orderItem);
                                     JSONObject emailPayload = new JSONObject();
+                                    emailPayload.put("EmailSubject", "Item Delivery Validation : " + orderItem.getSubOrderNumber());
+                                    emailPayload.put("EmailMessage", "Delivery Validation Code : " + validationCode);
                                     if (orderRepository.findByOrderId(orderItem.getOrderId()).getSaleType().equals("M2C")) {
                                         JSONObject cusReq = new JSONObject();
                                         cusReq.put("Type", "CUSTOMER");
                                         cusReq.put("TypeId", orderRepository.findByOrderId(orderItem.getOrderId()).getCustomerId());
                                         JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
                                         emailPayload.put("EmailDestination", cusRes.getString("email"));
-                                        emailPayload.put("EmailMessage", "Delivery Validation Code : " + validationCode);
                                         globalMethods.processEmailWithoutTemplate(emailPayload);
                                     } else {
                                         JSONObject cusReq = new JSONObject();
@@ -428,7 +429,6 @@ public class MessengerShippingController {
                                         cusReq.put("TypeId", orderRepository.findByOrderId(orderItem.getOrderId()).getBusinessId());
                                         JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
                                         emailPayload.put("EmailDestination", cusRes.getString("email"));
-                                        emailPayload.put("EmailMessage", "Delivery Validation Code : " + validationCode);
                                         globalMethods.processEmailWithoutTemplate(emailPayload);
                                     }
 
@@ -488,8 +488,6 @@ public class MessengerShippingController {
                             orderItemRepository.findById(request.getLong("OrderItemId"))
                                     .ifPresentOrElse(orderItem -> {
                                         if (request.getString("ValidCode").equals(globalMethods.deCryptCode(itemMessengerDelivery.getDeliveryCode()))) {
-
-
                                             itemMessengerDelivery.setDeliveryStatus(3);
                                             itemMessengerDelivery.setUpdatedDate(Timestamp.from(Instant.now()));
                                             itemMessengerDeliveryRepository.save(itemMessengerDelivery);
