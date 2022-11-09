@@ -403,10 +403,10 @@ public class MessengerShippingController {
                 JSONObject request = new JSONObject(req);
 
                 String[] deliveryTypes = {"MC", "MW"};
-                itemMessengerDeliveryRepository.findItemMessengerDeliveryByOrderItemIdAndMessengerIdAndDeliveryTypeIn(request.getLong("OrderItemId"), messengerId, deliveryTypes
+                itemMessengerDeliveryRepository.findItemMessengerDeliveryByOrderItemIdAndMessengerIdAndDeliveryTypeIn(
+                        request.getLong("OrderItemId"), messengerId, deliveryTypes
                 ).ifPresentOrElse(itemMessengerDelivery -> {
                     if (itemMessengerDelivery.getValidationStatus().equals(3)) {
-
                         orderItemRepository.findById(request.getLong("OrderItemId"))
                                 .ifPresentOrElse(orderItem -> {
                                     String validationCode = globalMethods.generateValidationCode();
@@ -448,8 +448,8 @@ public class MessengerShippingController {
                     }
                 }, () -> {
                     responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
-                            .put("statusDescription", "The Delivery is not assigned to this messenger")
-                            .put("statusMessage", "The Delivery is not assigned to this messenger");
+                            .put("statusDescription", "The Item has not been picked")
+                            .put("statusMessage", "The Item has not been picked");
                 });
             } else {
                 responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
