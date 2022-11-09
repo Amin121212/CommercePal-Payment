@@ -8,11 +8,11 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ShipmentStatusRepository extends JpaRepository<ShipmentStatus, Integer> {
-    Optional<ShipmentStatus> findShipmentStatusByCode(String code);
+    Optional<ShipmentStatus> findShipmentStatusByCode(Integer code);
 
     @Query(value = "SELECT Code FROM ShipmentStatus ORDER BY Code ASC", nativeQuery = true)
-    List<Integer> findShipmentStatusByCodeAndCode(String c,String b);
+    List<Integer> findShipmentStatusByCodeAndCode(String c, String b);
 
-
+    ShipmentStatus findByCode(Integer code);
 
 }

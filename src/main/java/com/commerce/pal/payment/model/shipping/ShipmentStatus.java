@@ -17,7 +17,7 @@ public class ShipmentStatus {
     private Integer id;
     @Basic
     @Column(name = "Code")
-    private String code;
+    private Integer code;
     @Basic
     @Column(name = "Description")
     private String description;

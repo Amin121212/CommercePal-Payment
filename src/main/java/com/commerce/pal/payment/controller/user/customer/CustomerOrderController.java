@@ -244,7 +244,6 @@ public class CustomerOrderController {
             JSONObject userDetails = valTokenBdy.getJSONObject("UserDetails");
             JSONObject orderItem = new JSONObject();
             orderItemRepository.findById(Long.valueOf(OrderItemId)).ifPresent(item -> {
-
                 orderItem.put("ItemId", item.getItemId());
                 orderItem.put("OrderId", item.getOrderId());
                 orderItem.put("SubOrderNumber", item.getSubOrderNumber());
@@ -255,7 +254,7 @@ public class CustomerOrderController {
                 orderItem.put("QrCodeNumber", item.getQrCodeNumber());
                 orderItem.put("CreatedDate", item.getCreatedDate());
                 orderItem.put("ShipmentStatus", item.getShipmentStatus());
-                orderItem.put("ShipmentStatusWord", shipmentStatusRepository.findShipmentStatusByCode(item.getShipmentStatus().toString()).get().getDescription());
+                orderItem.put("ShipmentStatusWord", shipmentStatusRepository.findByCode(item.getShipmentStatus()).getDescription());
                 List<String> shipmentStatus = new ArrayList<>();
                 itemShipmentStatusRepository.findItemShipmentStatusesByItemId(item.getItemId())
                         .forEach(itemShipmentStatus -> {
