@@ -261,14 +261,24 @@ public class CustomerOrderController {
                             orderItem.put("ShipmentStatusWord", "Processing on WareHouse");
                         });
 
-                List<String> shipmentStatus = new ArrayList<>();
+                List<JSONObject> shipmentStatus = new ArrayList<>();
                 itemShipmentStatusRepository.findItemShipmentStatusesByItemId(item.getItemId())
                         .forEach(itemShipmentStatus -> {
                             shipmentStatusRepository.findShipmentStatusByCode(itemShipmentStatus.getShipmentStatus())
                                     .ifPresentOrElse(shipmentStatus1 -> {
-                                        shipmentStatus.add(shipmentStatus1.getDescription());
+                                        JSONObject shipBody = new JSONObject();
+                                        shipBody.put("ShipStatusDate", itemShipmentStatus.getCreatedDate());
+                                        shipBody.put("ShipmentStatusWord", shipmentStatus1.getDescription());
+                                        shipBody.put("ShipmentStatus", itemShipmentStatus.getShipmentStatus());
+                                        shipBody.put("ShipmentStatusComment", itemShipmentStatus.getComments());
+                                        shipmentStatus.add(shipBody);
                                     }, () -> {
-                                        shipmentStatus.add("Processing on WareHouse");
+                                        JSONObject shipBody = new JSONObject();
+                                        shipBody.put("ShipStatusDate", itemShipmentStatus.getCreatedDate());
+                                        shipBody.put("ShipmentStatusWord", "Processing on WareHouse");
+                                        shipBody.put("ShipmentStatus", itemShipmentStatus.getShipmentStatus());
+                                        shipBody.put("ShipmentStatusComment", itemShipmentStatus.getComments());
+                                        shipmentStatus.add(shipBody);
                                     });
                         });
                 orderItem.put("ShipmentStatusList", shipmentStatus);
