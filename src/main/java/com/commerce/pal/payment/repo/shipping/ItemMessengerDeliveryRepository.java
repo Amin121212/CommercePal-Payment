@@ -24,5 +24,7 @@ public interface ItemMessengerDeliveryRepository extends JpaRepository<ItemMesse
 
     Optional<ItemMessengerDelivery> findItemMessengerDeliveryByOrderItemIdAndMessengerId(Long item, Long messenger);
 
+    Optional<ItemMessengerDelivery> findItemMessengerDeliveryByOrderItemIdAndDeliveryTypeAndValidationStatus(Long item, String type, Integer status);
+
     Optional<ItemMessengerDelivery> findItemMessengerDeliveryByOrderItemIdAndCustomerId(Long item, Long messenger);
 }

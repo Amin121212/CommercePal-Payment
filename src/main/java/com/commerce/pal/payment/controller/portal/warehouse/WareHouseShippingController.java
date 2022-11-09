@@ -86,8 +86,8 @@ public class WareHouseShippingController {
                                     itemShipmentStatusRepository.save(itemShipmentStatus);
                                 });
 
-                        itemMessengerDeliveryRepository.findItemMessengerDeliveryByOrderItemIdAndMessengerId(
-                                orderItem.getItemId(), request.getLong("MessengerId")
+                        itemMessengerDeliveryRepository.findItemMessengerDeliveryByOrderItemIdAndDeliveryTypeAndValidationStatus(
+                                orderItem.getItemId(), request.getString("DeliveryType"), 0
                         ).ifPresentOrElse(itemMessengerDelivery -> {
                             itemMessengerDelivery.setDeliveryType(request.getString("DeliveryType"));
                             switch (request.getString("DeliveryType")) {
@@ -145,7 +145,7 @@ public class WareHouseShippingController {
                                 case "WC":
                                     itemMessengerDelivery.setWareHouseId(Long.valueOf(orderItem.getAssignedWareHouseId()));
                                     itemMessengerDelivery.setCustomerId(
-                                            orderRepository.findByOrderId(orderItem.getOrderId()).getSaleType().equals("M2C")?
+                                            orderRepository.findByOrderId(orderItem.getOrderId()).getSaleType().equals("M2C") ?
                                                     orderRepository.findByOrderId(orderItem.getOrderId()).getCustomerId() :
                                                     orderRepository.findByOrderId(orderItem.getOrderId()).getBusinessId()
                                     );
