@@ -90,8 +90,21 @@ public class MessengerAssignmentNotification {
                         merReq.put("TypeId", payload.getLong("MerchantId"));
                         JSONObject merRes = dataAccessService.pickAndProcess(merReq);
                         emailPayload.put("EmailDestination", merRes.getString("email"));
+                        emailPayload.put("EmailSubject", "Item Assigned for Pick-Up : " + payload.getString("OrderRef"));
                         emailPayload.put("EmailMessage", getDeliveryType(payload.getString("DeliveryType")) + "-" + payload.getString("OrderRef"));
                         globalMethods.processEmailWithoutTemplate(emailPayload);
+
+                        loginValidationRepository.findLoginValidationByEmailAddress(merRes.getString("email"))
+                                .ifPresent(user -> {
+                                    JSONObject pushPayload = new JSONObject();
+                                    pushPayload.put("UserId", user.getUserOneSignalId() != null ? user.getUserOneSignalId() : "5c66ca50-c009-480f-a200-72c244d74ff4");
+                                    pushPayload.put("Header", "Item Assigned for Pick-Up : " + payload.getString("OrderRef"));
+                                    pushPayload.put("Message", getDeliveryType(payload.getString("DeliveryType")) + "-" + payload.getString("OrderRef"));
+                                    JSONObject data = new JSONObject();
+                                    data.put("OrderRef", payload.getString("OrderRef"));
+                                    pushPayload.put("data", data);
+                                    globalMethods.sendPushNotification(pushPayload);
+                                });
 
                         if (payload.getString("SaleType").equals("M2C")) {
                             JSONObject cusReq = new JSONObject();
@@ -110,23 +123,34 @@ public class MessengerAssignmentNotification {
                             emailPayload.put("EmailMessage", getDeliveryType(payload.getString("DeliveryType")) + "-" + payload.getString("OrderRef"));
                             globalMethods.processEmailWithoutTemplate(emailPayload);
                         }
-
                     } catch (Exception ex) {
-
+                        log.log(Level.WARNING,"MC ERROR " + ex.getMessage());
                     }
                     break;
                 case "MW":
                     try {
-
                         JSONObject merReq = new JSONObject();
                         merReq.put("Type", "MERCHANT");
                         merReq.put("TypeId", payload.getLong("MerchantId"));
                         JSONObject merRes = dataAccessService.pickAndProcess(merReq);
+                        emailPayload.put("EmailSubject", "Item Assigned for Pick-Up : " + payload.getString("OrderRef"));
                         emailPayload.put("EmailMessage", getDeliveryType(payload.getString("DeliveryType")) + "-" + payload.getString("OrderRef"));
-                        emailPayload.put("EmailDestination", merRes.getString("email"));
                         globalMethods.processEmailWithoutTemplate(emailPayload);
 
+                        loginValidationRepository.findLoginValidationByEmailAddress(merRes.getString("email"))
+                                .ifPresent(user -> {
+                                    JSONObject pushPayload = new JSONObject();
+                                    pushPayload.put("UserId", user.getUserOneSignalId() != null ? user.getUserOneSignalId() : "5c66ca50-c009-480f-a200-72c244d74ff4");
+                                    pushPayload.put("Header", "Item Assigned for Pick-Up : " + payload.getString("OrderRef"));
+                                    pushPayload.put("Message", getDeliveryType(payload.getString("DeliveryType")) + "-" + payload.getString("OrderRef"));
+                                    JSONObject data = new JSONObject();
+                                    data.put("OrderRef", payload.getString("OrderRef"));
+                                    pushPayload.put("data", data);
+                                    globalMethods.sendPushNotification(pushPayload);
+                                });
+
                     } catch (Exception ex) {
+                        log.log(Level.WARNING,"MW ERROR " + ex.getMessage());
                     }
                     break;
                 case "WC":
@@ -149,7 +173,7 @@ public class MessengerAssignmentNotification {
                             globalMethods.processEmailWithoutTemplate(emailPayload);
                         }
                     } catch (Exception ex) {
-
+                        log.log(Level.WARNING,"WC ERROR " + ex.getMessage());
                     }
                     break;
             }
