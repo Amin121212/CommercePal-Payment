@@ -61,7 +61,7 @@ public class CustomerOrderController {
     @RequestMapping(value = {"/my-orders"}, method = {RequestMethod.POST}, produces = {"application/json"})
     @ResponseBody
     public ResponseEntity<?> customerOrders(@RequestHeader("Authorization") String accessToken,
-                                            @RequestParam("page") Optional<String> orderRef) {
+                                            @RequestParam("orderRef") Optional<String> orderRef) {
         JSONObject responseMap = new JSONObject();
 
         List<JSONObject> orders = new ArrayList<>();

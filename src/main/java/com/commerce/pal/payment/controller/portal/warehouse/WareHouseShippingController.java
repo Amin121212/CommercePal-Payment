@@ -68,13 +68,23 @@ public class WareHouseShippingController {
                         orderItem.setShipmentStatus(AssignMessengerPickAtMerchant);
                         orderItem.setShipmentUpdateDate(Timestamp.from(Instant.now()));
 
-                        ItemShipmentStatus itemShipmentStatus = new ItemShipmentStatus();
-                        itemShipmentStatus.setItemId(orderItem.getItemId());
-                        itemShipmentStatus.setShipmentStatus(AssignMessengerPickAtMerchant);
-                        itemShipmentStatus.setComments(request.getString("Comments"));
-                        itemShipmentStatus.setStatus(1);
-                        itemShipmentStatus.setCreatedDate(Timestamp.from(Instant.now()));
-                        itemShipmentStatusRepository.save(itemShipmentStatus);
+                        itemShipmentStatusRepository.findItemShipmentStatusByItemIdAndShipmentStatus(
+                                        orderItem.getItemId(), AssignMessengerPickAtMerchant)
+                                .ifPresentOrElse(itemShipmentStatus -> {
+                                    itemShipmentStatus.setComments(request.getString("Comments"));
+                                    itemShipmentStatus.setStatus(1);
+                                    itemShipmentStatus.setCreatedDate(Timestamp.from(Instant.now()));
+                                    itemShipmentStatusRepository.save(itemShipmentStatus);
+                                }, () -> {
+                                    ItemShipmentStatus itemShipmentStatus = new ItemShipmentStatus();
+                                    itemShipmentStatus.setItemId(orderItem.getItemId());
+                                    itemShipmentStatus.setShipmentStatus(AssignMessengerPickAtMerchant);
+                                    itemShipmentStatus.setComments(request.getString("Comments"));
+                                    itemShipmentStatus.setStatus(1);
+                                    itemShipmentStatus.setCreatedDate(Timestamp.from(Instant.now()));
+                                    itemShipmentStatusRepository.save(itemShipmentStatus);
+                                });
+
                         itemMessengerDeliveryRepository.findItemMessengerDeliveryByOrderItemIdAndMessengerId(
                                 orderItem.getItemId(), request.getLong("MessengerId")
                         ).ifPresentOrElse(itemMessengerDelivery -> {
