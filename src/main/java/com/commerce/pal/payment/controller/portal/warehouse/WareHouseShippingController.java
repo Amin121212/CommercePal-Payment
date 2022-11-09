@@ -94,9 +94,9 @@ public class WareHouseShippingController {
                                     itemMessengerDelivery.setMerchantId(orderItem.getMerchantId());
 
                                     itemMessengerDelivery.setCustomerId(
-                                            orderRepository.findById(orderItem.getOrderId()).get().getSaleType() == "M2C" ?
-                                                    orderRepository.findById(orderItem.getOrderId()).get().getCustomerId() :
-                                                    orderRepository.findById(orderItem.getOrderId()).get().getBusinessId()
+                                            orderRepository.findByOrderId(orderItem.getOrderId()).getSaleType() == "M2C" ?
+                                                    orderRepository.findByOrderId(orderItem.getOrderId()).getCustomerId() :
+                                                    orderRepository.findByOrderId(orderItem.getOrderId()).getBusinessId()
                                     );
                                     break;
                                 case "MW":
@@ -106,9 +106,9 @@ public class WareHouseShippingController {
                                 case "WC":
                                     itemMessengerDelivery.setWareHouseId(Long.valueOf(orderItem.getAssignedWareHouseId()));
                                     itemMessengerDelivery.setCustomerId(
-                                            orderRepository.findById(orderItem.getOrderId()).get().getSaleType() == "M2C" ?
-                                                    orderRepository.findById(orderItem.getOrderId()).get().getCustomerId() :
-                                                    orderRepository.findById(orderItem.getOrderId()).get().getBusinessId()
+                                            orderRepository.findByOrderId(orderItem.getOrderId()).getSaleType() == "M2C" ?
+                                                    orderRepository.findByOrderId(orderItem.getOrderId()).getCustomerId() :
+                                                    orderRepository.findByOrderId(orderItem.getOrderId()).getBusinessId()
                                     );
                                     break;
                             }
@@ -133,9 +133,9 @@ public class WareHouseShippingController {
                                 case "MC":
                                     itemMessengerDelivery.setMerchantId(orderItem.getMerchantId());
                                     itemMessengerDelivery.setCustomerId(
-                                            orderRepository.findById(orderItem.getOrderId()).get().getSaleType() == "M2C" ?
-                                                    orderRepository.findById(orderItem.getOrderId()).get().getCustomerId() :
-                                                    orderRepository.findById(orderItem.getOrderId()).get().getBusinessId()
+                                            orderRepository.findByOrderId(orderItem.getOrderId()).getSaleType() == "M2C" ?
+                                                    orderRepository.findByOrderId(orderItem.getOrderId()).getCustomerId() :
+                                                    orderRepository.findByOrderId(orderItem.getOrderId()).getBusinessId()
                                     );
                                     break;
                                 case "MW":
@@ -145,9 +145,9 @@ public class WareHouseShippingController {
                                 case "WC":
                                     itemMessengerDelivery.setWareHouseId(Long.valueOf(orderItem.getAssignedWareHouseId()));
                                     itemMessengerDelivery.setCustomerId(
-                                            orderRepository.findById(orderItem.getOrderId()).get().getSaleType() == "M2C" ?
-                                                    orderRepository.findById(orderItem.getOrderId()).get().getCustomerId() :
-                                                    orderRepository.findById(orderItem.getOrderId()).get().getBusinessId()
+                                            orderRepository.findByOrderId(orderItem.getOrderId()).getSaleType() == "M2C" ?
+                                                    orderRepository.findByOrderId(orderItem.getOrderId()).getCustomerId() :
+                                                    orderRepository.findByOrderId(orderItem.getOrderId()).getBusinessId()
                                     );
                                     break;
                             }
