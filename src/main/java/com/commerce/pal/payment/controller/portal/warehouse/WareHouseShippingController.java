@@ -58,6 +58,7 @@ public class WareHouseShippingController {
             JSONObject request = new JSONObject(req);
             orderItemRepository.findById(request.getLong("OrderItemId"))
                     .ifPresentOrElse(orderItem -> {
+                        log.log(Level.INFO, orderRepository.findByOrderId(orderItem.getOrderId()).getCustomerId().toString());
                         String validationCode = globalMethods.generateValidationCode();
                         String deliveryCode = globalMethods.generateValidationCode();
 
@@ -92,7 +93,6 @@ public class WareHouseShippingController {
                             switch (request.getString("DeliveryType")) {
                                 case "MC":
                                     itemMessengerDelivery.setMerchantId(orderItem.getMerchantId());
-
                                     itemMessengerDelivery.setCustomerId(
                                             orderRepository.findByOrderId(orderItem.getOrderId()).getSaleType() == "M2C" ?
                                                     orderRepository.findByOrderId(orderItem.getOrderId()).getCustomerId() :
