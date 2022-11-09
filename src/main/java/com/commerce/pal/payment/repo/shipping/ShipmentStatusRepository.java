@@ -13,4 +13,6 @@ public interface ShipmentStatusRepository extends JpaRepository<ShipmentStatus, 
     @Query(value = "SELECT Code FROM ShipmentStatus ORDER BY Code ASC", nativeQuery = true)
     List<Integer> findShipmentStatusByCodeAndCode(String c,String b);
 
+
+
 }
