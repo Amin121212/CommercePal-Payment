@@ -1,6 +1,7 @@
 package com.commerce.pal.payment.util.specification;
 
 
+import com.commerce.pal.payment.model.payment.Order;
 import com.commerce.pal.payment.model.payment.OrderItem;
 import com.commerce.pal.payment.model.payment.Transaction;
 import com.commerce.pal.payment.util.specification.utils.SearchCriteria;
@@ -37,6 +38,21 @@ public class SpecificationsDao {
         return entityManager.createQuery(query).getResultList();
     }
 
+    public List<Order> getOrders(final List<SearchCriteria> params) {
+        final CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        final CriteriaQuery<Order> query = builder.createQuery(Order.class);
+        final Root r = query.from(OrderItem.class);
+
+        Predicate predicate = builder.conjunction();
+        SpecificationQueryCriteriaConsumer searchOrders = new SpecificationQueryCriteriaConsumer(predicate, builder, r);
+        params.stream().forEach(searchOrders);
+        predicate = searchOrders.getPredicate();
+        query.where(predicate);
+        query.orderBy((builder.desc(r.get("orderId"))));
+        return entityManager.createQuery(query).getResultList();
+    }
+
+
     public List<Transaction> getTransactions(final List<SearchCriteria> params, Integer page) {
         Integer transPageSize = 20;
         final CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -56,7 +72,7 @@ public class SpecificationsDao {
         https://stackoverflow.com/questions/51583079/criteria-api-in-with-arraylist
          */
         return entityManager.createQuery(query)
-                .setMaxResults( transPageSize)
+                .setMaxResults(transPageSize)
                 .getResultList();
     }
 

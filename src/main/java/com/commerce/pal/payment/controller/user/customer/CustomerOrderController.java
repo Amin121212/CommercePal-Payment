@@ -5,16 +5,23 @@ import com.commerce.pal.payment.module.ValidateAccessToken;
 import com.commerce.pal.payment.module.order.OrderService;
 import com.commerce.pal.payment.repo.payment.OrderItemRepository;
 import com.commerce.pal.payment.repo.payment.OrderRepository;
-import com.commerce.pal.payment.util.GlobalMethods;
+import com.commerce.pal.payment.repo.shipping.ItemShipmentStatusRepository;
+import com.commerce.pal.payment.repo.shipping.ShipmentStatusRepository;
 import com.commerce.pal.payment.util.ResponseCodes;
+import com.commerce.pal.payment.util.specification.SpecificationsDao;
+import com.commerce.pal.payment.util.specification.utils.SearchCriteria;
 import lombok.extern.java.Log;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
+import static com.commerce.pal.payment.util.TransactionStatus.PAYMENT_SUCCESS;
 
 @Log
 @CrossOrigin(origins = {"*"}, maxAge = 3600L)
@@ -23,32 +30,39 @@ import java.util.List;
 @SuppressWarnings("Duplicates")
 public class CustomerOrderController {
     private final OrderService orderService;
-    private final GlobalMethods globalMethods;
     private final OrderRepository orderRepository;
+    private final SpecificationsDao specificationsDao;
     private final DataAccessService dataAccessService;
     private final OrderItemRepository orderItemRepository;
     private final ValidateAccessToken validateAccessToken;
+    private final ShipmentStatusRepository shipmentStatusRepository;
+    private final ItemShipmentStatusRepository itemShipmentStatusRepository;
 
     @Autowired
-    public CustomerOrderController(OrderService orderService,
-                                   GlobalMethods globalMethods,
-                                   OrderRepository orderRepository,
-                                   DataAccessService dataAccessService,
-                                   OrderItemRepository orderItemRepository,
-                                   ValidateAccessToken validateAccessToken) {
+    public CustomerOrderController(
+            OrderService orderService,
+            OrderRepository orderRepository,
+            SpecificationsDao specificationsDao,
+            DataAccessService dataAccessService,
+            OrderItemRepository orderItemRepository,
+            ValidateAccessToken validateAccessToken,
+            ShipmentStatusRepository shipmentStatusRepository,
+            ItemShipmentStatusRepository itemShipmentStatusRepository) {
         this.orderService = orderService;
-        this.globalMethods = globalMethods;
         this.orderRepository = orderRepository;
+        this.specificationsDao = specificationsDao;
         this.dataAccessService = dataAccessService;
         this.orderItemRepository = orderItemRepository;
         this.validateAccessToken = validateAccessToken;
+        this.shipmentStatusRepository = shipmentStatusRepository;
+        this.itemShipmentStatusRepository = itemShipmentStatusRepository;
     }
 
-    @RequestMapping(value = {"/order-detail"}, method = {RequestMethod.POST}, produces = {"application/json"})
+    @RequestMapping(value = {"/my-orders"}, method = {RequestMethod.POST}, produces = {"application/json"})
     @ResponseBody
-    public ResponseEntity<?> orderDetails(@RequestHeader("Authorization") String accessToken, @RequestBody String req) {
+    public ResponseEntity<?> customerOrders(@RequestHeader("Authorization") String accessToken,
+                                            @RequestParam("page") Optional<String> orderRef) {
         JSONObject responseMap = new JSONObject();
-        JSONObject reqBdy = new JSONObject(req);
 
         List<JSONObject> orders = new ArrayList<>();
         JSONObject valTokenReq = new JSONObject();
@@ -58,13 +72,56 @@ public class CustomerOrderController {
         JSONObject valTokenBdy = validateAccessToken.pickAndReturnAll(valTokenReq);
 
         if (valTokenBdy.getString("Status").equals("00")) {
-//            JSONObject userDetails = valTokenBdy.getJSONObject("UserDetails");
-//            JSONObject businessInfo = userDetails.getJSONObject("businessInfo");
-//            Long businessId = Long.valueOf(userDetails.getJSONObject("businessInfo").getInt("userId"));
+            JSONObject customerData = valTokenBdy.getJSONObject("UserDetails").getJSONObject("Details");
+            Long customerId = customerData.getLong("userId");
+            List<SearchCriteria> params = new ArrayList<SearchCriteria>();
+            params.add(new SearchCriteria("customerId", ":", customerId));
+            params.add(new SearchCriteria("status", ":", PAYMENT_SUCCESS));
+            params.add(new SearchCriteria("paymentStatus", ":", PAYMENT_SUCCESS));
+            orderRef.ifPresent(value -> {
+                params.add(new SearchCriteria("orderRef", ":", value));
+            });
+            specificationsDao.getOrders(params)
+                    .forEach(order -> {
+                        JSONObject orderInfo = new JSONObject();
+                        orderInfo.put("OrderId", order.getOrderId());
+                        orderInfo.put("OrderRef", order.getOrderRef());
+                        orderInfo.put("OrderDate", order.getOrderDate());
+                        orderInfo.put("DeliveryPrice", order.getDeliveryPrice());
+                        orderInfo.put("TotalPrice", order.getTotalPrice());
+                        orderInfo.put("PaymentStatus", order.getPaymentStatus());
+                        orderInfo.put("PaymentDate", order.getPaymentDate());
+                        orderInfo.put("PaymentMethod", order.getPaymentMethod());
+                        orderInfo.put("Discount", order.getDiscount());
+                        orderInfo.put("DeliveryPrice", order.getDeliveryPrice());
+                        orders.add(orderInfo);
+                    });
+        }
+        responseMap.put("statusCode", ResponseCodes.SUCCESS)
+                .put("statusDescription", "success")
+                .put("data", orders)
+                .put("statusMessage", "Request Successful");
+        return ResponseEntity.ok(responseMap.toString());
+    }
 
-            orderRepository.findOrderByOrderRef(reqBdy.getString("OrderRef"))
+    @RequestMapping(value = {"/order-detail"}, method = {RequestMethod.POST}, produces = {"application/json"})
+    @ResponseBody
+    public ResponseEntity<?> orderDetails(@RequestHeader("Authorization") String accessToken, @RequestBody String req) {
+        JSONObject responseMap = new JSONObject();
+        JSONObject reqBdy = new JSONObject(req);
+
+        JSONObject orderDetails = new JSONObject();
+        JSONObject valTokenReq = new JSONObject();
+        valTokenReq.put("AccessToken", accessToken)
+                .put("UserType", "C");
+        JSONObject valTokenBdy = validateAccessToken.pickAndReturnAll(valTokenReq);
+
+        if (valTokenBdy.getString("Status").equals("00")) {
+            JSONObject customerData = valTokenBdy.getJSONObject("UserDetails").getJSONObject("Details");
+            Long customerId = customerData.getLong("userId");
+            orderRepository.findOrderByOrderIdAndCustomerId(reqBdy.getLong("OrderId"), customerId)
                     .ifPresent(order -> {
-                        JSONObject orderDetails = new JSONObject();
+
                         orderDetails.put("OrderRef", order.getOrderRef());
                         orderDetails.put("OrderDate", order.getOrderDate());
                         orderDetails.put("DeliveryPrice", order.getDeliveryPrice());
@@ -87,14 +144,12 @@ public class CustomerOrderController {
                                     orderItems.add(itemPay);
                                 });
                         orderDetails.put("orderItems", orderItems);
-                        orders.add(orderDetails);
                     });
         }
         responseMap.put("statusCode", ResponseCodes.SUCCESS)
                 .put("statusDescription", "success")
-                .put("data", orders)
+                .put("data", orderDetails)
                 .put("statusMessage", "Request Successful");
-
         return ResponseEntity.ok(responseMap.toString());
     }
 
@@ -158,6 +213,55 @@ public class CustomerOrderController {
                     .put("statusDescription", "success")
                     .put("data", orders)
                     .put("statusMessage", "Request Successful");
+        } else {
+            responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                    .put("statusDescription", "Merchant Does not exists")
+                    .put("statusMessage", "Merchant Does not exists");
+        }
+        return ResponseEntity.ok(responseMap.toString());
+    }
+
+
+    @RequestMapping(value = {"/order-item"}, method = {RequestMethod.GET}, produces = {"application/json"})
+    @ResponseBody
+    public ResponseEntity<?> orderItem(@RequestParam("ItemId") String ItemId) {
+        JSONObject orderItem = orderService.orderItemDetails(Long.valueOf(ItemId));
+        return ResponseEntity.status(HttpStatus.OK).body(orderItem.toString());
+    }
+
+    @RequestMapping(value = {"/order-status-item"}, method = {RequestMethod.GET}, produces = {"application/json"})
+    @ResponseBody
+    public ResponseEntity<?> getItemShippingStatus(@RequestHeader("Authorization") String accessToken,
+                                                   @RequestParam("OrderItemId") Integer OrderItemId) {
+        JSONObject responseMap = new JSONObject();
+        JSONObject valTokenReq = new JSONObject();
+        valTokenReq.put("AccessToken", accessToken)
+                .put("UserType", "M");
+
+        JSONObject valTokenBdy = validateAccessToken.pickAndReturnAll(valTokenReq);
+
+        if (valTokenBdy.getString("Status").equals("00")) {
+            JSONObject userDetails = valTokenBdy.getJSONObject("UserDetails");
+            JSONObject orderItem = new JSONObject();
+            orderItemRepository.findById(Long.valueOf(OrderItemId)).ifPresent(item -> {
+                orderItem.put("ItemId", item.getItemId());
+                orderItem.put("OrderId", item.getOrderId());
+                orderItem.put("SubOrderNumber", item.getSubOrderNumber());
+                orderItem.put("SubProductId", item.getSubProductId());
+                orderItem.put("ProductId", item.getProductLinkingId());
+                orderItem.put("UnitPrice", item.getUnitPrice());
+                orderItem.put("TotalAmount", item.getTotalAmount());
+                orderItem.put("QrCodeNumber", item.getQrCodeNumber());
+                orderItem.put("CreatedDate", item.getCreatedDate());
+                orderItem.put("ShipmentStatus", item.getShipmentStatus());
+                orderItem.put("ShipmentStatusWord", shipmentStatusRepository.findById(item.getShipmentStatus()).get().getDescription());
+                List<String> shipmentStatus = new ArrayList<>();
+                itemShipmentStatusRepository.findItemShipmentStatusesByItemId(item.getItemId())
+                        .forEach(itemShipmentStatus -> {
+                            shipmentStatus.add(shipmentStatusRepository.findById(itemShipmentStatus.getShipmentStatus()).get().getDescription());
+                        });
+                orderItem.put("ShipmentStatusList", shipmentStatus);
+            });
         } else {
             responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
                     .put("statusDescription", "Merchant Does not exists")
