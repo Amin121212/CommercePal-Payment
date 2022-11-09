@@ -41,7 +41,7 @@ public class SpecificationsDao {
     public List<Order> getOrders(final List<SearchCriteria> params) {
         final CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         final CriteriaQuery<Order> query = builder.createQuery(Order.class);
-        final Root r = query.from(OrderItem.class);
+        final Root r = query.from(Order.class);
 
         Predicate predicate = builder.conjunction();
         SpecificationQueryCriteriaConsumer searchOrders = new SpecificationQueryCriteriaConsumer(predicate, builder, r);

@@ -67,9 +67,9 @@ public class OrderPaymentNotification {
                         orderPay.put("OrderDate", order.getOrderDate());
                         List<JSONObject> customerOrderItems = new ArrayList<>();
                         orderItemRepository.findAllByOrderId(order.getOrderId())
-                                .forEach(merchant -> {
+                                .forEach(merchantId -> {
                                     List<JSONObject> orderItems = new ArrayList<>();
-                                    orderItemRepository.findOrderItemsByOrderIdAndMerchantId(order.getOrderId(), merchant)
+                                    orderItemRepository.findOrderItemsByOrderIdAndMerchantId(order.getOrderId(), merchantId)
                                             .forEach(orderItem -> {
                                                 JSONObject itemPay = new JSONObject();
                                                 JSONObject prodReq = new JSONObject();
@@ -83,7 +83,7 @@ public class OrderPaymentNotification {
                                                 JSONObject subProdReq = new JSONObject();
                                                 subProdReq.put("Type", "SUB-PRODUCT");
                                                 subProdReq.put("TypeId", orderItem.getSubProductId());
-                                                JSONObject subProductBdy = dataAccessService.pickAndProcess(subProdReq);
+                                                // JSONObject subProductBdy = dataAccessService.pickAndProcess(subProdReq);
 
                                                 orderItems.add(itemPay);
                                                 customerOrderItems.add(itemPay);
@@ -98,12 +98,11 @@ public class OrderPaymentNotification {
                                             });
                                     orderPay.put("orderItems", orderItems);
 
-                                    if (!merchant.equals(0)) {
+                                    if (!merchantId.equals(0)) {
                                         JSONObject merReq = new JSONObject();
                                         merReq.put("Type", "MERCHANT");
-                                        merReq.put("TypeId", merchant);
+                                        merReq.put("TypeId", merchantId);
                                         JSONObject merRes = dataAccessService.pickAndProcess(merReq);
-
 
                                         loginValidationRepository.findLoginValidationByEmailAddress(merRes.getString("email"))
                                                 .ifPresent(user -> {
@@ -116,7 +115,6 @@ public class OrderPaymentNotification {
                                                     pushPayload.put("data", data);
                                                     globalMethods.sendPushNotification(pushPayload);
                                                 });
-
                                         orderPay.put("email", merRes.getString("email"));
                                         orderPay.put("subject", "New Order Ref : " + order.getOrderRef() + " (Merchant)");
                                         orderPay.put("templates", "merchant-new-order.ftl");
