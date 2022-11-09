@@ -190,7 +190,7 @@ public class WareHouseShippingController {
     }
 
 
-    @RequestMapping(value = "/scan-qr-code-from-messenger", method = RequestMethod.POST)
+    @RequestMapping(value = "/scan-qr-from-messenger", method = RequestMethod.POST)
     public ResponseEntity<?> scanQrCodeFromMessenger(@RequestHeader("Authorization") String accessToken,
                                                      @RequestBody String req) {
         JSONObject responseMap = new JSONObject();
@@ -225,8 +225,8 @@ public class WareHouseShippingController {
         try {
             JSONObject request = new JSONObject(req);
             orderItemRepository.findById(request.getLong("OrderItemId")).ifPresentOrElse(orderItem -> {
-                itemMessengerDeliveryRepository.findItemMessengerDeliveryByOrderItemIdAndMessengerIdAndDeliveryTypeAndDeliveryStatus(
-                        request.getLong("OrderItemId"), request.getLong("MessengerId"), "MW", 1
+                itemMessengerDeliveryRepository.findItemMessengerDeliveryByOrderItemIdAndDeliveryTypeAndDeliveryStatus(
+                        request.getLong("OrderItemId"), "MW", 1
                 ).ifPresentOrElse(itemMessengerDelivery -> {
                     itemMessengerDelivery.setDeliveryStatus(3);
                     itemMessengerDelivery.setDeliveryCode("WareHouse Acceptance");
