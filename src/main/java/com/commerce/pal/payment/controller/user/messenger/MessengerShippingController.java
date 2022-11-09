@@ -487,38 +487,46 @@ public class MessengerShippingController {
                         .ifPresentOrElse(itemMessengerDelivery -> {
                             orderItemRepository.findById(request.getLong("OrderItemId"))
                                     .ifPresentOrElse(orderItem -> {
-                                        itemMessengerDelivery.setDeliveryStatus(3);
-                                        itemMessengerDelivery.setUpdatedDate(Timestamp.from(Instant.now()));
-                                        itemMessengerDeliveryRepository.save(itemMessengerDelivery);
-                                        orderItem.setShipmentStatus(MessengerDeliveredItemToCustomer);
-                                        orderItemRepository.save(orderItem);
-                                        ItemShipmentStatus itemShipmentStatus = new ItemShipmentStatus();
+                                        if (request.getString("ValidCode").equals(globalMethods.deCryptCode(itemMessengerDelivery.getDeliveryCode()))) {
 
-                                        itemShipmentStatus.setShipmentStatus(MessengerDeliveredItemToCustomer);
-                                        orderItem.setShipmentUpdateDate(Timestamp.from(Instant.now()));
-                                        itemShipmentStatus.setItemId(orderItem.getItemId());
-                                        itemShipmentStatus.setComments(request.getString("Comments"));
-                                        itemShipmentStatus.setStatus(1);
-                                        itemShipmentStatus.setCreatedDate(Timestamp.from(Instant.now()));
-                                        itemShipmentStatusRepository.save(itemShipmentStatus);
-                                        // Send Notification of Acceptance
-                                        // merchantAcceptAndPickUpNotification.pickAndProcess(orderItem.getOrderId().toString());
 
-                                        responseMap.put("statusCode", ResponseCodes.SUCCESS)
-                                                .put("statusDescription", "Success")
-                                                .put("statusMessage", "Success");
+                                            itemMessengerDelivery.setDeliveryStatus(3);
+                                            itemMessengerDelivery.setUpdatedDate(Timestamp.from(Instant.now()));
+                                            itemMessengerDeliveryRepository.save(itemMessengerDelivery);
+                                            orderItem.setShipmentStatus(MessengerDeliveredItemToCustomer);
+                                            orderItemRepository.save(orderItem);
+                                            ItemShipmentStatus itemShipmentStatus = new ItemShipmentStatus();
 
-                                        loginValidationRepository.findLoginValidationByEmailAddress(messengerInfo.getString("email"))
-                                                .ifPresent(user -> {
-                                                    JSONObject pushPayload = new JSONObject();
-                                                    pushPayload.put("UserId", user.getUserOneSignalId() != null ? user.getUserOneSignalId() : "5c66ca50-c009-480f-a200-72c244d74ff4");
-                                                    pushPayload.put("Header", "Delivered to Customer : " + orderItem.getSubOrderNumber());
-                                                    pushPayload.put("Message", "Delivered to Customer : " + orderItem.getSubOrderNumber());
-                                                    JSONObject data = new JSONObject();
-                                                    data.put("OrderItem", orderItem.getSubOrderNumber());
-                                                    pushPayload.put("data", data);
-                                                    globalMethods.sendPushNotification(pushPayload);
-                                                });
+                                            itemShipmentStatus.setShipmentStatus(MessengerDeliveredItemToCustomer);
+                                            orderItem.setShipmentUpdateDate(Timestamp.from(Instant.now()));
+                                            itemShipmentStatus.setItemId(orderItem.getItemId());
+                                            itemShipmentStatus.setComments(request.getString("Comments"));
+                                            itemShipmentStatus.setStatus(1);
+                                            itemShipmentStatus.setCreatedDate(Timestamp.from(Instant.now()));
+                                            itemShipmentStatusRepository.save(itemShipmentStatus);
+                                            // Send Notification of Acceptance
+                                            // merchantAcceptAndPickUpNotification.pickAndProcess(orderItem.getOrderId().toString());
+
+                                            responseMap.put("statusCode", ResponseCodes.SUCCESS)
+                                                    .put("statusDescription", "Success")
+                                                    .put("statusMessage", "Success");
+
+                                            loginValidationRepository.findLoginValidationByEmailAddress(messengerInfo.getString("email"))
+                                                    .ifPresent(user -> {
+                                                        JSONObject pushPayload = new JSONObject();
+                                                        pushPayload.put("UserId", user.getUserOneSignalId() != null ? user.getUserOneSignalId() : "5c66ca50-c009-480f-a200-72c244d74ff4");
+                                                        pushPayload.put("Header", "Delivered to Customer : " + orderItem.getSubOrderNumber());
+                                                        pushPayload.put("Message", "Delivered to Customer : " + orderItem.getSubOrderNumber());
+                                                        JSONObject data = new JSONObject();
+                                                        data.put("OrderItem", orderItem.getSubOrderNumber());
+                                                        pushPayload.put("data", data);
+                                                        globalMethods.sendPushNotification(pushPayload);
+                                                    });
+                                        } else {
+                                            responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                                                    .put("statusDescription", "The code is not valid")
+                                                    .put("statusMessage", "The code is not valid");
+                                        }
                                     }, () -> {
                                         responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
                                                 .put("statusDescription", "The Item does not exists")
