@@ -14,5 +14,4 @@ public interface ShipmentStatusRepository extends JpaRepository<ShipmentStatus, 
     List<Integer> findShipmentStatusByCodeAndCode(String c, String b);
 
     ShipmentStatus findByCode(Integer code);
-
 }

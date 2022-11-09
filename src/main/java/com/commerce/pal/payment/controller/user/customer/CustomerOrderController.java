@@ -254,11 +254,22 @@ public class CustomerOrderController {
                 orderItem.put("QrCodeNumber", item.getQrCodeNumber());
                 orderItem.put("CreatedDate", item.getCreatedDate());
                 orderItem.put("ShipmentStatus", item.getShipmentStatus());
-                orderItem.put("ShipmentStatusWord", shipmentStatusRepository.findByCode(item.getShipmentStatus()).getDescription());
+                shipmentStatusRepository.findShipmentStatusByCode(item.getShipmentStatus())
+                        .ifPresentOrElse(shipmentStatus -> {
+                            orderItem.put("ShipmentStatusWord", shipmentStatus.getDescription());
+                        }, () -> {
+                            orderItem.put("ShipmentStatusWord", "Processing on WareHouse");
+                        });
+
                 List<String> shipmentStatus = new ArrayList<>();
                 itemShipmentStatusRepository.findItemShipmentStatusesByItemId(item.getItemId())
                         .forEach(itemShipmentStatus -> {
-                            shipmentStatus.add(shipmentStatusRepository.findById(itemShipmentStatus.getShipmentStatus()).get().getDescription());
+                            shipmentStatusRepository.findShipmentStatusByCode(itemShipmentStatus.getShipmentStatus())
+                                    .ifPresentOrElse(shipmentStatus1 -> {
+                                        shipmentStatus.add(shipmentStatus1.getDescription());
+                                    }, () -> {
+                                        shipmentStatus.add("Processing on WareHouse");
+                                    });
                         });
                 orderItem.put("ShipmentStatusList", shipmentStatus);
             });
