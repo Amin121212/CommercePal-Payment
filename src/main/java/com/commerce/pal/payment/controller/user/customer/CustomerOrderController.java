@@ -273,6 +273,10 @@ public class CustomerOrderController {
                         });
                 orderItem.put("ShipmentStatusList", shipmentStatus);
             });
+            responseMap.put("statusCode", ResponseCodes.SUCCESS)
+                    .put("statusDescription", "success")
+                    .put("data", orderItem)
+                    .put("statusMessage", "Request Successful");
         } else {
             responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
                     .put("statusDescription", "Merchant Does not exists")
