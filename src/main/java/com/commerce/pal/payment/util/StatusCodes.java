@@ -11,6 +11,7 @@ public class StatusCodes {
     public static final Integer MessengerPickedMerchantToWareHouse = 105;
     public static final Integer MessengerPickedMerchantToCustomer = 106;
     public static final Integer MessengerPickedWareHouseToCustomer = 107;
+    public static final Integer MessengerDeliveredItemToMerchant = 108;
     public static final Integer MessengerDeliveredItemToCustomer = 500;
 
 

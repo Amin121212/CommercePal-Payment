@@ -71,7 +71,6 @@ public class ItemMessengerDelivery {
     @Basic
     @Column(name = "AcceptanceRemarks")
     private String acceptanceRemarks;
-
     @Basic
     @Column(name = "AcceptedDate")
     private Timestamp acceptedDate;

@@ -8,25 +8,17 @@ import java.util.Optional;
 
 public interface ItemMessengerDeliveryRepository extends JpaRepository<ItemMessengerDelivery, Long> {
 
-    Optional<ItemMessengerDelivery> findItemMessengerDeliveryByMerchantIdAndOrderItemId(Long merchant, Long item);
-
     Optional<ItemMessengerDelivery> findItemMessengerDeliveryByOrderItemIdAndMessengerIdAndDeliveryTypeIn(Long item, Long messenger, String[] deliveryType);
 
     Optional<ItemMessengerDelivery> findItemMessengerDeliveryByOrderItemIdAndMerchantIdAndDeliveryTypeIn(Long item, Long merchant, String[] deliveryType);
-
-    List<ItemMessengerDelivery> findItemMessengerDeliveriesByMessengerIdAndStatusIn(Long messenger, Integer[] status);
 
     List<ItemMessengerDelivery> findItemMessengerDeliveriesByMessengerIdAndStatusInAndDeliveryStatusIn(Long messenger, Integer[] status, Integer[] deliveryStatus);
 
     Optional<ItemMessengerDelivery> findItemMessengerDeliveryByIdAndMessengerId(Long deliveryId, Long messenger);
 
-    Optional<ItemMessengerDelivery> findItemMessengerDeliveryByOrderItemIdAndMessengerIdAndStatus(Long item, Long messenger, Integer status);
-
-    Optional<ItemMessengerDelivery> findItemMessengerDeliveryByOrderItemIdAndMessengerId(Long item, Long messenger);
-
     Optional<ItemMessengerDelivery> findItemMessengerDeliveryByOrderItemIdAndDeliveryTypeAndValidationStatus(Long item, String type, Integer status);
 
     Optional<ItemMessengerDelivery> findItemMessengerDeliveryByOrderItemIdAndCustomerId(Long item, Long messenger);
 
-    Optional<ItemMessengerDelivery> findItemMessengerDeliveryByOrderItemIdAndMessengerIdAndDeliveryTypeInAndValidationStatus(Long item, Long messenger, String[] deliveryType, Integer status);
+    Optional<ItemMessengerDelivery> findItemMessengerDeliveryByOrderItemIdAndMessengerIdAndDeliveryTypeAndDeliveryStatus(Long item, Long messenger, String Type, Integer status);
 }
