@@ -487,6 +487,7 @@ public class MessengerShippingController {
                                     .ifPresentOrElse(orderItem -> {
                                         if (request.getString("ValidCode").equals(globalMethods.deCryptCode(itemMessengerDelivery.getDeliveryCode()))) {
                                             itemMessengerDelivery.setDeliveryStatus(3);
+                                            itemMessengerDelivery.setDeliveryDate(Timestamp.from(Instant.now()));
                                             itemMessengerDelivery.setUpdatedDate(Timestamp.from(Instant.now()));
                                             itemMessengerDeliveryRepository.save(itemMessengerDelivery);
                                             orderItem.setShipmentStatus(MessengerDeliveredItemToCustomer);
