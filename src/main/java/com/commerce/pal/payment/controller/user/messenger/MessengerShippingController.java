@@ -431,10 +431,8 @@ public class MessengerShippingController {
                                         emailPayload.put("EmailDestination", cusRes.getString("email"));
                                         globalMethods.processEmailWithoutTemplate(emailPayload);
                                     }
-
                                     responseMap.put("statusCode", ResponseCodes.SUCCESS)
                                             .put("statusDescription", "Success")
-                                            .put("ValidCode", validationCode)
                                             .put("statusMessage", "Success");
                                 }, () -> {
                                     responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
@@ -520,6 +518,25 @@ public class MessengerShippingController {
                                                         pushPayload.put("data", data);
                                                         globalMethods.sendPushNotification(pushPayload);
                                                     });
+
+                                            JSONObject emailPayload = new JSONObject();
+                                            emailPayload.put("EmailSubject", "Item Delivered to Customer : " + orderItem.getSubOrderNumber());
+                                            emailPayload.put("EmailMessage", "Item Delivered to Customer : " + orderItem.getSubOrderNumber());
+                                            if (orderRepository.findByOrderId(orderItem.getOrderId()).getSaleType().equals("M2C")) {
+                                                JSONObject cusReq = new JSONObject();
+                                                cusReq.put("Type", "CUSTOMER");
+                                                cusReq.put("TypeId", orderRepository.findByOrderId(orderItem.getOrderId()).getCustomerId());
+                                                JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
+                                                emailPayload.put("EmailDestination", cusRes.getString("email"));
+                                                globalMethods.processEmailWithoutTemplate(emailPayload);
+                                            } else {
+                                                JSONObject cusReq = new JSONObject();
+                                                cusReq.put("Type", "BUSINESS");
+                                                cusReq.put("TypeId", orderRepository.findByOrderId(orderItem.getOrderId()).getBusinessId());
+                                                JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
+                                                emailPayload.put("EmailDestination", cusRes.getString("email"));
+                                                globalMethods.processEmailWithoutTemplate(emailPayload);
+                                            }
                                         } else {
                                             responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
                                                     .put("statusDescription", "The code is not valid")
