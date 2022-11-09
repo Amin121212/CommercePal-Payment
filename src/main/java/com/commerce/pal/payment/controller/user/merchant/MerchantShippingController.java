@@ -221,8 +221,7 @@ public class MerchantShippingController {
                     orderItemRepository.findById(request.getLong("OrderItemId"))
                             .ifPresentOrElse(orderItem -> {
                                 if (request.getString("ValidCode").equals(globalMethods.deCryptCode(itemMessengerDelivery.getValidationCode()))) {
-                                    itemMessengerDelivery.setDeliveryStatus(1);
-                                    itemMessengerDelivery.setValidationStatus(1);
+                                    itemMessengerDelivery.setValidationStatus(3);
                                     itemMessengerDelivery.setValidationDate(Timestamp.from(Instant.now()));
                                     itemMessengerDeliveryRepository.save(itemMessengerDelivery);
 

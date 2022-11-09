@@ -279,10 +279,8 @@ public class MessengerShippingController {
                             .ifPresentOrElse(orderItem -> {
                                 String validationCode = globalMethods.generateValidationCode();
                                 itemMessengerDelivery.setValidationCode(globalMethods.encryptCode(validationCode));
-                                itemMessengerDelivery.setValidationStatus(0);
-
+                                itemMessengerDelivery.setValidationStatus(1);
                                 orderItemRepository.save(orderItem);
-
                                 loginValidationRepository.findLoginValidationByEmailAddress(messengerInfo.getString("email"))
                                         .ifPresent(user -> {
                                             JSONObject pushPayload = new JSONObject();
@@ -342,8 +340,10 @@ public class MessengerShippingController {
                 String[] deliveryTypes = {"MC"};
                 itemMessengerDeliveryRepository.findItemMessengerDeliveryByOrderItemIdAndMessengerIdAndDeliveryTypeIn(request.getLong("OrderItemId"), messengerId, deliveryTypes
                 ).ifPresentOrElse(itemMessengerDelivery -> {
+                    itemMessengerDelivery.setDeliveryStatus(1);
                     orderItemRepository.findById(request.getLong("OrderItemId"))
                             .ifPresentOrElse(orderItem -> {
+
                                 orderItem.setIsQrCodeAssigned(1);
                                 orderItem.setQrCodeNumber(request.getString("QrCodeNumber"));
                                 orderItem.setQrCodeAssignmentDate(Timestamp.from(Instant.now()));
@@ -368,6 +368,84 @@ public class MessengerShippingController {
                                         .put("statusDescription", "The Item does not exists")
                                         .put("statusMessage", "The Item does not exists");
                             });
+                }, () -> {
+                    responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                            .put("statusDescription", "The Delivery is not assigned to this messenger")
+                            .put("statusMessage", "The Delivery is not assigned to this messenger");
+                });
+            } else {
+                responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                        .put("statusDescription", "Error in user validation")
+                        .put("statusMessage", "Error in user validation");
+            }
+        } catch (Exception ex) {
+            responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                    .put("statusDescription", "Error in user validation")
+                    .put("statusMessage", "Error in user validation");
+            log.log(Level.WARNING, ex.getMessage());
+        }
+        return ResponseEntity.ok(responseMap.toString());
+    }
+
+    @RequestMapping(value = "/generate-otp-code-customer-delivery", method = RequestMethod.POST)
+    public ResponseEntity<?> generateOtpForCustomerDelivery(@RequestHeader("Authorization") String accessToken,
+                                                            @RequestBody String req) {
+        JSONObject responseMap = new JSONObject();
+        try {
+            JSONObject valTokenReq = new JSONObject();
+            valTokenReq.put("AccessToken", accessToken)
+                    .put("UserType", "M");
+            JSONObject valTokenBdy = validateAccessToken.pickAndReturnAll(valTokenReq);
+            if (valTokenBdy.getString("Status").equals("00")) {
+                JSONObject userDetails = valTokenBdy.getJSONObject("UserDetails");
+                JSONObject messengerInfo = userDetails.getJSONObject("messengerInfo");
+                Long messengerId = Long.valueOf(messengerInfo.getInt("userId"));
+                JSONObject request = new JSONObject(req);
+
+                String[] deliveryTypes = {"MC", "MW"};
+                itemMessengerDeliveryRepository.findItemMessengerDeliveryByOrderItemIdAndMessengerIdAndDeliveryTypeIn(request.getLong("OrderItemId"), messengerId, deliveryTypes
+                ).ifPresentOrElse(itemMessengerDelivery -> {
+                    if (itemMessengerDelivery.getValidationStatus().equals(3)) {
+
+                        orderItemRepository.findById(request.getLong("OrderItemId"))
+                                .ifPresentOrElse(orderItem -> {
+                                    String validationCode = globalMethods.generateValidationCode();
+                                    itemMessengerDelivery.setDeliveryCode(globalMethods.encryptCode(validationCode));
+                                    itemMessengerDelivery.setDeliveryStatus(3);
+                                    orderItemRepository.save(orderItem);
+                                    JSONObject emailPayload = new JSONObject();
+                                    if (orderRepository.findByOrderId(orderItem.getOrderId()).getSaleType().equals("M2C")) {
+                                        JSONObject cusReq = new JSONObject();
+                                        cusReq.put("Type", "CUSTOMER");
+                                        cusReq.put("TypeId", orderRepository.findByOrderId(orderItem.getOrderId()).getCustomerId());
+                                        JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
+                                        emailPayload.put("EmailDestination", cusRes.getString("email"));
+                                        emailPayload.put("EmailMessage", "Delivery Validation Code : " + validationCode);
+                                        globalMethods.processEmailWithoutTemplate(emailPayload);
+                                    } else {
+                                        JSONObject cusReq = new JSONObject();
+                                        cusReq.put("Type", "BUSINESS");
+                                        cusReq.put("TypeId", orderRepository.findByOrderId(orderItem.getOrderId()).getBusinessId());
+                                        JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
+                                        emailPayload.put("EmailDestination", cusRes.getString("email"));
+                                        emailPayload.put("EmailMessage", "Delivery Validation Code : " + validationCode);
+                                        globalMethods.processEmailWithoutTemplate(emailPayload);
+                                    }
+
+                                    responseMap.put("statusCode", ResponseCodes.SUCCESS)
+                                            .put("statusDescription", "Success")
+                                            .put("ValidCode", validationCode)
+                                            .put("statusMessage", "Success");
+                                }, () -> {
+                                    responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                                            .put("statusDescription", "The Item does not exists")
+                                            .put("statusMessage", "The Item does not exists");
+                                });
+                    } else {
+                        responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                                .put("statusDescription", "The Item has not been picked")
+                                .put("statusMessage", "The Item has not been picked");
+                    }
                 }, () -> {
                     responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
                             .put("statusDescription", "The Delivery is not assigned to this messenger")
