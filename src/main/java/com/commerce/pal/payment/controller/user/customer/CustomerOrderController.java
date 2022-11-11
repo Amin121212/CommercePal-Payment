@@ -58,7 +58,7 @@ public class CustomerOrderController {
         this.itemShipmentStatusRepository = itemShipmentStatusRepository;
     }
 
-    @RequestMapping(value = {"/my-orders"}, method = {RequestMethod.POST}, produces = {"application/json"})
+    @RequestMapping(value = {"/my-orders"}, method = {RequestMethod.GET}, produces = {"application/json"})
     @ResponseBody
     public ResponseEntity<?> customerOrders(@RequestHeader("Authorization") String accessToken,
                                             @RequestParam("orderRef") Optional<String> orderRef) {

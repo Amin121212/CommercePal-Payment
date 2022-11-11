@@ -1,11 +1,14 @@
 package com.commerce.pal.payment.controller.portal.warehouse;
 
+import com.commerce.pal.payment.model.shipping.ItemCustomerPickUp;
 import com.commerce.pal.payment.model.shipping.ItemMessengerDelivery;
 import com.commerce.pal.payment.model.shipping.ItemShipmentStatus;
+import com.commerce.pal.payment.module.DataAccessService;
 import com.commerce.pal.payment.module.order.OrderService;
 import com.commerce.pal.payment.module.shipping.notification.process.MessengerAssignmentNotification;
 import com.commerce.pal.payment.repo.payment.OrderItemRepository;
 import com.commerce.pal.payment.repo.payment.OrderRepository;
+import com.commerce.pal.payment.repo.shipping.ItemCustomerPickUpRepository;
 import com.commerce.pal.payment.repo.shipping.ItemMessengerDeliveryRepository;
 import com.commerce.pal.payment.repo.shipping.ItemShipmentStatusRepository;
 import com.commerce.pal.payment.util.GlobalMethods;
@@ -22,7 +25,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 
 import static com.commerce.pal.payment.util.StatusCodes.*;
-import static com.commerce.pal.payment.util.StatusCodes.MessengerPickedMerchantToWareHouse;
 
 @Log
 @CrossOrigin(origins = {"*"}, maxAge = 3600L)
@@ -33,7 +35,9 @@ public class WareHouseShippingController {
     private final OrderService orderService;
     private final GlobalMethods globalMethods;
     private final OrderRepository orderRepository;
+    private final DataAccessService dataAccessService;
     private final OrderItemRepository orderItemRepository;
+    private final ItemCustomerPickUpRepository itemCustomerPickUpRepository;
     private final ItemShipmentStatusRepository itemShipmentStatusRepository;
     private final MessengerAssignmentNotification messengerAssignmentNotification;
     private final ItemMessengerDeliveryRepository itemMessengerDeliveryRepository;
@@ -42,14 +46,18 @@ public class WareHouseShippingController {
     public WareHouseShippingController(OrderService orderService,
                                        GlobalMethods globalMethods,
                                        OrderRepository orderRepository,
+                                       DataAccessService dataAccessService,
                                        OrderItemRepository orderItemRepository,
+                                       ItemCustomerPickUpRepository itemCustomerPickUpRepository,
                                        ItemShipmentStatusRepository itemShipmentStatusRepository,
                                        MessengerAssignmentNotification messengerAssignmentNotification,
                                        ItemMessengerDeliveryRepository itemMessengerDeliveryRepository) {
         this.orderService = orderService;
         this.globalMethods = globalMethods;
         this.orderRepository = orderRepository;
+        this.dataAccessService = dataAccessService;
         this.orderItemRepository = orderItemRepository;
+        this.itemCustomerPickUpRepository = itemCustomerPickUpRepository;
         this.itemShipmentStatusRepository = itemShipmentStatusRepository;
         this.messengerAssignmentNotification = messengerAssignmentNotification;
         this.itemMessengerDeliveryRepository = itemMessengerDeliveryRepository;
@@ -221,7 +229,7 @@ public class WareHouseShippingController {
         JSONObject responseMap = new JSONObject();
         try {
             JSONObject request = new JSONObject(req);
-            orderItemRepository.findOrderItemByQrCodeNumberAndItemId(request.getString("QrCodeNumber"),request.getLong("OrderItemId")).ifPresentOrElse(orderItem -> {
+            orderItemRepository.findOrderItemByQrCodeNumberAndItemId(request.getString("QrCodeNumber"), request.getLong("OrderItemId")).ifPresentOrElse(orderItem -> {
                 itemMessengerDeliveryRepository.findItemMessengerDeliveryByOrderItemIdAndDeliveryTypeAndDeliveryStatus(
                         request.getLong("OrderItemId"), "MW", 1
                 ).ifPresentOrElse(itemMessengerDelivery -> {
@@ -230,17 +238,60 @@ public class WareHouseShippingController {
                     itemMessengerDelivery.setDeliveryDate(Timestamp.from(Instant.now()));
                     itemMessengerDeliveryRepository.save(itemMessengerDelivery);
 
-                    orderItem.setShipmentStatus(MessengerDeliveredItemToMerchant);
+                    orderItem.setShipmentStatus(MessengerDeliveredItemToWareHouse);
                     orderItem.setShipmentUpdateDate(Timestamp.from(Instant.now()));
                     orderItemRepository.save(orderItem);
 
                     ItemShipmentStatus itemShipmentStatus = new ItemShipmentStatus();
-                    itemShipmentStatus.setShipmentStatus(MessengerDeliveredItemToMerchant);
+                    itemShipmentStatus.setShipmentStatus(MessengerDeliveredItemToWareHouse);
                     itemShipmentStatus.setItemId(orderItem.getItemId());
                     itemShipmentStatus.setComments(request.getString("Comments"));
                     itemShipmentStatus.setStatus(1);
                     itemShipmentStatus.setCreatedDate(Timestamp.from(Instant.now()));
                     itemShipmentStatusRepository.save(itemShipmentStatus);
+                    AtomicReference<String> message = new AtomicReference<>("Is not final Destination");
+                    orderRepository.findById(orderItem.getOrderId())
+                            .ifPresentOrElse(order -> {
+                                if (order.getPreferredLocationType().equals("W")) {
+                                    if (order.getUserAddressId().equals(request.getLong("WareHouseId"))) {
+                                        message.set("Final Destination.Notification sent to the customer");
+                                        String validationCode = globalMethods.generateValidationCode();
+                                        ItemCustomerPickUp pickUp = new ItemCustomerPickUp();
+                                        pickUp.setOrderItemId(orderItem.getItemId());
+                                        pickUp.setCollectionType("WAREHOUSE");
+                                        pickUp.setAgentId(0L);
+                                        pickUp.setWareHouseId(request.getLong("WareHouseId"));
+                                        pickUp.setCustomerId(order.getCustomerId());
+                                        pickUp.setCollectionCode(globalMethods.encryptCode(validationCode));
+                                        pickUp.setCollectionStatus(0);
+                                        pickUp.setCollectionDate(Timestamp.from(Instant.now()));
+                                        pickUp.setStatus(0);
+                                        pickUp.setCreatedDate(Timestamp.from(Instant.now()));
+                                        pickUp.setUpdatedDate(Timestamp.from(Instant.now()));
+                                        itemCustomerPickUpRepository.save(pickUp);
+                                        JSONObject emailPayload = new JSONObject();
+                                        emailPayload.put("EmailSubject", "Item Received at WareHouse : " + orderItem.getSubOrderNumber());
+                                        emailPayload.put("EmailMessage", "The Pick Up Validation Code : " + validationCode);
+                                        if (orderRepository.findByOrderId(orderItem.getOrderId()).getSaleType().equals("M2C")) {
+                                            JSONObject cusReq = new JSONObject();
+                                            cusReq.put("Type", "CUSTOMER");
+                                            cusReq.put("TypeId", orderRepository.findByOrderId(orderItem.getOrderId()).getCustomerId());
+                                            JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
+                                            emailPayload.put("EmailDestination", cusRes.getString("email"));
+                                            globalMethods.processEmailWithoutTemplate(emailPayload);
+                                        } else {
+                                            JSONObject cusReq = new JSONObject();
+                                            cusReq.put("Type", "BUSINESS");
+                                            cusReq.put("TypeId", orderRepository.findByOrderId(orderItem.getOrderId()).getBusinessId());
+                                            JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
+                                            emailPayload.put("EmailDestination", cusRes.getString("email"));
+                                            globalMethods.processEmailWithoutTemplate(emailPayload);
+                                        }
+                                    }
+                                }
+                            }, () -> {
+                                message.set("Is not final Destination");
+                            });
                     responseMap.put("statusCode", ResponseCodes.SUCCESS)
                             .put("statusDescription", "success")
                             .put("statusMessage", "success");
