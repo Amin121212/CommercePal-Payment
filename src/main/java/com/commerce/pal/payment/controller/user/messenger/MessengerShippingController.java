@@ -25,6 +25,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 
 import static com.commerce.pal.payment.util.StatusCodes.*;
@@ -630,6 +631,119 @@ public class MessengerShippingController {
                     responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
                             .put("statusDescription", "The Delivery is not assigned to this messenger")
                             .put("statusMessage", "The Delivery is not assigned to this messenger");
+                });
+            } else {
+                responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                        .put("statusDescription", "Error in user validation")
+                        .put("statusMessage", "Error in user validation");
+            }
+        } catch (Exception ex) {
+            responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                    .put("statusDescription", "Error in user validation")
+                    .put("statusMessage", "Error in user validation");
+            log.log(Level.WARNING, ex.getMessage());
+        }
+        return ResponseEntity.ok(responseMap.toString());
+    }
+
+    @RequestMapping(value = "/scan-qr-at-warehouse", method = RequestMethod.POST)
+    public ResponseEntity<?> scanQrCodeAt(@RequestHeader("Authorization") String accessToken,
+                                          @RequestBody String req) {
+        JSONObject responseMap = new JSONObject();
+        try {
+            JSONObject valTokenReq = new JSONObject();
+            valTokenReq.put("AccessToken", accessToken)
+                    .put("UserType", "M");
+            JSONObject valTokenBdy = validateAccessToken.pickAndReturnAll(valTokenReq);
+            if (valTokenBdy.getString("Status").equals("00")) {
+                JSONObject request = new JSONObject(req);
+                JSONObject userDetails = valTokenBdy.getJSONObject("UserDetails");
+                JSONObject messengerInfo = userDetails.getJSONObject("messengerInfo");
+                Long messenger = Long.valueOf(messengerInfo.getInt("userId"));
+
+                AtomicReference<JSONObject> orderItem = new AtomicReference<>(new JSONObject());
+                orderItemRepository.findOrderItemByQrCodeNumber(request.getString("QrCodeNumber"))
+                        .ifPresentOrElse(data -> {
+                            itemMessengerDeliveryRepository.findItemMessengerDeliveryByOrderItemIdAndMessengerIdAndDeliveryTypeAndValidationStatus(
+                                    data.getItemId(), messenger, "WC", 0
+                            ).ifPresentOrElse(itemMessengerDelivery -> {
+                                orderItem.set(orderService.orderItemDetails(data.getItemId()));
+                                responseMap.put("statusCode", ResponseCodes.SUCCESS)
+                                        .put("statusDescription", "success")
+                                        .put("data", orderItem.get())
+                                        .put("statusMessage", "Request Successful");
+                            }, () -> {
+                                responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                                        .put("statusDescription", "Delivery is not assigned to the Messenger")
+                                        .put("statusMessage", "Delivery is not assigned to the Messenger");
+                            });
+                        }, () -> {
+                            responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                                    .put("statusDescription", "Item Does Not Exist")
+                                    .put("statusMessage", "Item Does Not Exist");
+                        });
+            } else {
+                responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                        .put("statusDescription", "Error in user validation")
+                        .put("statusMessage", "Error in user validation");
+            }
+
+        } catch (Exception ex) {
+            responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                    .put("statusDescription", "Error in user validation")
+                    .put("statusMessage", "Error in user validation");
+            log.log(Level.WARNING, ex.getMessage());
+        }
+        return ResponseEntity.ok(responseMap.toString());
+    }
+
+    @RequestMapping(value = "/accept-item", method = RequestMethod.POST)
+    public ResponseEntity<?> acceptItem(@RequestHeader("Authorization") String accessToken,
+                                        @RequestBody String req) {
+        JSONObject responseMap = new JSONObject();
+        try {
+            JSONObject valTokenReq = new JSONObject();
+            valTokenReq.put("AccessToken", accessToken)
+                    .put("UserType", "M");
+            JSONObject valTokenBdy = validateAccessToken.pickAndReturnAll(valTokenReq);
+            if (valTokenBdy.getString("Status").equals("00")) {
+                JSONObject request = new JSONObject(req);
+                JSONObject userDetails = valTokenBdy.getJSONObject("UserDetails");
+                JSONObject messengerInfo = userDetails.getJSONObject("messengerInfo");
+                Long messenger = Long.valueOf(messengerInfo.getInt("userId"));
+                orderItemRepository.findOrderItemByQrCodeNumberAndItemId(
+                        request.getString("QrCodeNumber"), request.getLong("OrderItemId")).ifPresentOrElse(orderItem -> {
+                    itemMessengerDeliveryRepository.findItemMessengerDeliveryByOrderItemIdAndMessengerIdAndDeliveryTypeAndValidationStatus(
+                            request.getLong("OrderItemId"), messenger, "WC", 0
+                    ).ifPresentOrElse(itemMessengerDelivery -> {
+                        itemMessengerDelivery.setValidationStatus(3);
+                        itemMessengerDelivery.setValidationCode("Messenger Acceptance");
+                        itemMessengerDelivery.setValidationDate(Timestamp.from(Instant.now()));
+                        itemMessengerDeliveryRepository.save(itemMessengerDelivery);
+
+                        orderItem.setShipmentStatus(MessengerPickedWareHouseToCustomer);
+                        orderItem.setShipmentUpdateDate(Timestamp.from(Instant.now()));
+                        orderItemRepository.save(orderItem);
+
+                        ItemShipmentStatus itemShipmentStatus = new ItemShipmentStatus();
+                        itemShipmentStatus.setShipmentStatus(MessengerPickedWareHouseToCustomer);
+                        itemShipmentStatus.setItemId(orderItem.getItemId());
+                        itemShipmentStatus.setComments(request.getString("Comments"));
+                        itemShipmentStatus.setStatus(1);
+                        itemShipmentStatus.setCreatedDate(Timestamp.from(Instant.now()));
+                        itemShipmentStatusRepository.save(itemShipmentStatus);
+                        responseMap.put("statusCode", ResponseCodes.SUCCESS)
+                                .put("statusDescription", "success")
+                                .put("statusMessage", "success");
+                    }, () -> {
+                        responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                                .put("statusDescription", "Item Does Not Exist")
+                                .put("statusMessage", "Item Does Not Exist");
+                    });
+                }, () -> {
+                    responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                            .put("statusDescription", "Item Does Not Exist")
+                            .put("statusMessage", "Item Does Not Exist");
                 });
             } else {
                 responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)

@@ -28,4 +28,6 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
 
     @Query(value = "SELECT OrderId  FROM OrderItem WHERE MerchantId = :merchantId AND UserShipmentStatus IN :status AND Status = 3 GROUP BY OrderId", nativeQuery = true)
     List<Long> findByMerchantIdAndUserShipmentStatusOrderByCreatedDateDesc(Long merchantId, List<Integer> status);
+
+    Optional<OrderItem> findOrderItemByQrCodeNumberAndItemId(String qrCode, Long itemId);
 }
