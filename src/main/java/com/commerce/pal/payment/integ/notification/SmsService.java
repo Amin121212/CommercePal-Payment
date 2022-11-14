@@ -33,7 +33,7 @@ public class SmsService {
                     .setBody(pushBdy.toString())
                     .setUrl(PUSH_END_POINT)
                     .build();
-            log.log(Level.INFO, "CommercePal OneSignal Res : " + httpProcessor.processProperRequest(builder));
+            log.log(Level.INFO, "CommercePal Notification Res : " + httpProcessor.processProperRequest(builder));
         } catch (Exception ex) {
             log.log(Level.WARNING, ex.getMessage());
         }
