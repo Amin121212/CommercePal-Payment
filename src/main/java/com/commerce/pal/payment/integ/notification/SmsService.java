@@ -13,7 +13,7 @@ import java.util.logging.Level;
 @Service
 public class SmsService {
 
-    @Value("${commerce.pal.notification.one.signal.endpoint}")
+    @Value("${commerce.pal.notification.sms.notification.endpoint}")
     private String PUSH_END_POINT;
 
     private final HttpProcessor httpProcessor;
