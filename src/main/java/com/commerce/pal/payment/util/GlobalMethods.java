@@ -1,6 +1,7 @@
 package com.commerce.pal.payment.util;
 
 import com.commerce.pal.payment.integ.notification.EmailClient;
+import com.commerce.pal.payment.integ.notification.SmsService;
 import com.commerce.pal.payment.integ.notification.push.OneSignal;
 import com.commerce.pal.payment.module.database.AccountService;
 import lombok.extern.java.Log;
@@ -20,11 +21,14 @@ public class GlobalMethods {
 
     @Autowired
     private EmailClient emailClient;
+    @Autowired
+    private SmsService smsService;
 
     @Autowired
     private OneSignal oneSignal;
 
     private final AccountService accountService;
+
     @Autowired
     public GlobalMethods(AccountService accountService) {
         this.accountService = accountService;
@@ -56,6 +60,11 @@ public class GlobalMethods {
                 payload.getString("Message"),
                 payload.getJSONObject("data"));
     }
+
+    public void sendSMS(String message, String phone) {
+        smsService.pickAndProcess(message, phone);
+    }
+
 
     public String generateValidationCode() {
         Random rnd = new Random();

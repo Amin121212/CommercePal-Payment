@@ -78,6 +78,10 @@ public class AgentCashProcessing {
             emailPayload.put("EmailMessage", "Trans Ref " + agentCash.get().getPaymentRef() + " and Validation Code : " + validationCode);
             globalMethods.processEmailWithoutTemplate(emailPayload);
 
+            String message = "You have requested to make payment using agent cash.Provide this code to an Agent to fulfill" +
+                    "payment : Code : " + validationCode;
+            globalMethods.sendSMS(message, payment.getAccountNumber().substring(payment.getAccountNumber().length() - 9));
+
         } catch (Exception ex) {
             log.log(Level.WARNING, ex.getMessage());
             respBdy.put("statusCode", ResponseCodes.SYSTEM_ERROR)
