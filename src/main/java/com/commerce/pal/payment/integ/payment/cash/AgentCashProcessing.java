@@ -78,9 +78,14 @@ public class AgentCashProcessing {
             emailPayload.put("EmailMessage", "Trans Ref " + agentCash.get().getPaymentRef() + " and Validation Code : " + validationCode);
             globalMethods.processEmailWithoutTemplate(emailPayload);
 
-            String message = "You have requested to make payment using agent cash.Provide this code to an Agent to fulfill" +
-                    "payment : Code : " + validationCode;
-            globalMethods.sendSMS(message, payment.getAccountNumber().substring(payment.getAccountNumber().length() - 9));
+            JSONObject smsBody = new JSONObject();
+            smsBody.put("TemplateId", "6");
+            smsBody.put("TemplateLanguage", "en");
+            smsBody.put("tran_ref", agentCash.get().getPaymentRef());
+            smsBody.put("order_ref", payment.getOrderRef());
+            smsBody.put("OTP", validationCode);
+            smsBody.put("Phone", payment.getAccountNumber().substring(payment.getAccountNumber().length() - 9));
+            globalMethods.sendSMSNotification(smsBody);
 
         } catch (Exception ex) {
             log.log(Level.WARNING, ex.getMessage());

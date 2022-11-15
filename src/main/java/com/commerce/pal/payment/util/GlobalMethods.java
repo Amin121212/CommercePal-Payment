@@ -24,13 +24,15 @@ public class GlobalMethods {
     @Autowired
     private SmsService smsService;
 
+
     @Autowired
     private OneSignal oneSignal;
-
+    private final SmsLogging smsLogging;
     private final AccountService accountService;
 
     @Autowired
-    public GlobalMethods(AccountService accountService) {
+    public GlobalMethods(SmsLogging smsLogging, AccountService accountService) {
+        this.smsLogging = smsLogging;
         this.accountService = accountService;
     }
 
@@ -63,6 +65,11 @@ public class GlobalMethods {
 
     public void sendSMS(String message, String phone) {
         smsService.pickAndProcess(message, phone);
+    }
+
+    public void sendSMSNotification(JSONObject data) {
+        String message = smsLogging.generateMessage(data);
+        smsService.pickAndProcess(message, data.getString("Phone"));
     }
 
 
