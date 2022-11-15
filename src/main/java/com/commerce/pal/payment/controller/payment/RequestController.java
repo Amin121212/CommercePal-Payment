@@ -74,7 +74,7 @@ public class RequestController {
             if (valTokenBdy.getString("Status").equals("00")) {
                 requestObject.put("UserEmail", valTokenBdy.getString("Email"));
                 requestObject.put("UserId", globalMethods.getUserId(requestObject.getString("UserType"), valTokenBdy.getJSONObject("UserDetails")));
-                requestObject.put("UserLanguage", valTokenBdy.getJSONObject("UserDetails").getString("Language"));
+                requestObject.put("UserLanguage", valTokenBdy.getJSONObject("UserDetails").getString("language"));
 
                 switch (requestObject.getString("ServiceCode")) {
                     case "SAHAY-LOOKUP":
