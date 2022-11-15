@@ -130,6 +130,15 @@ public class OrderPaymentNotification {
                         orderPay.put("templates", "merchant-new-order.ftl");
                         //Send to Customer
                         globalMethods.processEmailWithTemplate(orderPay);
+
+                        JSONObject smsBody = new JSONObject();
+                        smsBody.put("TemplateId", "2");
+                        smsBody.put("TemplateLanguage", "en");
+                        smsBody.put("amount", order.getTotalPrice().toString());
+                        smsBody.put("ref", order.getBillerReference());
+                        smsBody.put("Phone", cusRes.getString("phoneNumber").substring(cusRes.getString("phoneNumber").length() - 9));
+                        globalMethods.sendSMSNotification(smsBody);
+
                     }, () -> {
                         log.log(Level.WARNING, "Invalid Order Ref Passed : " + orderRef);
                     });
