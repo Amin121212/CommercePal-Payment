@@ -167,6 +167,7 @@ public class MessengerShippingController {
                 delivery.put("MerchantId", itemMessengerDelivery.getMerchantId());
                 delivery.put("CustomerId", itemMessengerDelivery.getCustomerId());
                 delivery.put("WareHouseId", itemMessengerDelivery.getWareHouseId());
+                delivery.put("ValidationStatus", itemMessengerDelivery.getValidationStatus());
                 orderItemRepository.findById(itemMessengerDelivery.getOrderItemId())
                         .ifPresent(orderItem -> {
                             delivery.put("ItemOrderRef", orderItem.getSubOrderNumber());
