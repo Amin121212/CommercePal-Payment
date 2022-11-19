@@ -252,6 +252,13 @@ public class MessengerShippingController {
         return ResponseEntity.status(HttpStatus.OK).body(data.toString());
     }
 
+    @RequestMapping(value = {"/warehouse-address"}, method = {RequestMethod.GET}, produces = {"application/json"})
+    @ResponseBody
+    public ResponseEntity<?> warehouseAddress(@RequestParam("ItemId") String ItemId) {
+        JSONObject data = orderService.wareHouseAddress(Long.valueOf(ItemId));
+        return ResponseEntity.status(HttpStatus.OK).body(data.toString());
+    }
+
     @RequestMapping(value = {"/product-info"}, method = {RequestMethod.GET}, produces = {"application/json"})
     @ResponseBody
     public ResponseEntity<?> getProductInfo(@RequestParam("ItemId") String ItemId) {
@@ -340,7 +347,7 @@ public class MessengerShippingController {
                 Long messengerId = Long.valueOf(messengerInfo.getInt("userId"));
                 JSONObject request = new JSONObject(req);
 
-                String[] deliveryTypes = {"MC","MW"};
+                String[] deliveryTypes = {"MC", "MW"};
                 itemMessengerDeliveryRepository.findItemMessengerDeliveryByOrderItemIdAndMessengerIdAndDeliveryTypeIn(request.getLong("OrderItemId"), messengerId, deliveryTypes
                 ).ifPresentOrElse(itemMessengerDelivery -> {
                     itemMessengerDelivery.setDeliveryStatus(1);
@@ -601,7 +608,7 @@ public class MessengerShippingController {
                                         orderItem.setShipmentStatus(MessengerPickedMerchantToCustomer);
                                         itemShipmentStatus.setShipmentStatus(MessengerPickedMerchantToCustomer);
                                     } else if (itemMessengerDelivery.getDeliveryType().equals("MC")) {
-                                        
+
                                     } else {
                                         orderItem.setShipmentStatus(MessengerPickedMerchantToWareHouse);
                                         itemShipmentStatus.setShipmentStatus(MessengerPickedMerchantToWareHouse);

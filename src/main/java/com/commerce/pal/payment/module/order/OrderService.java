@@ -102,4 +102,18 @@ public class OrderService {
         }
         return merchantAddress.get();
     }
+
+
+    public JSONObject wareHouseAddress(Long itemId) {
+        AtomicReference<JSONObject> wareHouseAddress = new AtomicReference<>(new JSONObject());
+        try {
+            JSONObject cusReq = new JSONObject();
+            cusReq.put("Type", "MERCHANT-ADDRESS");
+            cusReq.put("TypeId", 353);
+            wareHouseAddress.set(dataAccessService.pickAndProcess(cusReq));
+        } catch (Exception ex) {
+            log.log(Level.WARNING, ex.getMessage());
+        }
+        return wareHouseAddress.get();
+    }
 }
