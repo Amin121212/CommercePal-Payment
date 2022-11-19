@@ -1,7 +1,7 @@
 package com.commerce.pal.payment.util;
 
 import com.commerce.pal.payment.integ.notification.EmailClient;
-import com.commerce.pal.payment.integ.notification.SmsService;
+import com.commerce.pal.payment.integ.notification.SmsEmailService;
 import com.commerce.pal.payment.integ.notification.push.OneSignal;
 import com.commerce.pal.payment.module.database.AccountService;
 import lombok.extern.java.Log;
@@ -22,7 +22,7 @@ public class GlobalMethods {
     @Autowired
     private EmailClient emailClient;
     @Autowired
-    private SmsService smsService;
+    private SmsEmailService smsEmailService;
 
 
     @Autowired
@@ -64,12 +64,16 @@ public class GlobalMethods {
     }
 
     public void sendSMS(String message, String phone) {
-        smsService.pickAndProcess(message, phone);
+        smsEmailService.pickAndProcess(message, phone);
     }
 
     public void sendSMSNotification(JSONObject data) {
         String message = smsLogging.generateMessage(data);
-        smsService.pickAndProcess(message, data.getString("Phone"));
+        smsEmailService.pickAndProcess(message, data.getString("Phone"));
+    }
+
+    public void sendEmailNotification(JSONObject data) {
+        smsEmailService.pickAndProcessEmail(data);
     }
 
 

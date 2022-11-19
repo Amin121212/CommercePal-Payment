@@ -72,12 +72,6 @@ public class AgentCashProcessing {
                     .put("statusDescription", "Success")
                     .put("statusMessage", "Success");
 
-            JSONObject emailPayload = new JSONObject();
-            emailPayload.put("EmailDestination", payment.getUserEmail());
-            emailPayload.put("EmailSubject", "Order : [" + payment.getOrderRef() + "] - Agent Cash Payment Code");
-            emailPayload.put("EmailMessage", "Trans Ref " + agentCash.get().getPaymentRef() + " and Validation Code : " + validationCode);
-            globalMethods.processEmailWithoutTemplate(emailPayload);
-
             JSONObject smsBody = new JSONObject();
             smsBody.put("TemplateId", "6");
             smsBody.put("TemplateLanguage", "en");
@@ -86,6 +80,14 @@ public class AgentCashProcessing {
             smsBody.put("OTP", validationCode);
             smsBody.put("Phone", payment.getAccountNumber().substring(payment.getAccountNumber().length() - 9));
             globalMethods.sendSMSNotification(smsBody);
+
+            JSONObject emailPayload = new JSONObject();
+            emailPayload.put("HasTemplate", "NO");
+            emailPayload.put("TemplateName", "NO");
+            emailPayload.put("EmailDestination", payment.getUserEmail());
+            emailPayload.put("EmailSubject", "Order : [" + payment.getOrderRef() + "] - Agent Cash Payment Code");
+            emailPayload.put("EmailMessage", "Trans Ref " + agentCash.get().getPaymentRef() + " and Validation Code : " + validationCode);
+            globalMethods.sendEmailNotification(emailPayload);
 
         } catch (Exception ex) {
             log.log(Level.WARNING, ex.getMessage());
