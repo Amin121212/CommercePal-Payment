@@ -340,7 +340,7 @@ public class MessengerShippingController {
                 Long messengerId = Long.valueOf(messengerInfo.getInt("userId"));
                 JSONObject request = new JSONObject(req);
 
-                String[] deliveryTypes = {"MC"};
+                String[] deliveryTypes = {"MC","MW"};
                 itemMessengerDeliveryRepository.findItemMessengerDeliveryByOrderItemIdAndMessengerIdAndDeliveryTypeIn(request.getLong("OrderItemId"), messengerId, deliveryTypes
                 ).ifPresentOrElse(itemMessengerDelivery -> {
                     itemMessengerDelivery.setDeliveryStatus(1);
@@ -600,6 +600,8 @@ public class MessengerShippingController {
                                     if (itemMessengerDelivery.getDeliveryType().equals("MC")) {
                                         orderItem.setShipmentStatus(MessengerPickedMerchantToCustomer);
                                         itemShipmentStatus.setShipmentStatus(MessengerPickedMerchantToCustomer);
+                                    } else if (itemMessengerDelivery.getDeliveryType().equals("MC")) {
+                                        
                                     } else {
                                         orderItem.setShipmentStatus(MessengerPickedMerchantToWareHouse);
                                         itemShipmentStatus.setShipmentStatus(MessengerPickedMerchantToWareHouse);
