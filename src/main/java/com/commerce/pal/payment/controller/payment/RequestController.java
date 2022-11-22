@@ -76,7 +76,6 @@ public class RequestController {
                     responseBody = ethioSwithAccount.accountCheck(requestObject);
                     break;
             }
-
             if (requestBody.isEmpty()) {
                 JSONObject valTokenReq = new JSONObject();
                 valTokenReq.put("AccessToken", accessToken)
