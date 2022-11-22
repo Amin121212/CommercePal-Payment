@@ -1,8 +1,7 @@
 package com.commerce.pal.payment.util;
 
 import com.commerce.pal.payment.integ.notification.EmailClient;
-import com.commerce.pal.payment.integ.notification.SmsEmailService;
-import com.commerce.pal.payment.integ.notification.push.OneSignal;
+import com.commerce.pal.payment.integ.notification.SmsEmailPushService;
 import com.commerce.pal.payment.module.database.AccountService;
 import lombok.extern.java.Log;
 import org.json.JSONObject;
@@ -22,11 +21,9 @@ public class GlobalMethods {
     @Autowired
     private EmailClient emailClient;
     @Autowired
-    private SmsEmailService smsEmailService;
+    private SmsEmailPushService smsEmailService;
 
 
-    @Autowired
-    private OneSignal oneSignal;
     private final SmsLogging smsLogging;
     private final AccountService accountService;
 
@@ -38,7 +35,14 @@ public class GlobalMethods {
 
     public String generateTrans() {
         String ref = Timestamp.from(Instant.now()).toString();
-        ref = IDGenerator.getInstance("SB").getRRN();
+
+        Boolean finalRef = false;
+        while (finalRef = false) {
+            ref = IDGenerator.getInstance("SB").getRRN();
+            if (!ref.contains("0") || !ref.contains("O")) {
+                finalRef = true;
+            }
+        }
         return ref;
     }
 
@@ -57,7 +61,7 @@ public class GlobalMethods {
     }
 
     public void sendPushNotification(JSONObject payload) {
-        oneSignal.pickAndProcess(payload.getString("UserId"),
+        smsEmailService.pickAndProcessPush(payload.getString("UserId"),
                 payload.getString("Header"),
                 payload.getString("Message"),
                 payload.getJSONObject("data"));

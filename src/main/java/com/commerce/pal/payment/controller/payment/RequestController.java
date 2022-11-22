@@ -65,42 +65,45 @@ public class RequestController {
         JSONObject responseBody = new JSONObject();
         try {
             JSONObject requestObject = new JSONObject(requestBody);
-            JSONObject valTokenReq = new JSONObject();
-            valTokenReq.put("AccessToken", accessToken)
-                    .put("UserType", requestObject.getString("UserType"));
+            switch (requestObject.getString("ServiceCode")) {
+                case "SAHAY-LOOKUP":
+                    responseBody = sahayCustomerValidation.checkCustomer(requestObject.getString("PhoneNumber"));
+                    break;
+                case "ES-BANK-LOOKUP":
+                    responseBody = ethioSwithAccount.bankCheck();
+                    break;
+                case "ES-ACCOUNT-LOOKUP":
+                    responseBody = ethioSwithAccount.accountCheck(requestObject);
+                    break;
+            }
 
-            JSONObject valTokenBdy = validateAccessToken.pickAndReturnAll(valTokenReq);
+            if (requestBody.isEmpty()) {
+                JSONObject valTokenReq = new JSONObject();
+                valTokenReq.put("AccessToken", accessToken)
+                        .put("UserType", requestObject.getString("UserType"));
+                JSONObject valTokenBdy = validateAccessToken.pickAndReturnAll(valTokenReq);
+                if (valTokenBdy.getString("Status").equals("00")) {
+                    requestObject.put("UserEmail", valTokenBdy.getString("Email"));
+                    requestObject.put("UserId", globalMethods.getUserId(requestObject.getString("UserType"), valTokenBdy.getJSONObject("UserDetails")));
+                    requestObject.put("UserLanguage", valTokenBdy.getJSONObject("UserDetails").getJSONObject("Details").getString("language"));
 
-            if (valTokenBdy.getString("Status").equals("00")) {
-                requestObject.put("UserEmail", valTokenBdy.getString("Email"));
-                requestObject.put("UserId", globalMethods.getUserId(requestObject.getString("UserType"), valTokenBdy.getJSONObject("UserDetails")));
-                requestObject.put("UserLanguage", valTokenBdy.getJSONObject("UserDetails").getJSONObject("Details").getString("language"));
-
-                switch (requestObject.getString("ServiceCode")) {
-                    case "SAHAY-LOOKUP":
-                        responseBody = sahayCustomerValidation.checkCustomer(requestObject.getString("PhoneNumber"));
-                        break;
-                    case "ES-BANK-LOOKUP":
-                        responseBody = ethioSwithAccount.bankCheck();
-                        break;
-                    case "ES-ACCOUNT-LOOKUP":
-                        responseBody = ethioSwithAccount.accountCheck(requestObject);
-                        break;
-                    case "CHECKOUT":
-                    case "LOAN-REQUEST":
-                        responseBody = paymentService.pickAndProcess(requestObject);
-                        break;
-                    case "SAHAY-CONFIRM-PAYMENT":
-                        responseBody = sahayPaymentFulfillment.pickAndProcess(requestObject);
-                        break;
-                    case "AGENT-CASH-FULFILLMENT":
-                        responseBody = agentCashProcessing.processFulfillment(requestObject);
-                        break;
-                    default:
-                        responseBody.put("statusCode", ResponseCodes.REQUEST_NOT_ACCEPTED)
-                                .put("statusDescription", "failed")
-                                .put("statusMessage", "Request failed");
-                        break;
+                    switch (requestObject.getString("ServiceCode")) {
+                        case "CHECKOUT":
+                        case "LOAN-REQUEST":
+                            responseBody = paymentService.pickAndProcess(requestObject);
+                            break;
+                        case "SAHAY-CONFIRM-PAYMENT":
+                            responseBody = sahayPaymentFulfillment.pickAndProcess(requestObject);
+                            break;
+                        case "AGENT-CASH-FULFILLMENT":
+                            responseBody = agentCashProcessing.processFulfillment(requestObject);
+                            break;
+                        default:
+                            responseBody.put("statusCode", ResponseCodes.REQUEST_NOT_ACCEPTED)
+                                    .put("statusDescription", "failed")
+                                    .put("statusMessage", "Request failed");
+                            break;
+                    }
                 }
             } else {
                 responseBody.put("statusCode", ResponseCodes.REQUEST_NOT_ACCEPTED)
