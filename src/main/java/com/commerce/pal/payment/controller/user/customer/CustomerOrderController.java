@@ -121,7 +121,6 @@ public class CustomerOrderController {
             Long customerId = customerData.getLong("userId");
             orderRepository.findOrderByOrderIdAndCustomerId(reqBdy.getLong("OrderId"), customerId)
                     .ifPresent(order -> {
-
                         orderDetails.put("OrderRef", order.getOrderRef());
                         orderDetails.put("OrderDate", order.getOrderDate());
                         orderDetails.put("DeliveryPrice", order.getDeliveryPrice());

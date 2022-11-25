@@ -14,6 +14,7 @@ import java.util.logging.Level;
 
 @Log
 @Service
+@SuppressWarnings("Duplicates")
 public class OrderService {
 
     private final OrderRepository orderRepository;

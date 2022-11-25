@@ -65,18 +65,23 @@ public class RequestController {
         JSONObject responseBody = new JSONObject();
         try {
             JSONObject requestObject = new JSONObject(requestBody);
+            Boolean checkToken = true;
+
             switch (requestObject.getString("ServiceCode")) {
                 case "SAHAY-LOOKUP":
+                    checkToken = false;
                     responseBody = sahayCustomerValidation.checkCustomer(requestObject.getString("PhoneNumber"));
                     break;
                 case "ES-BANK-LOOKUP":
+                    checkToken = false;
                     responseBody = ethioSwithAccount.bankCheck();
                     break;
                 case "ES-ACCOUNT-LOOKUP":
+                    checkToken = false;
                     responseBody = ethioSwithAccount.accountCheck(requestObject);
                     break;
             }
-            if (responseBody.length() == 0) {
+            if (checkToken.equals(true)) {
                 JSONObject valTokenReq = new JSONObject();
                 valTokenReq.put("AccessToken", accessToken)
                         .put("UserType", requestObject.getString("UserType"));
