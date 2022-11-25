@@ -37,7 +37,7 @@ public class GlobalMethods {
         String ref = Timestamp.from(Instant.now()).toString();
 
         Boolean finalRef = false;
-        while (finalRef = false) {
+        while (finalRef == false) {
             ref = IDGenerator.getInstance("SB").getRRN();
             if (!ref.contains("0") || !ref.contains("O")) {
                 finalRef = true;
