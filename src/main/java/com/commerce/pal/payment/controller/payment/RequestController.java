@@ -109,13 +109,8 @@ public class RequestController {
                             break;
                     }
                 }
-            } else {
-                responseBody.put("statusCode", ResponseCodes.REQUEST_NOT_ACCEPTED)
-                        .put("statusDescription", "failed")
-                        .put("statusMessage", "Request failed");
             }
             return ResponseEntity.ok(responseBody.toString());
-
         } catch (Exception ex) {
             responseBody.put("statusCode", ResponseCodes.SYSTEM_ERROR)
                     .put("statusDescription", "failed")
