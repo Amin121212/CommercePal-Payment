@@ -94,7 +94,7 @@ public class OrderService {
             orderItemRepository.findById(itemId).ifPresent(item -> {
                 JSONObject cusReq = new JSONObject();
                 cusReq.put("Type", "PRODUCT-AND-SUB");
-                cusReq.put("TypeId", item.getSubProductId());
+                cusReq.put("TypeId", item.getProductLinkingId());
                 cusReq.put("SubProductId", item.getSubProductId());
                 merchantAddress.set(dataAccessService.pickAndProcess(cusReq));
             });

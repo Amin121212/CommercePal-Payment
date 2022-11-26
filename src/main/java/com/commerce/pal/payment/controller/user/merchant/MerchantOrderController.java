@@ -135,8 +135,8 @@ public class MerchantOrderController {
     @RequestMapping(value = {"/product-info"}, method = {RequestMethod.GET}, produces = {"application/json"})
     @ResponseBody
     public ResponseEntity<?> getProductInfo(@RequestParam("ItemId") String ItemId) {
-        JSONObject orderItem = orderService.productInfo(Long.valueOf(ItemId));
-        return ResponseEntity.status(HttpStatus.OK).body(orderItem.toString());
+        JSONObject productInfo = orderService.productInfo(Long.valueOf(ItemId));
+        return ResponseEntity.status(HttpStatus.OK).body(productInfo.toString());
     }
 
     @RequestMapping(value = {"/my-orders"}, method = {RequestMethod.GET}, produces = {"application/json"})
