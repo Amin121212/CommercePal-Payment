@@ -58,9 +58,7 @@ public class OrderPaymentNotification {
                             cusReq.put("Type", "BUSINESS");
                             cusReq.put("TypeId", order.getBusinessId());
                         }
-
                         JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
-
                         JSONObject orderPay = new JSONObject();
                         orderPay.put("CustomerName", cusRes.getString("firstName"));
                         orderPay.put("OrderRef", order.getOrderRef());
@@ -115,11 +113,16 @@ public class OrderPaymentNotification {
                                                     pushPayload.put("data", data);
                                                     globalMethods.sendPushNotification(pushPayload);
                                                 });
-                                        orderPay.put("email", merRes.getString("email"));
-                                        orderPay.put("subject", "New Order Ref : " + order.getOrderRef() + " (Merchant)");
-                                        orderPay.put("templates", "merchant-new-order.ftl");
-                                        //Send to Merchant
-                                        globalMethods.processEmailWithTemplate(orderPay);
+                                        JSONObject merchantEmailPayload = new JSONObject();
+                                        merchantEmailPayload.put("HasTemplate", "YES");
+                                        merchantEmailPayload.put("TemplateName", "merchant-payment");
+                                        merchantEmailPayload.put("name", merRes.getString("firstName"));
+                                        merchantEmailPayload.put("orderRef", order.getOrderRef());
+                                        merchantEmailPayload.put("orderItems", customerOrderItems);
+                                        merchantEmailPayload.put("EmailDestination", merRes.getString("email"));
+                                        merchantEmailPayload.put("EmailSubject", "ORDER PAYMENT - REF : " + order.getOrderRef());
+                                        merchantEmailPayload.put("EmailMessage", "Order Payment");
+                                        globalMethods.sendEmailNotification(merchantEmailPayload);
                                     } else { // DO for WareHouse Id
 
                                     }
