@@ -115,6 +115,11 @@ public class PaymentStoreProcedure {
             query.registerStoredProcedureParameter("Balance", String.class, ParameterMode.OUT);
             query.registerStoredProcedureParameter("ComBalance", String.class, ParameterMode.OUT);
             query.registerStoredProcedureParameter("Narration", String.class, ParameterMode.OUT);
+            query.registerStoredProcedureParameter("MerchantAccount", String.class, ParameterMode.OUT);
+            query.registerStoredProcedureParameter("MerchantAmount", String.class, ParameterMode.OUT);
+            query.registerStoredProcedureParameter("MerchantCommission", String.class, ParameterMode.OUT);
+            query.registerStoredProcedureParameter("MerchantEmailAddress", String.class, ParameterMode.OUT);
+
 
             query.execute();
 
@@ -122,6 +127,10 @@ public class PaymentStoreProcedure {
             transResponse.put("Balance", query.getOutputParameterValue("Balance"));
             transResponse.put("ComBalance", query.getOutputParameterValue("ComBalance"));
             transResponse.put("Narration", query.getOutputParameterValue("Narration"));
+            transResponse.put("MerchantAccount", query.getOutputParameterValue("MerchantAccount"));
+            transResponse.put("MerchantAmount", query.getOutputParameterValue("MerchantAmount"));
+            transResponse.put("MerchantCommission", query.getOutputParameterValue("MerchantCommission"));
+            transResponse.put("MerchantEmailAddress", query.getOutputParameterValue("MerchantEmailAddress"));
             transResponse.put("Status", "00");
             transResponse.put("Message", "The request was processed successfully");
 

@@ -255,6 +255,7 @@ public class MerchantShippingController {
                                     reqBody.put("PaymentNarration", payNar);
 
                                     JSONObject payRes = paymentStoreProcedure.merchantItemSettlement(reqBody);
+
                                     responseMap.put("statusCode", ResponseCodes.SUCCESS)
                                             .put("balance", payRes.getString("Balance"))
                                             .put("comBalance", payRes.getString("ComBalance"))
@@ -262,8 +263,31 @@ public class MerchantShippingController {
                                             .put("statusDescription", "Success")
                                             .put("statusMessage", "Success");
 
-                                    // Send Notification of Acceptance
-                                    // merchantAcceptAndPickUpNotification.pickAndProcess(orderItem.getOrderId().toString());
+                                    List<JSONObject> orderItems = new ArrayList<>();
+                                    JSONObject itemPay = new JSONObject();
+                                    JSONObject prodReq = new JSONObject();
+                                    prodReq.put("Type", "PRODUCT");
+                                    prodReq.put("TypeId", orderItem.getProductLinkingId());
+                                    JSONObject productBdy = dataAccessService.pickAndProcess(prodReq);
+                                    itemPay.put("ProductName", productBdy.getString("productName"));
+                                    itemPay.put("ProductImage", productBdy.getString("webImage"));
+                                    itemPay.put("NoOfProduct", orderItem.getQuantity());
+                                    itemPay.put("ItemOrderRef", orderItem.getSubOrderNumber());
+                                    orderItems.add(itemPay);
+
+                                    JSONObject merchantEmailPayload = new JSONObject();
+                                    merchantEmailPayload.put("HasTemplate", "YES");
+                                    merchantEmailPayload.put("TemplateName", "merchant-payment-notification");
+                                    merchantEmailPayload.put("Amount", payRes.getString("MerchantAmount"));
+                                    merchantEmailPayload.put("TransRef", transRef);
+                                    merchantEmailPayload.put("WalletAccount", payRes.get("WalletAccount"));
+                                    merchantEmailPayload.put("orderItems", orderItems);
+
+                                    merchantEmailPayload.put("EmailDestination", payRes.get("MerchantEmailAddress"));
+                                    merchantEmailPayload.put("EmailSubject", "ORDER PAYMENT - REF : " + transRef);
+                                    merchantEmailPayload.put("EmailMessage", "Order Payment");
+                                    globalMethods.sendEmailNotification(merchantEmailPayload);
+
                                 } else {
                                     responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
                                             .put("statusDescription", "The code is not valid")
