@@ -36,8 +36,6 @@ public class MerchantAcceptAndPickUpNotification {
 
     public void pickAndProcess(Long itemId) {
         try {
-
-
             orderItemRepository.findById(itemId)
                     .ifPresent(orderItem -> {
                         orderRepository.findById(orderItem.getOrderId())
