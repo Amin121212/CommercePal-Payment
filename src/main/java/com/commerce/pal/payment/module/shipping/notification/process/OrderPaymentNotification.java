@@ -124,17 +124,24 @@ public class OrderPaymentNotification {
 
                                     }
                                 });
-                        orderPay.put("orderItems", customerOrderItems);
-                        orderPay.put("email", cusRes.getString("email"));
-                        orderPay.put("subject", "New Order Ref : " + order.getOrderRef() + " (Customer)");
-                        orderPay.put("templates", "merchant-new-order.ftl");
-                        //Send to Customer
-                        globalMethods.processEmailWithTemplate(orderPay);
+
+                        JSONObject emailPayload = new JSONObject();
+                        emailPayload.put("HasTemplate", "YES");
+                        emailPayload.put("TemplateName", "customer-payment");
+                        emailPayload.put("name", cusRes.getString("firstName"));
+                        emailPayload.put("amount", String.valueOf(order.getTotalPrice().doubleValue() + order.getDeliveryPrice().doubleValue()));
+                        emailPayload.put("orderRef", order.getOrderRef());
+                        emailPayload.put("orderItems", customerOrderItems);
+                        emailPayload.put("EmailDestination", cusRes.getString("email"));
+                        emailPayload.put("EmailSubject", "ORDER PAYMENT - REF : " + order.getOrderRef());
+                        emailPayload.put("EmailMessage", "Order Payment");
+                        globalMethods.sendEmailNotification(emailPayload);
 
                         JSONObject smsBody = new JSONObject();
                         smsBody.put("TemplateId", "2");
                         smsBody.put("TemplateLanguage", "en");
-                        smsBody.put("amount", order.getTotalPrice().toString());
+                        smsBody.put("amount", String.valueOf(order.getTotalPrice().doubleValue() + order.getDeliveryPrice().doubleValue()));
+                        smsBody.put("delivery", order.getDeliveryPrice().toString());
                         smsBody.put("ref", order.getBillerReference());
                         smsBody.put("Phone", cusRes.getString("phoneNumber").substring(cusRes.getString("phoneNumber").length() - 9));
                         globalMethods.sendSMSNotification(smsBody);
