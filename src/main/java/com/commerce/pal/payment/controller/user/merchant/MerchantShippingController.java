@@ -175,7 +175,7 @@ public class MerchantShippingController {
                             itemShipmentStatus.setCreatedDate(Timestamp.from(Instant.now()));
                             itemShipmentStatusRepository.save(itemShipmentStatus);
                             // Send Notification of Acceptance
-                            merchantAcceptAndPickUpNotification.pickAndProcess(orderItem.getOrderId().toString(), orderItem.getItemId());
+                            merchantAcceptAndPickUpNotification.pickAndProcess(orderItem.getItemId());
 
                             responseMap.put("statusCode", ResponseCodes.SUCCESS)
                                     .put("statusDescription", "success")
