@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicReference;
@@ -60,7 +61,9 @@ public class PaymentService {
                         payment.get().setPaymentType(rqBdy.getString("PaymentType"));
                         payment.get().setPaymentAccountType(rqBdy.getString("PaymentMode"));
                         payment.get().setAccountNumber(rqBdy.getString("UserEmail"));
-                        payment.get().setAmount(new BigDecimal(order.getTotalPrice().doubleValue() + order.getDeliveryPrice().doubleValue()));
+                        BigDecimal amount = new BigDecimal(order.getTotalPrice().doubleValue() + order.getDeliveryPrice().doubleValue());
+                        amount = amount.setScale(2, RoundingMode.CEILING);
+                        payment.get().setAmount(amount);
                         payment.get().setCurrency(rqBdy.getString("Currency"));
                         payment.get().setStatus(0);
                         payment.get().setRequestPayload(rqBdy.toString());
