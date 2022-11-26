@@ -112,6 +112,7 @@ public class OrderService {
             cusReq.put("Type", "MERCHANT-ADDRESS");
             cusReq.put("TypeId", 353);
             wareHouseAddress.set(dataAccessService.pickAndProcess(cusReq));
+            wareHouseAddress.get().put("WareHouseId", 1);
         } catch (Exception ex) {
             log.log(Level.WARNING, ex.getMessage());
         }
