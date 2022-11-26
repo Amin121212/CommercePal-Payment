@@ -148,7 +148,6 @@ public class OrderPaymentNotification {
                         smsBody.put("ref", order.getBillerReference());
                         smsBody.put("Phone", cusRes.getString("phoneNumber").substring(cusRes.getString("phoneNumber").length() - 9));
                         globalMethods.sendSMSNotification(smsBody);
-
                     }, () -> {
                         log.log(Level.WARNING, "Invalid Order Ref Passed : " + orderRef);
                     });
