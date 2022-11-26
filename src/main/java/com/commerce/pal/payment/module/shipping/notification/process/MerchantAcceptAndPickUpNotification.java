@@ -51,15 +51,8 @@ public class MerchantAcceptAndPickUpNotification {
                                     emailPayload.put("name", cusRes.getString("firstName"));
                                     emailPayload.put("OrderRef", order.getOrderRef());
                                     emailPayload.put("OrderDate", order.getOrderDate());
-                                    List<JSONObject> customerOrderItems = new ArrayList<>();
-
-                                    JSONObject merReq = new JSONObject();
-                                    merReq.put("Type", "MERCHANT");
-                                    merReq.put("TypeId", orderItem.getMerchantId());
-                                    JSONObject merRes = dataAccessService.pickAndProcess(merReq);
 
                                     // Send Merchant Status Notification
-
                                     JSONObject prodReq = new JSONObject();
                                     prodReq.put("Type", "PRODUCT-AND-SUB");
                                     prodReq.put("TypeId", orderItem.getProductLinkingId());
@@ -71,17 +64,21 @@ public class MerchantAcceptAndPickUpNotification {
                                     emailPayload.put("NoOfProduct", orderItem.getQuantity());
                                     emailPayload.put("ItemOrderRef", orderItem.getSubOrderNumber());
                                     emailPayload.put("StatusDate", Timestamp.from(Instant.now()));
-                                    emailPayload.put("status", "Merchant has accepted you Item Order,Messenger will pick it pu");
+                                    emailPayload.put("ShippingStatus", "Merchant has accepted your Item Order,Messenger will pick it up");
 
                                     emailPayload.put("HasTemplate", "YES");
                                     emailPayload.put("TemplateName", "customer-tracking");
                                     emailPayload.put("name", cusRes.getString("firstName"));
                                     emailPayload.put("orderRef", order.getOrderRef());
-                                    emailPayload.put("orderItems", customerOrderItems);
                                     emailPayload.put("EmailDestination", cusRes.getString("email"));
-                                    emailPayload.put("EmailSubject", "ORDER PAYMENT - REF : " + order.getOrderRef());
+                                    emailPayload.put("EmailSubject", "MERCHANT ITEM ACCEPTANCE - " + order.getOrderRef());
                                     emailPayload.put("EmailMessage", "Order Payment");
                                     globalMethods.sendEmailNotification(emailPayload);
+
+                                    JSONObject merReq = new JSONObject();
+                                    merReq.put("Type", "MERCHANT");
+                                    merReq.put("TypeId", orderItem.getMerchantId());
+                                    //JSONObject merRes = dataAccessService.pickAndProcess(merReq);
                                 });
                     });
 
