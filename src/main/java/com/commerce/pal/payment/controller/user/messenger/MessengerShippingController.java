@@ -423,6 +423,7 @@ public class MessengerShippingController {
                                     itemMessengerDelivery.setDeliveryCode(globalMethods.encryptCode(validationCode));
                                     itemMessengerDelivery.setDeliveryStatus(3);
                                     orderItemRepository.save(orderItem);
+
                                     JSONObject emailPayload = new JSONObject();
                                     JSONObject smsBody = new JSONObject();
                                     emailPayload.put("EmailSubject", "Item Delivery Validation : " + orderItem.getSubOrderNumber());
