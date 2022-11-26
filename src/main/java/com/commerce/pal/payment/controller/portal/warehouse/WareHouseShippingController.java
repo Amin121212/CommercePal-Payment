@@ -229,7 +229,8 @@ public class WareHouseShippingController {
         JSONObject responseMap = new JSONObject();
         try {
             JSONObject request = new JSONObject(req);
-            orderItemRepository.findOrderItemByQrCodeNumberAndItemId(request.getString("QrCodeNumber"), request.getLong("OrderItemId")).ifPresentOrElse(orderItem -> {
+            orderItemRepository.findOrderItemByQrCodeNumberAndItemId(request.getString("QrCodeNumber"), request.getLong("OrderItemId"))
+                    .ifPresentOrElse(orderItem -> {
                 itemMessengerDeliveryRepository.findItemMessengerDeliveryByOrderItemIdAndDeliveryTypeAndDeliveryStatus(
                         request.getLong("OrderItemId"), "MW", 1
                 ).ifPresentOrElse(itemMessengerDelivery -> {
@@ -301,7 +302,9 @@ public class WareHouseShippingController {
                             .put("statusMessage", "Item Does Not Exist");
                 });
             }, () -> {
-
+                        responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                                .put("statusDescription", "Item Does Not Exist")
+                                .put("statusMessage", "Item Does Not Exist");
             });
 
         } catch (Exception ex) {
