@@ -122,6 +122,7 @@ public class OrderPaymentNotification {
                                         merchantEmailPayload.put("EmailDestination", merRes.getString("email"));
                                         merchantEmailPayload.put("EmailSubject", "ORDER PAYMENT - REF : " + order.getOrderRef());
                                         merchantEmailPayload.put("EmailMessage", "Order Payment");
+                                        log.log(Level.INFO, "Merchant Payment Payload : " + merchantEmailPayload.toString());
                                         globalMethods.sendEmailNotification(merchantEmailPayload);
                                     } else { // DO for WareHouse Id
 
@@ -138,6 +139,7 @@ public class OrderPaymentNotification {
                         emailPayload.put("EmailDestination", cusRes.getString("email"));
                         emailPayload.put("EmailSubject", "ORDER PAYMENT - REF : " + order.getOrderRef());
                         emailPayload.put("EmailMessage", "Order Payment");
+                        log.log(Level.INFO, "Customer Payment Payload : " + emailPayload.toString());
                         globalMethods.sendEmailNotification(emailPayload);
 
                         JSONObject smsBody = new JSONObject();
