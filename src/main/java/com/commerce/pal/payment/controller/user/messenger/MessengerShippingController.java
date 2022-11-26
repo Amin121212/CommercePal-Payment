@@ -424,6 +424,7 @@ public class MessengerShippingController {
                                     itemMessengerDelivery.setDeliveryStatus(3);
                                     orderItemRepository.save(orderItem);
                                     JSONObject emailPayload = new JSONObject();
+                                    JSONObject smsBody = new JSONObject();
                                     emailPayload.put("EmailSubject", "Item Delivery Validation : " + orderItem.getSubOrderNumber());
                                     emailPayload.put("EmailMessage", "Delivery Validation Code : " + validationCode);
                                     if (orderRepository.findByOrderId(orderItem.getOrderId()).getSaleType().equals("M2C")) {
@@ -433,6 +434,7 @@ public class MessengerShippingController {
                                         JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
                                         emailPayload.put("name", cusRes.getString("firstName"));
                                         emailPayload.put("EmailDestination", cusRes.getString("email"));
+                                        smsBody.put("Phone", cusRes.getString("phoneNumber").substring(cusRes.getString("phoneNumber").length() - 9));
                                     } else {
                                         JSONObject cusReq = new JSONObject();
                                         cusReq.put("Type", "BUSINESS");
@@ -440,11 +442,19 @@ public class MessengerShippingController {
                                         JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
                                         emailPayload.put("name", cusRes.getString("firstName"));
                                         emailPayload.put("EmailDestination", cusRes.getString("email"));
+                                        smsBody.put("Phone", cusRes.getString("phoneNumber").substring(cusRes.getString("phoneNumber").length() - 9));
                                     }
+
                                     emailPayload.put("HasTemplate", "YES");
                                     emailPayload.put("TemplateName", "customer-delivery-otp");
                                     emailPayload.put("otp", validationCode);
                                     globalMethods.sendEmailNotification(emailPayload);
+
+                                    smsBody.put("TemplateId", "10");
+                                    smsBody.put("TemplateLanguage", "en");
+                                    smsBody.put("otp", validationCode);
+                                    smsBody.put("orderRef", orderItem.getSubOrderNumber());
+                                    globalMethods.sendSMSNotification(smsBody);
 
                                     responseMap.put("statusCode", ResponseCodes.SUCCESS)
                                             .put("statusDescription", "Success")
