@@ -152,6 +152,87 @@ public class CustomerOrderController {
         return ResponseEntity.ok(responseMap.toString());
     }
 
+    @RequestMapping(value = {"/order-detail-tracking"}, method = {RequestMethod.POST}, produces = {"application/json"})
+    @ResponseBody
+    public ResponseEntity<?> orderDetailsAndTracking(@RequestHeader("Authorization") String accessToken, @RequestBody String req) {
+        JSONObject responseMap = new JSONObject();
+        JSONObject reqBdy = new JSONObject(req);
+
+        JSONObject orderDetails = new JSONObject();
+        JSONObject valTokenReq = new JSONObject();
+        valTokenReq.put("AccessToken", accessToken)
+                .put("UserType", "C");
+        JSONObject valTokenBdy = validateAccessToken.pickAndReturnAll(valTokenReq);
+
+        if (valTokenBdy.getString("Status").equals("00")) {
+            JSONObject customerData = valTokenBdy.getJSONObject("UserDetails").getJSONObject("Details");
+            Long customerId = customerData.getLong("userId");
+            orderRepository.findOrderByOrderIdAndCustomerId(reqBdy.getLong("OrderId"), customerId)
+                    .ifPresent(order -> {
+                        orderDetails.put("OrderRef", order.getOrderRef());
+                        orderDetails.put("OrderDate", order.getOrderDate());
+                        orderDetails.put("DeliveryPrice", order.getDeliveryPrice());
+                        orderDetails.put("TotalPrice", order.getTotalPrice());
+                        orderDetails.put("PaymentStatus", order.getPaymentStatus());
+                        orderDetails.put("PaymentDate", order.getPaymentDate());
+                        orderDetails.put("PaymentMethod", order.getPaymentMethod());
+                        orderDetails.put("Discount", order.getDiscount());
+                        orderDetails.put("DeliveryPrice", order.getDeliveryPrice());
+                        List<JSONObject> orderItems = new ArrayList<>();
+                        orderItemRepository.findOrderItemsByOrderId(order.getOrderId())
+                                .forEach(orderItem -> {
+                                    JSONObject itemPay = orderService.orderItemDetails(orderItem.getItemId());
+                                    JSONObject prodReq = new JSONObject();
+                                    prodReq.put("Type", "PRODUCT-AND-SUB");
+                                    prodReq.put("TypeId", orderItem.getProductLinkingId());
+                                    prodReq.put("SubProductId", orderItem.getSubProductId());
+                                    JSONObject prodRes = dataAccessService.pickAndProcess(prodReq);
+                                    JSONObject productData = new JSONObject();
+                                    productData.put("ProductName", prodRes.getString("ProductName"));
+                                    productData.put("webImage", prodRes.getString("webImage"));
+                                    productData.put("ShortDescription", prodRes.getString("ShortDescription"));
+                                    itemPay.put("Product", productData);
+
+                                    shipmentStatusRepository.findShipmentStatusByCode(orderItem.getShipmentStatus())
+                                            .ifPresentOrElse(shipmentStatus -> {
+                                                itemPay.put("ShipmentStatusWord", shipmentStatus.getDescription());
+                                            }, () -> {
+                                                itemPay.put("ShipmentStatusWord", "Processing on WareHouse");
+                                            });
+
+                                    List<JSONObject> shipmentStatus = new ArrayList<>();
+                                    itemShipmentStatusRepository.findItemShipmentStatusesByItemId(orderItem.getItemId())
+                                            .forEach(itemShipmentStatus -> {
+                                                shipmentStatusRepository.findShipmentStatusByCode(itemShipmentStatus.getShipmentStatus())
+                                                        .ifPresentOrElse(shipmentStatus1 -> {
+                                                            JSONObject shipBody = new JSONObject();
+                                                            shipBody.put("ShipStatusDate", itemShipmentStatus.getCreatedDate());
+                                                            shipBody.put("ShipmentStatusWord", shipmentStatus1.getDescription());
+                                                            shipBody.put("ShipmentStatus", itemShipmentStatus.getShipmentStatus());
+                                                            shipBody.put("ShipmentStatusComment", itemShipmentStatus.getComments());
+                                                            shipmentStatus.add(shipBody);
+                                                        }, () -> {
+                                                            JSONObject shipBody = new JSONObject();
+                                                            shipBody.put("ShipStatusDate", itemShipmentStatus.getCreatedDate());
+                                                            shipBody.put("ShipmentStatusWord", "Processing on WareHouse");
+                                                            shipBody.put("ShipmentStatus", itemShipmentStatus.getShipmentStatus());
+                                                            shipBody.put("ShipmentStatusComment", itemShipmentStatus.getComments());
+                                                            shipmentStatus.add(shipBody);
+                                                        });
+                                            });
+                                    itemPay.put("ShipmentStatusList", shipmentStatus);
+                                    orderItems.add(itemPay);
+                                });
+                        orderDetails.put("orderItems", orderItems);
+                    });
+        }
+        responseMap.put("statusCode", ResponseCodes.SUCCESS)
+                .put("statusDescription", "success")
+                .put("data", orderDetails)
+                .put("statusMessage", "Request Successful");
+        return ResponseEntity.ok(responseMap.toString());
+    }
+
     @RequestMapping(value = {"/order-summary"}, method = {RequestMethod.GET}, produces = {"application/json"})
     @ResponseBody
     public ResponseEntity<?> orderSummary(@RequestHeader("Authorization") String accessToken,
