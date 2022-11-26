@@ -431,16 +431,21 @@ public class MessengerShippingController {
                                         cusReq.put("Type", "CUSTOMER");
                                         cusReq.put("TypeId", orderRepository.findByOrderId(orderItem.getOrderId()).getCustomerId());
                                         JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
+                                        emailPayload.put("name", cusRes.getString("firstName"));
                                         emailPayload.put("EmailDestination", cusRes.getString("email"));
-                                        globalMethods.processEmailWithoutTemplate(emailPayload);
                                     } else {
                                         JSONObject cusReq = new JSONObject();
                                         cusReq.put("Type", "BUSINESS");
                                         cusReq.put("TypeId", orderRepository.findByOrderId(orderItem.getOrderId()).getBusinessId());
                                         JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
+                                        emailPayload.put("name", cusRes.getString("firstName"));
                                         emailPayload.put("EmailDestination", cusRes.getString("email"));
-                                        globalMethods.processEmailWithoutTemplate(emailPayload);
                                     }
+                                    emailPayload.put("HasTemplate", "YES");
+                                    emailPayload.put("TemplateName", "customer-delivery-otp");
+                                    emailPayload.put("otp", validationCode);
+                                    globalMethods.sendEmailNotification(emailPayload);
+
                                     responseMap.put("statusCode", ResponseCodes.SUCCESS)
                                             .put("statusDescription", "Success")
                                             .put("statusMessage", "Success");
