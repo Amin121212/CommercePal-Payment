@@ -45,11 +45,10 @@ public class MerchantPaymentController {
     }
 
     //Admin Configure Shipping process and the respective WareHouse
-    @RequestMapping(value = "/withdrawals", method = RequestMethod.POST)
+    @RequestMapping(value = "/withdrawals", method = RequestMethod.GET)
     public ResponseEntity<?> merchantWithdrawals(@RequestBody String req) {
         JSONObject responseMap = new JSONObject();
         try {
-            JSONObject request = new JSONObject(req);
             List<JSONObject> list = new ArrayList<>();
             merchantWithdrawalRepository.findAll().forEach(merchantWithdrawal -> {
                 JSONObject merBdy = new JSONObject();
