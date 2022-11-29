@@ -320,14 +320,24 @@ public class WareHouseShippingController {
     @RequestMapping(value = {"/customer-address"}, method = {RequestMethod.GET}, produces = {"application/json"})
     @ResponseBody
     public ResponseEntity<?> customerAddress(@RequestParam("OrderId") String OrderId) {
+        JSONObject responseMap = new JSONObject();
         JSONObject data = orderService.customerAddressAdmin(Long.valueOf(OrderId));
-        return ResponseEntity.status(HttpStatus.OK).body(data.toString());
+        responseMap.put("statusCode", ResponseCodes.SUCCESS)
+                .put("statusDescription", "success")
+                .put("data", data)
+                .put("statusMessage", "Request Successful");
+        return ResponseEntity.status(HttpStatus.OK).body(responseMap.toString());
     }
 
     @RequestMapping(value = {"/merchant-address"}, method = {RequestMethod.GET}, produces = {"application/json"})
     @ResponseBody
     public ResponseEntity<?> merchantAddress(@RequestParam("ItemId") String ItemId) {
+        JSONObject responseMap = new JSONObject();
         JSONObject data = orderService.merchantAddress(Long.valueOf(ItemId));
-        return ResponseEntity.status(HttpStatus.OK).body(data.toString());
+        responseMap.put("statusCode", ResponseCodes.SUCCESS)
+                .put("statusDescription", "success")
+                .put("data", data)
+                .put("statusMessage", "Request Successful");
+        return ResponseEntity.status(HttpStatus.OK).body(responseMap.toString());
     }
 }
