@@ -55,18 +55,35 @@ public class OrderService {
         return orderItem;
     }
 
-    public JSONObject customerAddress(Long itemId) {
+    public JSONObject customerAddressAdmin(Long orderId) {
         AtomicReference<JSONObject> customerAddress = new AtomicReference<>(new JSONObject());
         try {
-            orderItemRepository.findById(itemId).ifPresent(item -> {
-                orderRepository.findById(item.getOrderId())
-                        .ifPresent(order -> {
-                            JSONObject cusReq = new JSONObject();
-                            cusReq.put("Type", "CUSTOMER-ADDRESS");
-                            cusReq.put("TypeId", order.getUserAddressId());
-                            customerAddress.set(dataAccessService.pickAndProcess(cusReq));
-                        });
-            });
+            orderRepository.findById(orderId)
+                    .ifPresent(order -> {
+                        JSONObject cusReq = new JSONObject();
+                        cusReq.put("Type", "CUSTOMER-ADDRESS");
+                        cusReq.put("TypeId", order.getUserAddressId());
+                        customerAddress.set(dataAccessService.pickAndProcess(cusReq));
+                    });
+
+        } catch (Exception ex) {
+            log.log(Level.WARNING, ex.getMessage());
+        }
+        return customerAddress.get();
+    }
+
+
+    public JSONObject customerAddress(Long orderId) {
+        AtomicReference<JSONObject> customerAddress = new AtomicReference<>(new JSONObject());
+        try {
+            orderRepository.findById(orderId)
+                    .ifPresent(order -> {
+                        JSONObject cusReq = new JSONObject();
+                        cusReq.put("Type", "CUSTOMER-ADDRESS");
+                        cusReq.put("TypeId", order.getUserAddressId());
+                        customerAddress.set(dataAccessService.pickAndProcess(cusReq));
+                    });
+
         } catch (Exception ex) {
             log.log(Level.WARNING, ex.getMessage());
         }
