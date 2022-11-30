@@ -82,7 +82,7 @@ public class MessengerAssignmentNotification {
             mesReq.put("TypeId", payload.getLong("MessengerId"));
             JSONObject mesRes = dataAccessService.pickAndProcess(mesReq);
 
-            JSONObject emailPayload = new JSONObject();
+            JSONObject emailPayload = new JSONObject(payload);
             emailPayload.put("EmailDestination", mesRes.getString("email"));
             emailPayload.put("EmailSubject", getDeliveryType(payload.getString("DeliveryType")) + "-" + payload.getString("OrderRef"));
             emailPayload.put("EmailMessage", getDeliveryType(payload.getString("DeliveryType")) + "-" + payload.getString("OrderRef"));
