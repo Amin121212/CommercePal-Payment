@@ -580,7 +580,6 @@ public class MessengerShippingController {
                                                         emailPayload.put("ShippingStatus", "Item delivered to Customer");
                                                         emailPayload.put("HasTemplate", "YES");
                                                         emailPayload.put("TemplateName", "customer-tracking");
-                                                        emailPayload.put("orderRef", order.getOrderRef());
                                                         emailPayload.put("EmailSubject", "Item Delivered to Customer - " + orderItem.getSubOrderNumber());
                                                         emailPayload.put("EmailMessage", "Order Payment");
                                                         globalMethods.sendEmailNotification(emailPayload);
