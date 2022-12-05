@@ -80,6 +80,12 @@ public class GlobalMethods {
         smsEmailService.pickAndProcessEmail(data);
     }
 
+    public void sendSlackNotification(JSONObject data) {
+        smsEmailService.pickAndProcessSlack(data);
+    }
+
+
+
 
     public String generateValidationCode() {
         Random rnd = new Random();

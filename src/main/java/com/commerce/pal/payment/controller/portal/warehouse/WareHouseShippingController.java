@@ -179,7 +179,6 @@ public class WareHouseShippingController {
                             messengerAssignmentNotification.pickAndProcess(itemMessengerDelivery, delivery);
                         });
 
-
                         responseMap.put("statusCode", ResponseCodes.SUCCESS)
                                 .put("statusDescription", "Success")
                                 .put("statusMessage", "Success");

@@ -180,6 +180,13 @@ public class MerchantShippingController {
                             responseMap.put("statusCode", ResponseCodes.SUCCESS)
                                     .put("statusDescription", "success")
                                     .put("statusMessage", "success");
+
+
+                            JSONObject slackBody = new JSONObject();
+                            slackBody.put("TemplateId", "6");
+                            slackBody.put("ref", orderRepository.findByOrderId(orderItem.getOrderId()).getOrderRef());
+                            slackBody.put("sub_ref", orderItem.getSubOrderNumber());
+                            globalMethods.sendSlackNotification(slackBody);
                         }, () -> {
                             responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
                                     .put("statusDescription", "Merchant Does not exists")

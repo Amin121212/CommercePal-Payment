@@ -87,6 +87,13 @@ public class MessengerAssignmentNotification {
             emailPayload.put("EmailSubject", getDeliveryType(payload.getString("DeliveryType")) + "-" + payload.getString("OrderRef"));
             emailPayload.put("EmailMessage", getDeliveryType(payload.getString("DeliveryType")) + "-" + payload.getString("OrderRef"));
 
+            JSONObject slackBody = new JSONObject();
+            slackBody.put("TemplateId", "9");
+            slackBody.put("messenger_name", mesRes.getString("firstName"));
+            slackBody.put("phone_number", mesRes.getString("ownerPhoneNumber"));
+            slackBody.put("sub_ref", payload.getString("SubOrderRef"));
+            globalMethods.sendSlackNotification(slackBody);
+
             loginValidationRepository.findLoginValidationByEmailAddress(mesRes.getString("email"))
                     .ifPresent(user -> {
                         JSONObject pushPayload = new JSONObject();

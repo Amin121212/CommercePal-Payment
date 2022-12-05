@@ -158,6 +158,11 @@ public class MerchantTransactionController {
                                                 .put("transRef", transRef)
                                                 .put("accountPayload", accountPayload)
                                                 .put("statusMessage", "Request Successful");
+
+                                        JSONObject slackBody = new JSONObject();
+                                        slackBody.put("TemplateId", "2");
+                                        slackBody.put("ref", transRef);
+                                        globalMethods.sendSlackNotification(slackBody);
                                     } else {
                                         responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
                                                 .put("statusDescription", "Insufficient Balance")

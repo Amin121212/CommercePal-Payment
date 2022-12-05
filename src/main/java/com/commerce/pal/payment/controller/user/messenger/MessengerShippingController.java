@@ -362,6 +362,12 @@ public class MessengerShippingController {
                                         .put("statusDescription", "Success")
                                         .put("statusMessage", "Success");
 
+
+                                JSONObject slackBody = new JSONObject();
+                                slackBody.put("TemplateId", "10");
+                                slackBody.put("sub_ref", orderItem.getSubOrderNumber());
+                                globalMethods.sendSlackNotification(slackBody);
+
                                 loginValidationRepository.findLoginValidationByEmailAddress(messengerInfo.getString("email"))
                                         .ifPresent(user -> {
                                             JSONObject pushPayload = new JSONObject();
