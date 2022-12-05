@@ -153,7 +153,7 @@ public class OrderPaymentNotification {
 
                         JSONObject slackBody = new JSONObject();
                         slackBody.put("TemplateId", "1");
-                        slackBody.put("ref", order.getBillerReference());
+                        slackBody.put("ref", order.getOrderRef());
                         globalMethods.sendSlackNotification(slackBody);
 
                     }, () -> {
