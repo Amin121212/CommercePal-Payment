@@ -91,7 +91,7 @@ public class MerchantTransactionController {
         return ResponseEntity.ok(responseMap.toString());
     }
 
-    @RequestMapping(value = "/request-withdrawal", method = RequestMethod.GET)
+    @RequestMapping(value = "/request-withdrawal", method = RequestMethod.POST)
     public ResponseEntity<?> requestForWithdrawal(@RequestBody String req,
                                                   @RequestHeader("Authorization") String accessToken) {
         JSONObject responseMap = new JSONObject();
