@@ -188,7 +188,7 @@ public class CustomerOrderController {
                                     prodReq.put("SubProductId", orderItem.getSubProductId());
                                     JSONObject prodRes = dataAccessService.pickAndProcess(prodReq);
                                     JSONObject productData = new JSONObject();
-                                    productData.put("ProductName", prodRes.getString("ProductName"));
+                                    productData.put("ProductName", prodRes.getString("productName"));
                                     productData.put("webImage", prodRes.getString("webImage"));
                                     productData.put("ShortDescription", prodRes.getString("ShortDescription"));
                                     itemPay.put("Product", productData);

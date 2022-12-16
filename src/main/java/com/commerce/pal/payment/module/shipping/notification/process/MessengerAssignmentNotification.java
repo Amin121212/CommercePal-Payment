@@ -58,7 +58,7 @@ public class MessengerAssignmentNotification {
 
                                     req.put("OrderRef", order.getOrderRef());
                                     req.put("OrderDate", order.getOrderDate());
-                                    req.put("ProductName", productBdy.getString("ProductName"));
+                                    req.put("ProductName", productBdy.getString("productName"));
                                     req.put("ProductImage", productBdy.getString("webImage"));
                                     req.put("NoOfProduct", orderItem.getQuantity());
                                     req.put("ItemOrderRef", orderItem.getSubOrderNumber());

@@ -67,7 +67,7 @@ public class MerchantAcceptAndPickUpNotification {
 
                                     emailPayload.put("OrderRef", order.getOrderRef());
                                     emailPayload.put("OrderDate", order.getOrderDate());
-                                    emailPayload.put("ProductName", productBdy.getString("ProductName"));
+                                    emailPayload.put("ProductName", productBdy.getString("productName"));
                                     emailPayload.put("ProductImage", productBdy.getString("webImage"));
                                     emailPayload.put("NoOfProduct", orderItem.getQuantity());
                                     emailPayload.put("ItemOrderRef", orderItem.getSubOrderNumber());
