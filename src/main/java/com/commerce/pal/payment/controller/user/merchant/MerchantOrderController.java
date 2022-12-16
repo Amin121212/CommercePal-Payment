@@ -80,40 +80,44 @@ public class MerchantOrderController {
                     .forEach(orderItemParent -> {
                         orderRepository.findOrderByOrderId(orderItemParent)
                                 .ifPresent(order -> {
-                                    JSONObject orderDetails = new JSONObject();
-                                    if (order.getSaleType().equals("M2C")) {
-                                        JSONObject cusReq = new JSONObject();
-                                        cusReq.put("Type", "CUSTOMER");
-                                        cusReq.put("TypeId", order.getCustomerId());
-                                        JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
-                                        log.log(Level.INFO,cusReq.toString());
-                                        orderDetails.put("CustomerName", cusRes.getString("firstName"));
-                                    } else {
-                                        JSONObject cusReq = new JSONObject();
-                                        cusReq.put("Type", "BUSINESS");
-                                        cusReq.put("TypeId", order.getBusinessId());
-                                        JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
-                                        log.log(Level.INFO,cusReq.toString());
-                                        orderDetails.put("CustomerName", cusRes.getString("firstName"));
-                                    }
-                                    orderDetails.put("OrderRef", order.getOrderRef());
-                                    orderDetails.put("OrderDate", order.getOrderDate());
+                                    try {
+                                        JSONObject orderDetails = new JSONObject();
+                                        if (order.getSaleType().equals("M2C")) {
+                                            JSONObject cusReq = new JSONObject();
+                                            cusReq.put("Type", "CUSTOMER");
+                                            cusReq.put("TypeId", order.getCustomerId());
+                                            JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
+                                            log.log(Level.INFO, cusReq.toString());
+                                            orderDetails.put("CustomerName", cusRes.getString("firstName"));
+                                        } else {
+                                            JSONObject cusReq = new JSONObject();
+                                            cusReq.put("Type", "BUSINESS");
+                                            cusReq.put("TypeId", order.getBusinessId());
+                                            JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
+                                            log.log(Level.INFO, cusReq.toString());
+                                            orderDetails.put("CustomerName", cusRes.getString("firstName"));
+                                        }
+                                        orderDetails.put("OrderRef", order.getOrderRef());
+                                        orderDetails.put("OrderDate", order.getOrderDate());
 
-                                    List<JSONObject> orderItems = new ArrayList<>();
-                                    orderItemRepository.findOrderItemsByOrderIdAndMerchantId(order.getOrderId(), merchantId)
-                                            .forEach(orderItem -> {
-                                                JSONObject itemPay = new JSONObject();
-                                                JSONObject prodReq = new JSONObject();
-                                                prodReq.put("Type", "PRODUCT");
-                                                prodReq.put("TypeId", orderItem.getProductLinkingId());
+                                        List<JSONObject> orderItems = new ArrayList<>();
+                                        orderItemRepository.findOrderItemsByOrderIdAndMerchantId(order.getOrderId(), merchantId)
+                                                .forEach(orderItem -> {
+                                                    JSONObject itemPay = new JSONObject();
+                                                    JSONObject prodReq = new JSONObject();
+                                                    prodReq.put("Type", "PRODUCT");
+                                                    prodReq.put("TypeId", orderItem.getProductLinkingId());
 //                                                JSONObject prodRes = dataAccessService.pickAndProcess(prodReq);
-                                                itemPay.put("NoOfProduct", orderItem.getQuantity());
-                                                itemPay.put("ItemOrderRef", orderItem.getSubOrderNumber());
-                                                itemPay.put("ItemId", orderItem.getItemId());
-                                                orderItems.add(itemPay);
-                                            });
-                                    orderDetails.put("orderItems", orderItems);
-                                    orders.add(orderDetails);
+                                                    itemPay.put("NoOfProduct", orderItem.getQuantity());
+                                                    itemPay.put("ItemOrderRef", orderItem.getSubOrderNumber());
+                                                    itemPay.put("ItemId", orderItem.getItemId());
+                                                    orderItems.add(itemPay);
+                                                });
+                                        orderDetails.put("orderItems", orderItems);
+                                        orders.add(orderDetails);
+                                    } catch (Exception ex) {
+                                        log.log(Level.WARNING, ex.getMessage());
+                                    }
                                 });
                     });
             responseMap.put("statusCode", ResponseCodes.SUCCESS)
