@@ -86,14 +86,14 @@ public class MerchantOrderController {
                                         cusReq.put("Type", "CUSTOMER");
                                         cusReq.put("TypeId", order.getCustomerId());
                                         JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
-                                        log.log(Level.INFO,cusRes.toString());
+                                        log.log(Level.INFO,cusReq.toString());
                                         orderDetails.put("CustomerName", cusRes.getString("firstName"));
                                     } else {
                                         JSONObject cusReq = new JSONObject();
                                         cusReq.put("Type", "BUSINESS");
                                         cusReq.put("TypeId", order.getBusinessId());
                                         JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
-                                        log.log(Level.INFO,cusRes.toString());
+                                        log.log(Level.INFO,cusReq.toString());
                                         orderDetails.put("CustomerName", cusRes.getString("firstName"));
                                     }
                                     orderDetails.put("OrderRef", order.getOrderRef());
