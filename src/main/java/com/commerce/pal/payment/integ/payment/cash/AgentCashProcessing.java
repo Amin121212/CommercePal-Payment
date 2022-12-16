@@ -110,7 +110,6 @@ public class AgentCashProcessing {
                     reqBdy.put("Currency", agentCashPayment.getCurrency());
                     reqBdy.put("Amount", agentCashPayment.getAmount().toString());
                     reqBdy.put("PaymentNarration", "Agent Cash Payment");
-                    log.log(Level.INFO, "CASH PAYMENT : " + reqBdy.toString());
                     JSONObject payRes = paymentStoreProcedure.agentCashPayment(reqBdy);
                     if (payRes.getString("Status").equals("00")) {
                         if (payRes.getString("TransactionStatus").equals("0")) {
