@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 
 @Log
 @CrossOrigin(origins = {"*"}, maxAge = 3600L)
@@ -85,12 +86,14 @@ public class MerchantOrderController {
                                         cusReq.put("Type", "CUSTOMER");
                                         cusReq.put("TypeId", order.getCustomerId());
                                         JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
+                                        log.log(Level.INFO,cusRes.toString());
                                         orderDetails.put("CustomerName", cusRes.getString("firstName"));
                                     } else {
                                         JSONObject cusReq = new JSONObject();
                                         cusReq.put("Type", "BUSINESS");
                                         cusReq.put("TypeId", order.getBusinessId());
                                         JSONObject cusRes = dataAccessService.pickAndProcess(cusReq);
+                                        log.log(Level.INFO,cusRes.toString());
                                         orderDetails.put("CustomerName", cusRes.getString("firstName"));
                                     }
                                     orderDetails.put("OrderRef", order.getOrderRef());
