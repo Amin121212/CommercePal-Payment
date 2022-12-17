@@ -350,40 +350,46 @@ public class MessengerShippingController {
                 String[] deliveryTypes = {"MC", "MW"};
                 itemMessengerDeliveryRepository.findItemMessengerDeliveryByOrderItemIdAndMessengerIdAndDeliveryTypeIn(request.getLong("OrderItemId"), messengerId, deliveryTypes
                 ).ifPresentOrElse(itemMessengerDelivery -> {
-                    itemMessengerDelivery.setDeliveryStatus(1);
-                    orderItemRepository.findById(request.getLong("OrderItemId"))
-                            .ifPresentOrElse(orderItem -> {
+                    if (itemMessengerDelivery.getValidationStatus().equals(3)) {
+                        itemMessengerDelivery.setDeliveryStatus(1);
+                        orderItemRepository.findById(request.getLong("OrderItemId"))
+                                .ifPresentOrElse(orderItem -> {
 
-                                orderItem.setIsQrCodeAssigned(1);
-                                orderItem.setQrCodeNumber(request.getString("QrCodeNumber"));
-                                orderItem.setQrCodeAssignmentDate(Timestamp.from(Instant.now()));
-                                orderItemRepository.save(orderItem);
-                                responseMap.put("statusCode", ResponseCodes.SUCCESS)
-                                        .put("statusDescription", "Success")
-                                        .put("statusMessage", "Success");
+                                    orderItem.setIsQrCodeAssigned(1);
+                                    orderItem.setQrCodeNumber(request.getString("QrCodeNumber"));
+                                    orderItem.setQrCodeAssignmentDate(Timestamp.from(Instant.now()));
+                                    orderItemRepository.save(orderItem);
+                                    responseMap.put("statusCode", ResponseCodes.SUCCESS)
+                                            .put("statusDescription", "Success")
+                                            .put("statusMessage", "Success");
 
 
-                                JSONObject slackBody = new JSONObject();
-                                slackBody.put("TemplateId", "10");
-                                slackBody.put("sub_ref", orderItem.getSubOrderNumber());
-                                globalMethods.sendSlackNotification(slackBody);
+                                    JSONObject slackBody = new JSONObject();
+                                    slackBody.put("TemplateId", "10");
+                                    slackBody.put("sub_ref", orderItem.getSubOrderNumber());
+                                    globalMethods.sendSlackNotification(slackBody);
 
-                                loginValidationRepository.findLoginValidationByEmailAddress(messengerInfo.getString("email"))
-                                        .ifPresent(user -> {
-                                            JSONObject pushPayload = new JSONObject();
-                                            pushPayload.put("UserId", user.getUserOneSignalId() != null ? user.getUserOneSignalId() : "5c66ca50-c009-480f-a200-72c244d74ff4");
-                                            pushPayload.put("Header", "Attach QR Code for : " + orderItem.getSubOrderNumber());
-                                            pushPayload.put("Message", "Attach QR Code for : " + orderItem.getSubOrderNumber());
-                                            JSONObject data = new JSONObject();
-                                            data.put("OrderItem", orderItem.getSubOrderNumber());
-                                            pushPayload.put("data", data);
-                                            globalMethods.sendPushNotification(pushPayload);
-                                        });
-                            }, () -> {
-                                responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
-                                        .put("statusDescription", "The Item does not exists")
-                                        .put("statusMessage", "The Item does not exists");
-                            });
+                                    loginValidationRepository.findLoginValidationByEmailAddress(messengerInfo.getString("email"))
+                                            .ifPresent(user -> {
+                                                JSONObject pushPayload = new JSONObject();
+                                                pushPayload.put("UserId", user.getUserOneSignalId() != null ? user.getUserOneSignalId() : "5c66ca50-c009-480f-a200-72c244d74ff4");
+                                                pushPayload.put("Header", "Attach QR Code for : " + orderItem.getSubOrderNumber());
+                                                pushPayload.put("Message", "Attach QR Code for : " + orderItem.getSubOrderNumber());
+                                                JSONObject data = new JSONObject();
+                                                data.put("OrderItem", orderItem.getSubOrderNumber());
+                                                pushPayload.put("data", data);
+                                                globalMethods.sendPushNotification(pushPayload);
+                                            });
+                                }, () -> {
+                                    responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                                            .put("statusDescription", "The Item does not exists")
+                                            .put("statusMessage", "The Item does not exists");
+                                });
+                    }else{
+                        responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                                .put("statusDescription", "The Delivery has not been validated by the merchant")
+                                .put("statusMessage", "The Delivery has not been validated by the merchant");
+                    }
                 }, () -> {
                     responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
                             .put("statusDescription", "The Delivery is not assigned to this messenger")
