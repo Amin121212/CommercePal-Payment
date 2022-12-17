@@ -463,7 +463,7 @@ public class MessengerShippingController {
                                     emailPayload.put("otp", validationCode);
                                     globalMethods.sendEmailNotification(emailPayload);
 
-                                    smsBody.put("TemplateId", "10");
+                                    smsBody.put("TemplateId", "4");
                                     smsBody.put("TemplateLanguage", "en");
                                     smsBody.put("otp", validationCode);
                                     smsBody.put("orderRef", orderItem.getSubOrderNumber());
