@@ -6,6 +6,8 @@ import com.commerce.pal.payment.module.DataAccessService;
 import com.commerce.pal.payment.module.database.PaymentStoreProcedure;
 import com.commerce.pal.payment.repo.payment.MerchantWithdrawalRepository;
 import com.commerce.pal.payment.util.ResponseCodes;
+import com.commerce.pal.payment.util.specification.SpecificationsDao;
+import com.commerce.pal.payment.util.specification.utils.SearchCriteria;
 import lombok.extern.java.Log;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 
@@ -27,6 +30,7 @@ import java.util.logging.Level;
 public class MerchantPaymentController {
     private final SahayTransfer sahayTransfer;
     private final DataAccessService dataAccessService;
+    private final SpecificationsDao specificationsDao;
     private final EthioFundsTransfer ethioFundsTransfer;
     private final PaymentStoreProcedure paymentStoreProcedure;
     private final MerchantWithdrawalRepository merchantWithdrawalRepository;
@@ -34,11 +38,13 @@ public class MerchantPaymentController {
     @Autowired
     public MerchantPaymentController(SahayTransfer sahayTransfer,
                                      DataAccessService dataAccessService,
+                                     SpecificationsDao specificationsDao,
                                      EthioFundsTransfer ethioFundsTransfer,
                                      PaymentStoreProcedure paymentStoreProcedure,
                                      MerchantWithdrawalRepository merchantWithdrawalRepository) {
         this.sahayTransfer = sahayTransfer;
         this.dataAccessService = dataAccessService;
+        this.specificationsDao = specificationsDao;
         this.ethioFundsTransfer = ethioFundsTransfer;
         this.paymentStoreProcedure = paymentStoreProcedure;
         this.merchantWithdrawalRepository = merchantWithdrawalRepository;
@@ -46,31 +52,36 @@ public class MerchantPaymentController {
 
     //Admin Configure Shipping process and the respective WareHouse
     @RequestMapping(value = "/withdrawals", method = RequestMethod.GET)
-    public ResponseEntity<?> merchantWithdrawals(@RequestBody String req) {
+    public ResponseEntity<?> merchantWithdrawals(@RequestParam("MerchantId") Optional<String> MerchantId) {
         JSONObject responseMap = new JSONObject();
         try {
             List<JSONObject> list = new ArrayList<>();
-            merchantWithdrawalRepository.findAll().forEach(merchantWithdrawal -> {
-                JSONObject merBdy = new JSONObject();
-                JSONObject merReq = new JSONObject();
-                merReq.put("Type", "MERCHANT");
-                merReq.put("TypeId", merchantWithdrawal.getMerchantId());
-                JSONObject merRes = dataAccessService.pickAndProcess(merReq);
-                merBdy.put("MerchantInfo", merRes);
-                merBdy.put("RequestId", merchantWithdrawal.getId());
-                merBdy.put("TransRef", merchantWithdrawal.getTransRef());
-                merBdy.put("WithdrawalMethod", merchantWithdrawal.getWithdrawalMethod());
-                merBdy.put("WithdrawalType", merchantWithdrawal.getWithdrawalType());
-                merBdy.put("Account", merchantWithdrawal.getAccount());
-                merBdy.put("Amount", merchantWithdrawal.getAmount());
-                merBdy.put("RequestDate", merchantWithdrawal.getRequestDate());
-                merBdy.put("VerifiedBy", merchantWithdrawal.getVerifiedBy());
-                merBdy.put("VerificationDate", merchantWithdrawal.getVerificationDate());
-                merBdy.put("ResponseStatus", merchantWithdrawal.getResponseStatus());
-                merBdy.put("ResponseDescription", merchantWithdrawal.getResponseDescription());
-                merBdy.put("ResponseDate", merchantWithdrawal.getResponseDate());
-                list.add(merBdy);
+            List<SearchCriteria> params = new ArrayList<SearchCriteria>();
+            MerchantId.ifPresent(value -> {
+                params.add(new SearchCriteria("merchantId", ":", MerchantId));
             });
+            specificationsDao.getMerchantWithdrawal(params).
+                    forEach(merchantWithdrawal -> {
+                        JSONObject merBdy = new JSONObject();
+                        JSONObject merReq = new JSONObject();
+                        merReq.put("Type", "MERCHANT");
+                        merReq.put("TypeId", merchantWithdrawal.getMerchantId());
+                        JSONObject merRes = dataAccessService.pickAndProcess(merReq);
+                        merBdy.put("MerchantInfo", merRes);
+                        merBdy.put("RequestId", merchantWithdrawal.getId());
+                        merBdy.put("TransRef", merchantWithdrawal.getTransRef());
+                        merBdy.put("WithdrawalMethod", merchantWithdrawal.getWithdrawalMethod());
+                        merBdy.put("WithdrawalType", merchantWithdrawal.getWithdrawalType());
+                        merBdy.put("Account", merchantWithdrawal.getAccount());
+                        merBdy.put("Amount", merchantWithdrawal.getAmount());
+                        merBdy.put("RequestDate", merchantWithdrawal.getRequestDate());
+                        merBdy.put("VerifiedBy", merchantWithdrawal.getVerifiedBy());
+                        merBdy.put("VerificationDate", merchantWithdrawal.getVerificationDate());
+                        merBdy.put("ResponseStatus", merchantWithdrawal.getResponseStatus());
+                        merBdy.put("ResponseDescription", merchantWithdrawal.getResponseDescription());
+                        merBdy.put("ResponseDate", merchantWithdrawal.getResponseDate());
+                        list.add(merBdy);
+                    });
 
             responseMap.put("statusCode", ResponseCodes.SUCCESS)
                     .put("statusDescription", "Request Successful")

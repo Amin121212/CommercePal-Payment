@@ -1,6 +1,7 @@
 package com.commerce.pal.payment.util.specification;
 
 
+import com.commerce.pal.payment.model.payment.MerchantWithdrawal;
 import com.commerce.pal.payment.model.payment.Order;
 import com.commerce.pal.payment.model.payment.OrderItem;
 import com.commerce.pal.payment.model.payment.Transaction;
@@ -74,6 +75,19 @@ public class SpecificationsDao {
         return entityManager.createQuery(query)
                 .setMaxResults(transPageSize)
                 .getResultList();
+    }
+
+    public List<MerchantWithdrawal> getMerchantWithdrawal(final List<SearchCriteria> params) {
+        final CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        final CriteriaQuery<MerchantWithdrawal> query = builder.createQuery(MerchantWithdrawal.class);
+        final Root r = query.from(MerchantWithdrawal.class);
+
+        Predicate predicate = builder.conjunction();
+        SpecificationQueryCriteriaConsumer searchOrderItems = new SpecificationQueryCriteriaConsumer(predicate, builder, r);
+        params.stream().forEach(searchOrderItems);
+        predicate = searchOrderItems.getPredicate();
+        query.where(predicate);
+        return entityManager.createQuery(query).getResultList();
     }
 
 
