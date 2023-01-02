@@ -58,7 +58,7 @@ public class MerchantPaymentController {
             List<JSONObject> list = new ArrayList<>();
             List<SearchCriteria> params = new ArrayList<SearchCriteria>();
             MerchantId.ifPresent(value -> {
-                params.add(new SearchCriteria("merchantId", ":", MerchantId));
+                params.add(new SearchCriteria("merchantId", ":", Long.valueOf(value)));
             });
             specificationsDao.getMerchantWithdrawal(params).
                     forEach(merchantWithdrawal -> {
