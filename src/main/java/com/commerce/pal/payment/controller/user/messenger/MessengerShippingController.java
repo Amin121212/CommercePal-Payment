@@ -266,6 +266,70 @@ public class MessengerShippingController {
         return ResponseEntity.status(HttpStatus.OK).body(orderItem.toString());
     }
 
+    @RequestMapping(value = "/generate-otp-code", method = RequestMethod.POST)
+    public ResponseEntity<?> generateOtpCode(@RequestHeader("Authorization") String accessToken,
+                                             @RequestBody String req) {
+        JSONObject responseMap = new JSONObject();
+        try {
+            JSONObject valTokenReq = new JSONObject();
+            valTokenReq.put("AccessToken", accessToken)
+                    .put("UserType", "M");
+            JSONObject valTokenBdy = validateAccessToken.pickAndReturnAll(valTokenReq);
+            if (valTokenBdy.getString("Status").equals("00")) {
+                JSONObject userDetails = valTokenBdy.getJSONObject("UserDetails");
+                JSONObject messengerInfo = userDetails.getJSONObject("messengerInfo");
+                Long messengerId = Long.valueOf(messengerInfo.getInt("userId"));
+                JSONObject request = new JSONObject(req);
+
+                String[] deliveryTypes = {"MC", "MW"};
+                itemMessengerDeliveryRepository.findItemMessengerDeliveryByOrderItemIdAndMessengerIdAndDeliveryTypeIn(request.getLong("OrderItemId"), messengerId, deliveryTypes
+                ).ifPresentOrElse(itemMessengerDelivery -> {
+                    orderItemRepository.findById(request.getLong("OrderItemId"))
+                            .ifPresentOrElse(orderItem -> {
+                                String validationCode = globalMethods.generateValidationCode();
+                                itemMessengerDelivery.setValidationCode(globalMethods.encryptCode(validationCode));
+                                itemMessengerDelivery.setValidationStatus(1);
+                                orderItemRepository.save(orderItem);
+                                loginValidationRepository.findLoginValidationByEmailAddress(messengerInfo.getString("email"))
+                                        .ifPresent(user -> {
+                                            JSONObject pushPayload = new JSONObject();
+                                            pushPayload.put("UserId", user.getUserOneSignalId() != null ? user.getUserOneSignalId() : "5c66ca50-c009-480f-a200-72c244d74ff4");
+                                            pushPayload.put("Header", "Generate Code for : " + orderItem.getSubOrderNumber());
+                                            pushPayload.put("Message", "Generate Code for : " + orderItem.getSubOrderNumber());
+                                            JSONObject data = new JSONObject();
+                                            data.put("OrderItem", orderItem.getSubOrderNumber());
+                                            pushPayload.put("data", data);
+                                            globalMethods.sendPushNotification(pushPayload);
+                                        });
+
+                                responseMap.put("statusCode", ResponseCodes.SUCCESS)
+                                        .put("statusDescription", "Success")
+                                        .put("ValidCode", validationCode)
+                                        .put("statusMessage", "Success");
+                            }, () -> {
+                                responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                                        .put("statusDescription", "The Item does not exists")
+                                        .put("statusMessage", "The Item does not exists");
+                            });
+                }, () -> {
+                    responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                            .put("statusDescription", "The Delivery is not assigned to this messenger")
+                            .put("statusMessage", "The Delivery is not assigned to this messenger");
+                });
+            } else {
+                responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                        .put("statusDescription", "Error in user validation")
+                        .put("statusMessage", "Error in user validation");
+            }
+        } catch (Exception ex) {
+            responseMap.put("statusCode", ResponseCodes.REQUEST_FAILED)
+                    .put("statusDescription", "Error in user validation")
+                    .put("statusMessage", "Error in user validation");
+            log.log(Level.WARNING, ex.getMessage());
+        }
+        return ResponseEntity.ok(responseMap.toString());
+    }
+
     // Confirm Customer Delivery
     @RequestMapping(value = "/attach-qr-code-item", method = RequestMethod.POST)
     public ResponseEntity<?> attachQrCodeToItem(@RequestHeader("Authorization") String accessToken,
