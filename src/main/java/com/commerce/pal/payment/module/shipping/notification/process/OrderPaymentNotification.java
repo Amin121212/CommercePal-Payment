@@ -156,6 +156,9 @@ public class OrderPaymentNotification {
                         slackBody.put("ref", order.getOrderRef());
                         globalMethods.sendSlackNotification(slackBody);
 
+                        slackBody.put("TemplateId", "12");
+                        globalMethods.sendSlackNotification(slackBody);
+
                     }, () -> {
                         log.log(Level.WARNING, "Invalid Order Ref Passed : " + orderRef);
                     });
