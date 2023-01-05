@@ -76,13 +76,16 @@ public class OrderService {
     public JSONObject customerAddress(Long orderId) {
         AtomicReference<JSONObject> customerAddress = new AtomicReference<>(new JSONObject());
         try {
-            orderRepository.findById(orderId)
-                    .ifPresent(order -> {
-                        JSONObject cusReq = new JSONObject();
-                        cusReq.put("Type", "CUSTOMER-ADDRESS");
-                        cusReq.put("TypeId", order.getUserAddressId());
-                        customerAddress.set(dataAccessService.pickAndProcess(cusReq));
-                    });
+            orderItemRepository.findById(orderId).ifPresent(order -> {
+                orderRepository.findById(order.getOrderId())
+                        .ifPresent(order1 -> {
+                            JSONObject cusReq = new JSONObject();
+                            cusReq.put("Type", "CUSTOMER-ADDRESS");
+                            cusReq.put("TypeId", order1.getUserAddressId());
+                            customerAddress.set(dataAccessService.pickAndProcess(cusReq));
+                        });
+            });
+
 
         } catch (Exception ex) {
             log.log(Level.WARNING, ex.getMessage());
