@@ -1,12 +1,11 @@
 package com.commerce.pal.payment.integ.payment.financials;
 
-import com.commerce.pal.payment.integ.payment.sahay.Constants;
+import com.commerce.pal.payment.integ.payment.sahay.SahayConstants;
 import com.commerce.pal.payment.module.payment.ProcessSuccessPayment;
 import com.commerce.pal.payment.repo.payment.PalPaymentRepository;
 import com.commerce.pal.payment.util.HttpProcessor;
 import com.commerce.pal.payment.util.ResponseCodes;
 import lombok.extern.java.Log;
-import org.asynchttpclient.RequestBuilder;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,7 +13,6 @@ import org.springframework.stereotype.Component;
 
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.logging.Level;
 
 @Log
 @Component
@@ -23,17 +21,17 @@ public class FinancialPaymentFulfillment {
     @Value(value = "${org.commerce.pal.sahay.payment.fulfillment.endpoint}")
     private String URL_PAYMENT_FULFILLMENT;
 
-    private final Constants constants;
+    private final SahayConstants sahayConstants;
     private final HttpProcessor httpProcessor;
     private final PalPaymentRepository palPaymentRepository;
     private final ProcessSuccessPayment processSuccessPayment;
 
     @Autowired
-    public FinancialPaymentFulfillment(Constants constants,
+    public FinancialPaymentFulfillment(SahayConstants sahayConstants,
                                        HttpProcessor httpProcessor,
                                        PalPaymentRepository palPaymentRepository,
                                        ProcessSuccessPayment processSuccessPayment) {
-        this.constants = constants;
+        this.sahayConstants = sahayConstants;
         this.httpProcessor = httpProcessor;
         this.palPaymentRepository = palPaymentRepository;
         this.processSuccessPayment = processSuccessPayment;

@@ -1,7 +1,6 @@
 package com.commerce.pal.payment.integ.payment.ethio;
 
-import com.commerce.pal.payment.integ.payment.sahay.Constants;
-import com.commerce.pal.payment.model.payment.MerchantWithdrawal;
+import com.commerce.pal.payment.integ.payment.sahay.SahayConstants;
 import com.commerce.pal.payment.util.HttpProcessor;
 import com.commerce.pal.payment.util.ResponseCodes;
 import lombok.extern.java.Log;
@@ -26,18 +25,18 @@ public class EthioSwithAccount {
     @Value(value = "${org.commerce.pal.sahay.payment.et.funds.transfer.check.endpoint}")
     private String URL_CHECK_ACCOUNT;
 
-    private final Constants constants;
+    private final SahayConstants sahayConstants;
     private final HttpProcessor httpProcessor;
 
-    public EthioSwithAccount(Constants constants, HttpProcessor httpProcessor) {
-        this.constants = constants;
+    public EthioSwithAccount(SahayConstants sahayConstants, HttpProcessor httpProcessor) {
+        this.sahayConstants = sahayConstants;
         this.httpProcessor = httpProcessor;
     }
 
     public JSONObject bankCheck() {
         JSONObject respBdy = new JSONObject();
         try {
-            String accessToken = constants.getToken();
+            String accessToken = sahayConstants.getToken();
             if (accessToken == null || accessToken.equals("") || accessToken.contains("Error")) {
                 respBdy.put("statusCode", ResponseCodes.SYSTEM_ERROR)
                         .put("statusDescription", "Unable to get access token")
@@ -88,7 +87,7 @@ public class EthioSwithAccount {
     public JSONObject accountCheck(JSONObject reqBdy) {
         JSONObject respBdy = new JSONObject();
         try {
-            String accessToken = constants.getToken();
+            String accessToken = sahayConstants.getToken();
             if (accessToken == null || accessToken.equals("") || accessToken.contains("Error")) {
                 respBdy.put("statusCode", ResponseCodes.SYSTEM_ERROR)
                         .put("statusDescription", "Unable to get access token")

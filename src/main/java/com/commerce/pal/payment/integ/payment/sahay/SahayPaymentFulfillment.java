@@ -22,17 +22,17 @@ public class SahayPaymentFulfillment {
     @Value(value = "${org.commerce.pal.sahay.payment.fulfillment.endpoint}")
     private String URL_PAYMENT_FULFILLMENT;
 
-    private final Constants constants;
+    private final SahayConstants sahayConstants;
     private final HttpProcessor httpProcessor;
     private final PalPaymentRepository palPaymentRepository;
     private final ProcessSuccessPayment processSuccessPayment;
 
     @Autowired
-    public SahayPaymentFulfillment(Constants constants,
+    public SahayPaymentFulfillment(SahayConstants sahayConstants,
                                    HttpProcessor httpProcessor,
                                    PalPaymentRepository palPaymentRepository,
                                    ProcessSuccessPayment processSuccessPayment) {
-        this.constants = constants;
+        this.sahayConstants = sahayConstants;
         this.httpProcessor = httpProcessor;
         this.palPaymentRepository = palPaymentRepository;
         this.processSuccessPayment = processSuccessPayment;
@@ -44,7 +44,7 @@ public class SahayPaymentFulfillment {
             palPaymentRepository.findPalPaymentByOrderRefAndTransRefAndStatus(
                     reqBdy.getString("OrderRef"), reqBdy.getString("TransRef"), 1
             ).ifPresentOrElse(payment -> {
-                String accessToken = constants.getToken();
+                String accessToken = sahayConstants.getToken();
                 if (accessToken == null || accessToken.equals("") || accessToken.contains("Error")) {
                     log.log(Level.SEVERE, "Unable to get access token");
                     respBdy.put("statusCode", ResponseCodes.SYSTEM_ERROR)

@@ -23,15 +23,15 @@ public class SahayTransfer {
     @Value(value = "${org.commerce.pal.sahay.payment.funds.transfer.endpoint}")
     private String URL_PAYMENT_REQUEST;
 
-    private final Constants constants;
+    private final SahayConstants sahayConstants;
     private final HttpProcessor httpProcessor;
     private final MerchantWithdrawalRepository merchantWithdrawalRepository;
 
     @Autowired
-    public SahayTransfer(Constants constants,
+    public SahayTransfer(SahayConstants sahayConstants,
                          HttpProcessor httpProcessor,
                          MerchantWithdrawalRepository merchantWithdrawalRepository) {
-        this.constants = constants;
+        this.sahayConstants = sahayConstants;
         this.httpProcessor = httpProcessor;
         this.merchantWithdrawalRepository = merchantWithdrawalRepository;
     }
@@ -39,7 +39,7 @@ public class SahayTransfer {
     public JSONObject pickAndProcess(MerchantWithdrawal merchantWithdrawal) {
         JSONObject respBdy = new JSONObject();
         try {
-            String accessToken = constants.getToken();
+            String accessToken = sahayConstants.getToken();
             if (accessToken == null || accessToken.equals("") || accessToken.contains("Error")) {
                 log.log(Level.SEVERE, "Unable to get access token");
                 respBdy.put("statusCode", ResponseCodes.SYSTEM_ERROR)

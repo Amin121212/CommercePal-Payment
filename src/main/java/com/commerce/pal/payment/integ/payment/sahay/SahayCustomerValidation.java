@@ -20,20 +20,20 @@ public class SahayCustomerValidation {
     @Value(value = "${org.commerce.pal.sahay.check.customer.endpoint}")
     private String URL_CHECK_CUSTOMER;
 
-    private final Constants constants;
+    private final SahayConstants sahayConstants;
     private final HttpProcessor httpProcessor;
 
     @Autowired
-    public SahayCustomerValidation(Constants constants,
+    public SahayCustomerValidation(SahayConstants sahayConstants,
                                    HttpProcessor httpProcessor) {
-        this.constants = constants;
+        this.sahayConstants = sahayConstants;
         this.httpProcessor = httpProcessor;
     }
 
     public JSONObject checkCustomer(String phone) {
         JSONObject respBdy = new JSONObject();
         try {
-            String accessToken = constants.getToken();
+            String accessToken = sahayConstants.getToken();
             if (accessToken == null || accessToken.equals("") || accessToken.contains("Error")) {
                 log.log(Level.SEVERE, "Unable to get access token");
                 respBdy.put("statusCode", ResponseCodes.SYSTEM_ERROR)

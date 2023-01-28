@@ -1,6 +1,5 @@
 package com.commerce.pal.payment.integ.payment.hellocash;
 
-import com.commerce.pal.payment.integ.payment.hellocash.Constants;
 import com.commerce.pal.payment.module.payment.ProcessSuccessPayment;
 import com.commerce.pal.payment.repo.payment.PalPaymentRepository;
 import com.commerce.pal.payment.util.HttpProcessor;
@@ -23,17 +22,17 @@ public class HelloCashPaymentFulfillment {
     @Value(value = "${org.hello.cash.validate.payment}")
     private String URL_PAYMENT_FULFILLMENT;
 
-    private final com.commerce.pal.payment.integ.payment.hellocash.Constants constants;
+    private final HelloCashConstants helloCashConstants;
     private final HttpProcessor httpProcessor;
     private final PalPaymentRepository palPaymentRepository;
     private final ProcessSuccessPayment processSuccessPayment;
 
     @Autowired
-    public HelloCashPaymentFulfillment(Constants constants,
+    public HelloCashPaymentFulfillment(HelloCashConstants helloCashConstants,
                                        HttpProcessor httpProcessor,
                                        PalPaymentRepository palPaymentRepository,
                                        ProcessSuccessPayment processSuccessPayment) {
-        this.constants = constants;
+        this.helloCashConstants = helloCashConstants;
         this.httpProcessor = httpProcessor;
         this.palPaymentRepository = palPaymentRepository;
         this.processSuccessPayment = processSuccessPayment;
@@ -45,7 +44,7 @@ public class HelloCashPaymentFulfillment {
             palPaymentRepository.findPalPaymentByOrderRefAndTransRefAndStatus(
                     reqBdy.getString("OrderRef"), reqBdy.getString("TransRef"), 1
             ).ifPresentOrElse(payment -> {
-                String accessToken = constants.getToken();
+                String accessToken = helloCashConstants.getToken();
                 if (accessToken == null || accessToken.equals("") || accessToken.contains("Error")) {
                     log.log(Level.SEVERE, "Unable to get access token");
                     respBdy.put("statusCode", ResponseCodes.SYSTEM_ERROR)

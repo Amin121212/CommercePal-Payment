@@ -1,6 +1,5 @@
 package com.commerce.pal.payment.integ.payment.hellocash;
 
-import com.commerce.pal.payment.integ.payment.hellocash.Constants;
 import com.commerce.pal.payment.model.payment.PalPayment;
 import com.commerce.pal.payment.repo.payment.PalPaymentRepository;
 import com.commerce.pal.payment.util.HttpProcessor;
@@ -24,15 +23,15 @@ public class HelloCashPayment {
     @Value(value = "${org.hello.cash.initiate.payment}")
     private String URL_PAYMENT_REQUEST;
 
-    private final com.commerce.pal.payment.integ.payment.hellocash.Constants constants;
+    private final HelloCashConstants helloCashConstants;
     private final HttpProcessor httpProcessor;
     private final PalPaymentRepository palPaymentRepository;
 
     @Autowired
-    public HelloCashPayment(Constants constants,
+    public HelloCashPayment(HelloCashConstants helloCashConstants,
                             HttpProcessor httpProcessor,
                             PalPaymentRepository palPaymentRepository) {
-        this.constants = constants;
+        this.helloCashConstants = helloCashConstants;
         this.httpProcessor = httpProcessor;
         this.palPaymentRepository = palPaymentRepository;
     }
@@ -40,7 +39,7 @@ public class HelloCashPayment {
     public JSONObject pickAndProcess(PalPayment payment) {
         JSONObject respBdy = new JSONObject();
         try {
-            String accessToken = constants.getToken();
+            String accessToken = helloCashConstants.getToken();
             if (accessToken == null || accessToken.equals("") || accessToken.contains("Error")) {
                 log.log(Level.SEVERE, "Unable to get access token");
                 respBdy.put("statusCode", ResponseCodes.SYSTEM_ERROR)

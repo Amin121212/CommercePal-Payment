@@ -1,6 +1,5 @@
 package com.commerce.pal.payment.integ.payment.financials;
 
-import com.commerce.pal.payment.integ.payment.sahay.Constants;
 import com.commerce.pal.payment.model.payment.PalPayment;
 import com.commerce.pal.payment.repo.payment.PalPaymentRepository;
 import com.commerce.pal.payment.util.HttpProcessor;

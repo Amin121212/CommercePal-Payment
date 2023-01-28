@@ -24,15 +24,15 @@ public class SahayPayment {
     private String URL_PAYMENT_REQUEST;
 
 
-    private final Constants constants;
+    private final SahayConstants sahayConstants;
     private final HttpProcessor httpProcessor;
     private final PalPaymentRepository palPaymentRepository;
 
     @Autowired
-    public SahayPayment(Constants constants,
+    public SahayPayment(SahayConstants sahayConstants,
                         HttpProcessor httpProcessor,
                         PalPaymentRepository palPaymentRepository) {
-        this.constants = constants;
+        this.sahayConstants = sahayConstants;
         this.httpProcessor = httpProcessor;
         this.palPaymentRepository = palPaymentRepository;
     }
@@ -40,7 +40,7 @@ public class SahayPayment {
     public JSONObject pickAndProcess(PalPayment payment) {
         JSONObject respBdy = new JSONObject();
         try {
-            String accessToken = constants.getToken();
+            String accessToken = sahayConstants.getToken();
             if (accessToken == null || accessToken.equals("") || accessToken.contains("Error")) {
                 log.log(Level.SEVERE, "Unable to get access token");
                 respBdy.put("statusCode", ResponseCodes.SYSTEM_ERROR)
