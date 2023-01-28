@@ -2,6 +2,7 @@ package com.commerce.pal.payment.module.payment;
 
 import com.commerce.pal.payment.integ.payment.cash.AgentCashProcessing;
 import com.commerce.pal.payment.integ.payment.financials.FinancialPayment;
+import com.commerce.pal.payment.integ.payment.hellocash.HelloCashPayment;
 import com.commerce.pal.payment.integ.payment.sahay.SahayPayment;
 import com.commerce.pal.payment.model.payment.PalPayment;
 import com.commerce.pal.payment.repo.payment.OrderRepository;
@@ -28,6 +29,7 @@ public class PaymentService {
     private final GlobalMethods globalMethods;
     private final OrderRepository orderRepository;
     private final FinancialPayment financialPayment;
+    private final HelloCashPayment helloCashPayment;
     private final AgentCashProcessing agentCashProcessing;
     private final PalPaymentRepository palPaymentRepository;
 
@@ -36,12 +38,14 @@ public class PaymentService {
                           GlobalMethods globalMethods,
                           OrderRepository orderRepository,
                           FinancialPayment financialPayment,
+                          HelloCashPayment helloCashPayment,
                           AgentCashProcessing agentCashProcessing,
                           PalPaymentRepository palPaymentRepository) {
         this.sahayPayment = sahayPayment;
         this.globalMethods = globalMethods;
         this.orderRepository = orderRepository;
         this.financialPayment = financialPayment;
+        this.helloCashPayment = helloCashPayment;
         this.agentCashProcessing = agentCashProcessing;
         this.palPaymentRepository = palPaymentRepository;
     }
@@ -75,6 +79,11 @@ public class PaymentService {
                                 payment.get().setAccountNumber(rqBdy.getString("PhoneNumber"));
                                 payment.set(palPaymentRepository.save(payment.get()));
                                 respBdy.set(sahayPayment.pickAndProcess(payment.get()));
+                                break;
+                            case "HELLO-CASH":
+                                payment.get().setAccountNumber(rqBdy.getString("PhoneNumber"));
+                                payment.set(palPaymentRepository.save(payment.get()));
+                                respBdy.set(helloCashPayment.pickAndProcess(payment.get()));
                                 break;
                             case "FINANCE-INST":
                                 respBdy.set(financialPayment.pickAndProcess(payment.get()));

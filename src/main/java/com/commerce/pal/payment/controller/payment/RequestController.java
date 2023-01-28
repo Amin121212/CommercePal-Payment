@@ -3,6 +3,7 @@ package com.commerce.pal.payment.controller.payment;
 import com.commerce.pal.payment.integ.payment.cash.AgentCashProcessing;
 import com.commerce.pal.payment.integ.payment.ethio.EthioFundsTransfer;
 import com.commerce.pal.payment.integ.payment.ethio.EthioSwithAccount;
+import com.commerce.pal.payment.integ.payment.hellocash.HelloCashPaymentFulfillment;
 import com.commerce.pal.payment.integ.payment.sahay.SahayCustomerValidation;
 import com.commerce.pal.payment.integ.payment.sahay.SahayPaymentFulfillment;
 import com.commerce.pal.payment.module.payment.PaymentService;
@@ -34,6 +35,7 @@ public class RequestController {
     private final ProcessSuccessPayment processSuccessPayment;
     private final SahayCustomerValidation sahayCustomerValidation;
     private final SahayPaymentFulfillment sahayPaymentFulfillment;
+    private final HelloCashPaymentFulfillment helloCashPaymentFulfillment;
 
     @Autowired
     public RequestController(GlobalMethods globalMethods,
@@ -44,7 +46,8 @@ public class RequestController {
                              AgentCashProcessing agentCashProcessing,
                              ProcessSuccessPayment processSuccessPayment,
                              SahayCustomerValidation sahayCustomerValidation,
-                             SahayPaymentFulfillment sahayPaymentFulfillment) {
+                             SahayPaymentFulfillment sahayPaymentFulfillment,
+                             HelloCashPaymentFulfillment helloCashPaymentFulfillment) {
         this.globalMethods = globalMethods;
         this.paymentService = paymentService;
         this.ethioSwithAccount = ethioSwithAccount;
@@ -55,6 +58,7 @@ public class RequestController {
         this.processSuccessPayment = processSuccessPayment;
         this.sahayCustomerValidation = sahayCustomerValidation;
         this.sahayPaymentFulfillment = sahayPaymentFulfillment;
+        this.helloCashPaymentFulfillment = helloCashPaymentFulfillment;
     }
 
     @RequestMapping(value = "/request", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -98,6 +102,9 @@ public class RequestController {
                             break;
                         case "SAHAY-CONFIRM-PAYMENT":
                             responseBody = sahayPaymentFulfillment.pickAndProcess(requestObject);
+                            break;
+                        case "HELLO-CASH-CONFIRM-PAYMENT":
+                            responseBody = helloCashPaymentFulfillment.pickAndProcess(requestObject);
                             break;
                         case "AGENT-CASH-FULFILLMENT":
                             responseBody = agentCashProcessing.processFulfillment(requestObject);

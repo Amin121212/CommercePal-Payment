@@ -27,11 +27,13 @@ public class ResponseCodes {
     public static final String REQUEST_FAILED = "440";
     public static final String DUPLICATE_transactionId = "901";
 
+
     public static final String TRANSACTION_LIMIT_NOT_SET = "600";
     public static final String DAILY_LIMIT_EXCEEDED = "601";
     public static final String TRANSACTION_LIMIT_EXCEEDED = "602";
     public static final String INVALID_AMOUNT = "603";
     public static final String BALANCE_LIMIT_EXCEEDED = "604";
+    public static final String TRANSACTION_STILL_PENDING = "605";
 
     public static final String INSUFFICIENT_FUNDS = "008";
     public static final String INVALID_CODE = "708";
