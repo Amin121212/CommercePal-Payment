@@ -78,7 +78,7 @@ public class HelloCashPaymentFulfillment {
 
                             payment.setStatus(3);
                             payment.setFinalResponse("000");
-                            payment.setFinalResponseMessage(resBody.getString("responseDescription"));
+                            payment.setFinalResponseMessage(resBody.getString("status"));
                             payment.setFinalResponseDate(Timestamp.from(Instant.now()));
                             palPaymentRepository.save(payment);
 
