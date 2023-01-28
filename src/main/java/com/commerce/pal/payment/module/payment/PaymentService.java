@@ -1,6 +1,7 @@
 package com.commerce.pal.payment.module.payment;
 
 import com.commerce.pal.payment.integ.payment.cash.AgentCashProcessing;
+import com.commerce.pal.payment.integ.payment.ebirr.EBirrPayment;
 import com.commerce.pal.payment.integ.payment.financials.FinancialPayment;
 import com.commerce.pal.payment.integ.payment.hellocash.HelloCashPayment;
 import com.commerce.pal.payment.integ.payment.sahay.SahayPayment;
@@ -25,6 +26,7 @@ import java.util.logging.Level;
 @Service
 @SuppressWarnings("Duplicates")
 public class PaymentService {
+    private final EBirrPayment eBirrPayment;
     private final SahayPayment sahayPayment;
     private final GlobalMethods globalMethods;
     private final OrderRepository orderRepository;
@@ -34,13 +36,15 @@ public class PaymentService {
     private final PalPaymentRepository palPaymentRepository;
 
     @Autowired
-    public PaymentService(SahayPayment sahayPayment,
+    public PaymentService(EBirrPayment eBirrPayment,
+                          SahayPayment sahayPayment,
                           GlobalMethods globalMethods,
                           OrderRepository orderRepository,
                           FinancialPayment financialPayment,
                           HelloCashPayment helloCashPayment,
                           AgentCashProcessing agentCashProcessing,
                           PalPaymentRepository palPaymentRepository) {
+        this.eBirrPayment = eBirrPayment;
         this.sahayPayment = sahayPayment;
         this.globalMethods = globalMethods;
         this.orderRepository = orderRepository;
@@ -84,6 +88,11 @@ public class PaymentService {
                                 payment.get().setAccountNumber(rqBdy.getString("PhoneNumber"));
                                 payment.set(palPaymentRepository.save(payment.get()));
                                 respBdy.set(helloCashPayment.pickAndProcess(payment.get()));
+                                break;
+                            case "E-BIRR":
+                                payment.get().setAccountNumber(rqBdy.getString("PhoneNumber"));
+                                payment.set(palPaymentRepository.save(payment.get()));
+                                respBdy.set(eBirrPayment.pickAndProcess(payment.get()));
                                 break;
                             case "FINANCE-INST":
                                 respBdy.set(financialPayment.pickAndProcess(payment.get()));
