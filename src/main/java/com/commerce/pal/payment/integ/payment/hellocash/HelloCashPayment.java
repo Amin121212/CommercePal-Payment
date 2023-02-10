@@ -57,7 +57,7 @@ public class HelloCashPayment {
                 palPaymentRepository.save(payment);
             } else {
                 JSONObject payload = new JSONObject();
-                payload.put("from", payment.getAccountNumber());
+                payload.put("from", "+" + payment.getAccountNumber());
                 payload.put("amount", payment.getAmount());
 
                 payment.setRequestPayload(payload.toString());
