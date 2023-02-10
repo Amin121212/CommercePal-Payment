@@ -77,7 +77,7 @@ public class HelloCashPayment {
                     payment.setResponsePayload(resBody.toString());
                     payment.setResponseDate(Timestamp.from(Instant.now()));
 
-                    if (resBody.getString("response").equals("000")) {
+                    if (resBody.getString("status").equals("PENDING")) {
                         respBdy.put("statusCode", ResponseCodes.SUCCESS)
                                 .put("OrderRef", payment.getOrderRef())
                                 .put("TransRef", payment.getTransRef())
