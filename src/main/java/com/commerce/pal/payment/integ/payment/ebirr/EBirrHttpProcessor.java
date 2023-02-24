@@ -1,4 +1,4 @@
-package com.commerce.pal.payment.util;
+package com.commerce.pal.payment.integ.payment.ebirr;
 
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
@@ -20,10 +20,10 @@ import static org.asynchttpclient.Dsl.asyncHttpClient;
 @Log
 @Component
 @SuppressWarnings("Duplicates")
-public class HttpProcessor {
+public class EBirrHttpProcessor {
     private AsyncHttpClientConfig cf;
 
-    public HttpProcessor() {
+    public EBirrHttpProcessor() {
         io.netty.handler.ssl.SslContext sc = null;
         try {
             sc = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
@@ -33,8 +33,8 @@ public class HttpProcessor {
         cf = new DefaultAsyncHttpClientConfig.Builder()
                 .setCompressionEnforced(true)
                 .setMaxConnections(100)
-                .setPooledConnectionIdleTimeout(30000)
-                .setRequestTimeout(30000)
+                .setPooledConnectionIdleTimeout(50000)
+                .setRequestTimeout(50000)
                 .setMaxConnectionsPerHost(5000)
                 .setSslContext(sc)
                 .build();

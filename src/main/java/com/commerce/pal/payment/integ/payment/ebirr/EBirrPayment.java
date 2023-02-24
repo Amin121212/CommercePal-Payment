@@ -2,7 +2,6 @@ package com.commerce.pal.payment.integ.payment.ebirr;
 
 import com.commerce.pal.payment.model.payment.PalPayment;
 import com.commerce.pal.payment.repo.payment.PalPaymentRepository;
-import com.commerce.pal.payment.util.HttpProcessor;
 import com.commerce.pal.payment.util.ResponseCodes;
 import lombok.extern.java.Log;
 import org.asynchttpclient.RequestBuilder;
@@ -37,11 +36,11 @@ public class EBirrPayment {
     @Value(value = "${org.ebirr.apiUserId}")
     private String apiUserId;
 
-    private final HttpProcessor httpProcessor;
+    private final EBirrHttpProcessor httpProcessor;
     private final PalPaymentRepository palPaymentRepository;
 
     @Autowired
-    public EBirrPayment(HttpProcessor httpProcessor,
+    public EBirrPayment(EBirrHttpProcessor httpProcessor,
                         PalPaymentRepository palPaymentRepository) {
         this.httpProcessor = httpProcessor;
         this.palPaymentRepository = palPaymentRepository;
