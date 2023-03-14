@@ -47,6 +47,7 @@ public class SahayAirtimePurchase {
 
     public void process(JSONObject reqBody) {
         try {
+            log.log(Level.INFO, "Processor Received : " + reqBody.toString());
             promotionPhoneRepository.findPromotionPhoneByPhoneAndDeviceId(
                             reqBody.getString("Phone"), reqBody.getString("Device"))
                     .ifPresent(promotionPhone -> {
