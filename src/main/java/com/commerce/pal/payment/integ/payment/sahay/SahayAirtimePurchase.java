@@ -108,7 +108,7 @@ public class SahayAirtimePurchase {
                         }
                     });
         } catch (Exception ex) {
-
+            log.log(Level.WARNING, ex.getMessage());
         }
     }
 }
