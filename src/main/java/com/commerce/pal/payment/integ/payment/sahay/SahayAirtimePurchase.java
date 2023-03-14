@@ -51,6 +51,7 @@ public class SahayAirtimePurchase {
             promotionPhoneRepository.findPromotionPhoneByPhoneAndDeviceId(
                             reqBody.getString("Phone"), reqBody.getString("Device"))
                     .ifPresent(promotionPhone -> {
+                        log.log(Level.INFO, promotionPhone.toString());
                         String accessToken = sahayConstants.getToken();
                         promotionPhone.setTransRef(globalMethods.generateTrans());
                         if (accessToken == null || accessToken.equals("") || accessToken.contains("Error")) {
@@ -75,9 +76,9 @@ public class SahayAirtimePurchase {
                                     .setBody(payload.toString())
                                     .setUrl(URL_AIRTIME_PURCHASE)
                                     .build();
-
+                            log.log(Level.INFO, payload.toString());
                             JSONObject resp = httpProcessor.jsonRequestProcessor(builder);
-
+                            log.log(Level.INFO, resp.toString());
                             if (resp.getString("StatusCode").equals("200")) {
                                 JSONObject resBody = new JSONObject(resp.getString("ResponseBody"));
                                 promotionPhone.setResponsePayload(resBody.toString());
