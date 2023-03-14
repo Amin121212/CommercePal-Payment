@@ -49,7 +49,7 @@ public class SahayAirtimePurchase {
         try {
             log.log(Level.INFO, "Processor Received : " + reqBody.toString());
             promotionPhoneRepository.findPromotionPhoneByPhoneAndDeviceId(
-                            reqBody.getString("Phone"), reqBody.getString("Device"))
+                            reqBody.getString("Phone").trim(), reqBody.getString("Device").trim())
                     .ifPresentOrElse(promotionPhone -> {
                         log.log(Level.INFO, promotionPhone.toString());
                         String accessToken = sahayConstants.getToken();
@@ -108,7 +108,7 @@ public class SahayAirtimePurchase {
                             }
                         }
                     }, () -> {
-                        log.log(Level.INFO, "Processor Failed : " + reqBody.toString());
+                        log.log(Level.INFO, "Processor Failed getting : " + reqBody.toString());
                     });
         } catch (Exception ex) {
             log.log(Level.WARNING, ex.getMessage());
