@@ -6,6 +6,7 @@ import com.commerce.pal.payment.integ.payment.ethio.EthioSwithAccount;
 import com.commerce.pal.payment.integ.payment.hellocash.HelloCashPaymentFulfillment;
 import com.commerce.pal.payment.integ.payment.sahay.SahayCustomerValidation;
 import com.commerce.pal.payment.integ.payment.sahay.SahayPaymentFulfillment;
+import com.commerce.pal.payment.jms.Sender;
 import com.commerce.pal.payment.module.payment.PaymentService;
 import com.commerce.pal.payment.module.ValidateAccessToken;
 import com.commerce.pal.payment.module.payment.ProcessSuccessPayment;
@@ -26,6 +27,7 @@ import java.util.logging.Level;
 @CrossOrigin(origins = "*")
 @SuppressWarnings("Duplicates")
 public class RequestController {
+    private final Sender sender;
     private final GlobalMethods globalMethods;
     private final PaymentService paymentService;
     private final EthioSwithAccount ethioSwithAccount;
@@ -38,7 +40,8 @@ public class RequestController {
     private final HelloCashPaymentFulfillment helloCashPaymentFulfillment;
 
     @Autowired
-    public RequestController(GlobalMethods globalMethods,
+    public RequestController(Sender sender,
+                             GlobalMethods globalMethods,
                              PaymentService paymentService,
                              EthioSwithAccount ethioSwithAccount,
                              EthioFundsTransfer ethioFundsTransfer,
@@ -48,6 +51,7 @@ public class RequestController {
                              SahayCustomerValidation sahayCustomerValidation,
                              SahayPaymentFulfillment sahayPaymentFulfillment,
                              HelloCashPaymentFulfillment helloCashPaymentFulfillment) {
+        this.sender = sender;
         this.globalMethods = globalMethods;
         this.paymentService = paymentService;
         this.ethioSwithAccount = ethioSwithAccount;
@@ -125,5 +129,22 @@ public class RequestController {
             log.log(Level.SEVERE, ex.getMessage());
             return ResponseEntity.ok(responseBody.toString());
         }
+    }
+
+    @RequestMapping(value = "/airtime-purchase", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<?> postSahayAirtimePurchase(@RequestBody String requestBody) {
+        log.log(Level.INFO, requestBody);
+        JSONObject responseBody = new JSONObject();
+        try {
+            sender.sendAirtimePurchase(requestBody.toString());
+        } catch (Exception ex) {
+            responseBody.put("statusCode", ResponseCodes.SYSTEM_ERROR)
+                    .put("statusDescription", "failed")
+                    .put("statusMessage", "Request failed");
+            log.log(Level.SEVERE, ex.getMessage());
+
+        }
+        return ResponseEntity.ok(responseBody.toString());
     }
 }
