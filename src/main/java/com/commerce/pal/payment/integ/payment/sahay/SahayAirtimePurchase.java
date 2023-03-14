@@ -41,6 +41,7 @@ public class SahayAirtimePurchase {
 
     @JmsListener(destination = "airtime-purchase.q")
     public void receive(String message) {
+        log.log(Level.INFO, "Received Airtime Request : " + message);
         process(new JSONObject(message));
     }
 
