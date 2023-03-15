@@ -2,6 +2,7 @@ package com.commerce.pal.payment.integ.payment.ebirr;
 
 import com.commerce.pal.payment.jms.Sender;
 import com.commerce.pal.payment.model.payment.PalPayment;
+import com.commerce.pal.payment.module.payment.ProcessSuccessPayment;
 import com.commerce.pal.payment.repo.payment.PalPaymentRepository;
 import com.commerce.pal.payment.util.ResponseCodes;
 import lombok.extern.java.Log;
@@ -41,14 +42,16 @@ public class EBirrPayment {
     private final Sender sender;
     private final EBirrHttpProcessor httpProcessor;
     private final PalPaymentRepository palPaymentRepository;
-
+    private final ProcessSuccessPayment processSuccessPayment;
     @Autowired
     public EBirrPayment(Sender sender,
                         EBirrHttpProcessor httpProcessor,
-                        PalPaymentRepository palPaymentRepository) {
+                        PalPaymentRepository palPaymentRepository,
+                        ProcessSuccessPayment processSuccessPayment) {
         this.sender = sender;
         this.httpProcessor = httpProcessor;
         this.palPaymentRepository = palPaymentRepository;
+        this.processSuccessPayment = processSuccessPayment;
     }
 
     @JmsListener(destination = "e-birr-payment.q")
@@ -147,7 +150,8 @@ public class EBirrPayment {
                                 payment.setFinalResponseMessage(resBody.getString("responseMsg") + " - " + paramsBdy.getString("issuerTransactionId"));
                                 payment.setFinalResponseDate(Timestamp.from(Instant.now()));
                                 palPaymentRepository.save(payment);
-
+                                // Process Payment
+                                processSuccessPayment.pickAndProcess(payment);
                             } else {
                                 respBdy.put("statusCode", ResponseCodes.NOT_EXIST)
                                         .put("statusDescription", "failed")

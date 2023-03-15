@@ -24,6 +24,9 @@ public class SahayAirtimePurchase {
 
     @Value(value = "${org.commerce.pal.app.registration.airtime.amount}")
     private String PROMOTION_AMOUNT;
+    @Value(value = "${Org.commerce.pal.app.registration.airtime.amount.active}")
+    private String PROMOTION_STATUS;
+
     private final GlobalMethods globalMethods;
     private final HttpProcessor httpProcessor;
     private final SahayConstants sahayConstants;
@@ -52,6 +55,7 @@ public class SahayAirtimePurchase {
                             reqBody.getString("Phone").trim(), reqBody.getString("Device").trim())
                     .ifPresentOrElse(promotionPhone -> {
                         log.log(Level.INFO, promotionPhone.toString());
+
                         String accessToken = sahayConstants.getToken();
                         promotionPhone.setTransRef(globalMethods.generateTrans());
                         if (accessToken == null || accessToken.equals("") || accessToken.contains("Error")) {
