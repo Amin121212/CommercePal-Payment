@@ -124,6 +124,15 @@ public class OrderPaymentNotification {
                                         merchantEmailPayload.put("EmailMessage", "Order Payment");
                                         log.log(Level.INFO, "Merchant Payment Payload : " + merchantEmailPayload.toString());
                                         globalMethods.sendEmailNotification(merchantEmailPayload);
+
+
+                                        JSONObject merchantSMSPayload = new JSONObject();
+                                        merchantSMSPayload.put("TemplateId", "11");
+                                        merchantSMSPayload.put("TemplateLanguage", "en");
+                                        merchantSMSPayload.put("name", merRes.getString("firstName"));
+                                        merchantSMSPayload.put("Phone", merRes.getString("phoneNumber").substring(merRes.getString("phoneNumber").length() - 9));
+                                        globalMethods.sendSMSNotification(merchantSMSPayload);
+
                                     } else { // DO for WareHouse Id
 
                                     }
