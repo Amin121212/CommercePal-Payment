@@ -94,6 +94,12 @@ public class SahayAirtimePurchase {
                                     promotionPhone.setProcessMessage("Success");
                                     promotionPhone.setProcessedDate(Timestamp.from(Instant.now()));
                                     promotionPhoneRepository.save(promotionPhone);
+
+                                    JSONObject promotionSMS = new JSONObject();
+                                    promotionSMS.put("TemplateId", "12");
+                                    promotionSMS.put("TemplateLanguage", "en");
+                                    promotionSMS.put("Phone", promotionPhone.getPhone().substring(promotionPhone.getPhone().length() - 9));
+                                    globalMethods.sendSMSNotification(promotionSMS);
                                 } else {
                                     promotionPhone.setStatus(5);
                                     promotionPhone.setProcessStatus("99");
