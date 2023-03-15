@@ -8,6 +8,7 @@ import org.asynchttpclient.AsyncHttpClientConfig;
 import org.asynchttpclient.DefaultAsyncHttpClientConfig;
 import org.asynchttpclient.RequestBuilder;
 import org.json.JSONObject;
+import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Component;
 
 import javax.net.ssl.SSLException;
@@ -33,12 +34,14 @@ public class EBirrHttpProcessor {
         cf = new DefaultAsyncHttpClientConfig.Builder()
                 .setCompressionEnforced(true)
                 .setMaxConnections(100)
-                .setPooledConnectionIdleTimeout(50000)
-                .setRequestTimeout(50000)
+                .setPooledConnectionIdleTimeout(300000)
+                .setRequestTimeout(300000)
                 .setMaxConnectionsPerHost(5000)
                 .setSslContext(sc)
                 .build();
     }
+
+
 
     public String processProperRequest(RequestBuilder builder) {
         AtomicReference<String> responseBody = new AtomicReference<>(new String());

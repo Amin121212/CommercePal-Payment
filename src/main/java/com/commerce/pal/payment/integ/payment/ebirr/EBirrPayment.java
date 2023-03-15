@@ -1,5 +1,6 @@
 package com.commerce.pal.payment.integ.payment.ebirr;
 
+import com.commerce.pal.payment.jms.Sender;
 import com.commerce.pal.payment.model.payment.PalPayment;
 import com.commerce.pal.payment.repo.payment.PalPaymentRepository;
 import com.commerce.pal.payment.util.ResponseCodes;
@@ -8,6 +9,7 @@ import org.asynchttpclient.RequestBuilder;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Component;
 
 import java.sql.Timestamp;
@@ -36,112 +38,144 @@ public class EBirrPayment {
     @Value(value = "${org.ebirr.apiUserId}")
     private String apiUserId;
 
+    private final Sender sender;
     private final EBirrHttpProcessor httpProcessor;
     private final PalPaymentRepository palPaymentRepository;
 
     @Autowired
-    public EBirrPayment(EBirrHttpProcessor httpProcessor,
+    public EBirrPayment(Sender sender,
+                        EBirrHttpProcessor httpProcessor,
                         PalPaymentRepository palPaymentRepository) {
+        this.sender = sender;
         this.httpProcessor = httpProcessor;
         this.palPaymentRepository = palPaymentRepository;
+    }
+
+    @JmsListener(destination = "e-birr-payment.q")
+    public void receive(String message) {
+        log.log(Level.INFO, "Received E-Birr Request : " + message);
+        processFromQueue(new JSONObject(message));
     }
 
     public JSONObject pickAndProcess(PalPayment payment) {
         JSONObject respBdy = new JSONObject();
         try {
-            JSONObject payload = new JSONObject();
-            payload.put("schemaVersion", schemaVersion);
-            payload.put("requestId", payment.getTransRef());
-            payload.put("timestamp", payment.getTransRef());
-            payload.put("channelName", channelName);
-            payload.put("serviceName", serviceName);
+            JSONObject messData = new JSONObject();
+            messData.put("Id", payment.getId());
+            sender.sendEbirrPayment(messData.toString());
+            respBdy.put("statusCode", ResponseCodes.SUCCESS)
+                    .put("OrderRef", payment.getOrderRef())
+                    .put("TransRef", payment.getTransRef())
+                    .put("PaymentRef", "issuerTransactionId")
+                    .put("statusDescription", "Success")
+                    .put("statusMessage", "Success");
+        } catch (Exception ex) {
+            log.log(Level.WARNING, ex.getMessage());
+            respBdy.put("statusCode", ResponseCodes.SYSTEM_ERROR)
+                    .put("statusDescription", "failed")
+                    .put("statusMessage", "Request failed");
+        }
+        return respBdy;
+    }
 
-            JSONObject serviceParams = new JSONObject();
-            serviceParams.put("merchantUid", merchantUid);
-            serviceParams.put("paymentMethod", paymentMethod);
-            serviceParams.put("apiKey", apiKey);
-            serviceParams.put("apiUserId", apiUserId);
+    public JSONObject processFromQueue(JSONObject request) {
+        JSONObject respBdy = new JSONObject();
+        try {
+            palPaymentRepository.findById(request.getLong("Id"))
+                    .ifPresent(payment -> {
+                        JSONObject payload = new JSONObject();
+                        payload.put("schemaVersion", schemaVersion);
+                        payload.put("requestId", payment.getTransRef());
+                        payload.put("timestamp", payment.getTransRef());
+                        payload.put("channelName", channelName);
+                        payload.put("serviceName", serviceName);
 
-            String payPhone = "";
-            if (payment.getAccountNumber().length() > 9) {
-                payPhone = "0" + payment.getAccountNumber().substring(payment.getAccountNumber().length() - 9);
-            } else {
-                payPhone = "0" + payment.getAccountNumber();
-            }
-            JSONObject payerInfo = new JSONObject();
-            payerInfo.put("accountNo", payPhone);
-            serviceParams.put("payerInfo", payerInfo);
+                        JSONObject serviceParams = new JSONObject();
+                        serviceParams.put("merchantUid", merchantUid);
+                        serviceParams.put("paymentMethod", paymentMethod);
+                        serviceParams.put("apiKey", apiKey);
+                        serviceParams.put("apiUserId", apiUserId);
 
-            JSONObject transactionInfo = new JSONObject();
-            transactionInfo.put("amount", payment.getAmount().toString());
-            transactionInfo.put("currency", "ETB");
-            transactionInfo.put("description", "Payment for Order:" + payment.getOrderRef());
-            transactionInfo.put("referenceId", payment.getTransRef());
-            transactionInfo.put("invoiceId", "I" + payment.getTransRef());
+                        String payPhone = "";
+                        if (payment.getAccountNumber().length() > 9) {
+                            payPhone = "0" + payment.getAccountNumber().substring(payment.getAccountNumber().length() - 9);
+                        } else {
+                            payPhone = "0" + payment.getAccountNumber();
+                        }
+                        JSONObject payerInfo = new JSONObject();
+                        payerInfo.put("accountNo", payPhone);
+                        serviceParams.put("payerInfo", payerInfo);
 
-            serviceParams.put("transactionInfo", transactionInfo);
+                        JSONObject transactionInfo = new JSONObject();
+                        transactionInfo.put("amount", payment.getAmount().toString());
+                        transactionInfo.put("currency", "ETB");
+                        transactionInfo.put("description", "Payment for Order:" + payment.getOrderRef());
+                        transactionInfo.put("referenceId", payment.getTransRef());
+                        transactionInfo.put("invoiceId", "I" + payment.getTransRef());
 
-            payload.put("serviceParams", serviceParams);
+                        serviceParams.put("transactionInfo", transactionInfo);
 
-            payment.setRequestPayload(payload.toString());
-            palPaymentRepository.save(payment);
+                        payload.put("serviceParams", serviceParams);
 
-            RequestBuilder builder = new RequestBuilder("POST");
-            builder.addHeader("Content-Type", "application/json")
-                    .setBody(payload.toString())
-                    .setUrl(URL_PAYMENT_REQUEST)
-                    .build();
+                        payment.setRequestPayload(payload.toString());
+                        palPaymentRepository.save(payment);
 
-            JSONObject resp = httpProcessor.jsonRequestProcessor(builder);
+                        RequestBuilder builder = new RequestBuilder("POST");
+                        builder.addHeader("Content-Type", "application/json")
+                                .setBody(payload.toString())
+                                .setUrl(URL_PAYMENT_REQUEST)
+                                .build();
 
-            if (resp.getString("StatusCode").equals("200")) {
-                JSONObject resBody = new JSONObject(resp.getString("ResponseBody"));
-                payment.setResponsePayload(resBody.toString());
-                payment.setResponseDate(Timestamp.from(Instant.now()));
-                if (resBody.getString("responseCode").equals("2001")) {
-                    JSONObject paramsBdy = resBody.getJSONObject("params");
-                    respBdy.put("statusCode", ResponseCodes.SUCCESS)
-                            .put("OrderRef", payment.getOrderRef())
-                            .put("TransRef", payment.getTransRef())
-                            .put("PaymentRef", "issuerTransactionId")
-                            .put("statusDescription", "Success")
-                            .put("statusMessage", "Success");
+                        JSONObject resp = httpProcessor.jsonRequestProcessor(builder);
 
-                    payment.setBillTransRef(paramsBdy.getString("transactionId"));
-                    payment.setStatus(3);
-                    payment.setFinalResponse("000");
-                    payment.setFinalResponseMessage(resBody.getString("responseMsg") + " - " + paramsBdy.getString("issuerTransactionId"));
-                    payment.setFinalResponseDate(Timestamp.from(Instant.now()));
-                    palPaymentRepository.save(payment);
+                        if (resp.getString("StatusCode").equals("200")) {
+                            JSONObject resBody = new JSONObject(resp.getString("ResponseBody"));
+                            payment.setResponsePayload(resBody.toString());
+                            payment.setResponseDate(Timestamp.from(Instant.now()));
+                            if (resBody.getString("responseCode").equals("2001")) {
+                                JSONObject paramsBdy = resBody.getJSONObject("params");
+                                respBdy.put("statusCode", ResponseCodes.SUCCESS)
+                                        .put("OrderRef", payment.getOrderRef())
+                                        .put("TransRef", payment.getTransRef())
+                                        .put("PaymentRef", "issuerTransactionId")
+                                        .put("statusDescription", "Success")
+                                        .put("statusMessage", "Success");
 
-                } else {
-                    respBdy.put("statusCode", ResponseCodes.NOT_EXIST)
-                            .put("statusDescription", "failed")
-                            .put("statusMessage", "Request failed");
+                                payment.setBillTransRef(paramsBdy.getString("transactionId"));
+                                payment.setStatus(3);
+                                payment.setFinalResponse("000");
+                                payment.setFinalResponseMessage(resBody.getString("responseMsg") + " - " + paramsBdy.getString("issuerTransactionId"));
+                                payment.setFinalResponseDate(Timestamp.from(Instant.now()));
+                                palPaymentRepository.save(payment);
 
-                    payment.setStatus(5);
-                    payment.setBillTransRef("FAILED");
-                    payment.setFinalResponse("999");
-                    payment.setFinalResponseMessage("FAILED");
-                    payment.setFinalResponseDate(Timestamp.from(Instant.now()));
-                    palPaymentRepository.save(payment);
-                }
-            } else {
-                respBdy.put("statusCode", ResponseCodes.SYSTEM_ERROR)
-                        .put("statusDescription", "failed")
-                        .put("statusMessage", "Request failed");
+                            } else {
+                                respBdy.put("statusCode", ResponseCodes.NOT_EXIST)
+                                        .put("statusDescription", "failed")
+                                        .put("statusMessage", "Request failed");
 
-                payment.setStatus(5);
-                payment.setBillTransRef("FAILED");
-                payment.setResponsePayload("FAILED");
-                payment.setResponseDate(Timestamp.from(Instant.now()));
+                                payment.setStatus(5);
+                                payment.setBillTransRef("FAILED");
+                                payment.setFinalResponse("999");
+                                payment.setFinalResponseMessage("FAILED");
+                                payment.setFinalResponseDate(Timestamp.from(Instant.now()));
+                                palPaymentRepository.save(payment);
+                            }
+                        } else {
+                            respBdy.put("statusCode", ResponseCodes.SYSTEM_ERROR)
+                                    .put("statusDescription", "failed")
+                                    .put("statusMessage", "Request failed");
 
-                payment.setFinalResponse("999");
-                payment.setFinalResponseMessage("FAILED");
-                payment.setFinalResponseDate(Timestamp.from(Instant.now()));
-                palPaymentRepository.save(payment);
-            }
+                            payment.setStatus(5);
+                            payment.setBillTransRef("FAILED");
+                            payment.setResponsePayload("FAILED");
+                            payment.setResponseDate(Timestamp.from(Instant.now()));
 
+                            payment.setFinalResponse("999");
+                            payment.setFinalResponseMessage("FAILED");
+                            payment.setFinalResponseDate(Timestamp.from(Instant.now()));
+                            palPaymentRepository.save(payment);
+                        }
+                    });
         } catch (Exception ex) {
             log.log(Level.WARNING, ex.getMessage());
             respBdy.put("statusCode", ResponseCodes.SYSTEM_ERROR)
