@@ -93,12 +93,12 @@ public class EthioFundsTransfer {
                         //todo
                         //Auto reversal
                         respBdy.put("statusCode", ResponseCodes.NOT_EXIST)
-                                .put("statusDescription", "failed")
+                                .put("statusDescription", resBody.getString("responseDescription"))
                                 .put("statusMessage", "Request failed");
                         merchantWithdrawal.setBillTransRef("FAILED");
                         merchantWithdrawal.setResponsePayload(resBody.toString());
                         merchantWithdrawal.setResponseStatus(5);
-                        merchantWithdrawal.setResponseDescription("FAILED");
+                        merchantWithdrawal.setResponseDescription(resBody.getString("responseDescription"));
                         merchantWithdrawal.setResponseDate(Timestamp.from(Instant.now()));
                         merchantWithdrawalRepository.save(merchantWithdrawal);
                     }
