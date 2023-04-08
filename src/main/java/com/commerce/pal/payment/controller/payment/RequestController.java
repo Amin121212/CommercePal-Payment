@@ -100,6 +100,7 @@ public class RequestController {
                     requestObject.put("UserLanguage", valTokenBdy.getJSONObject("UserDetails").getJSONObject("Details").getString("language"));
 
                     switch (requestObject.getString("ServiceCode")) {
+
                         case "CHECKOUT":
                         case "LOAN-REQUEST":
                             responseBody = paymentService.pickAndProcess(requestObject);
