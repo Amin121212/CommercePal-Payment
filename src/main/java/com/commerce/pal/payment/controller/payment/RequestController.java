@@ -10,6 +10,7 @@ import com.commerce.pal.payment.jms.Sender;
 import com.commerce.pal.payment.module.payment.PaymentService;
 import com.commerce.pal.payment.module.ValidateAccessToken;
 import com.commerce.pal.payment.module.payment.ProcessSuccessPayment;
+import com.commerce.pal.payment.module.payment.PromotionService;
 import com.commerce.pal.payment.util.GlobalMethods;
 import com.commerce.pal.payment.util.ResponseCodes;
 import lombok.extern.java.Log;
@@ -30,10 +31,12 @@ public class RequestController {
     private final Sender sender;
     private final GlobalMethods globalMethods;
     private final PaymentService paymentService;
+    private final PromotionService promotionService;
     private final EthioSwithAccount ethioSwithAccount;
     private final EthioFundsTransfer ethioFundsTransfer;
     private final ValidateAccessToken validateAccessToken;
     private final AgentCashProcessing agentCashProcessing;
+
     private final ProcessSuccessPayment processSuccessPayment;
     private final SahayCustomerValidation sahayCustomerValidation;
     private final SahayPaymentFulfillment sahayPaymentFulfillment;
@@ -43,6 +46,7 @@ public class RequestController {
     public RequestController(Sender sender,
                              GlobalMethods globalMethods,
                              PaymentService paymentService,
+                             PromotionService promotionService,
                              EthioSwithAccount ethioSwithAccount,
                              EthioFundsTransfer ethioFundsTransfer,
                              ValidateAccessToken validateAccessToken,
@@ -54,6 +58,7 @@ public class RequestController {
         this.sender = sender;
         this.globalMethods = globalMethods;
         this.paymentService = paymentService;
+        this.promotionService = promotionService;
         this.ethioSwithAccount = ethioSwithAccount;
         this.ethioFundsTransfer = ethioFundsTransfer;
 
@@ -100,6 +105,9 @@ public class RequestController {
                     requestObject.put("UserLanguage", valTokenBdy.getJSONObject("UserDetails").getJSONObject("Details").getString("language"));
 
                     switch (requestObject.getString("ServiceCode")) {
+                        case "ORDER-PROMO":
+                            responseBody = promotionService.pickAndProcess(requestObject);
+                            break;
                         case "CHECKOUT":
                         case "LOAN-REQUEST":
                             responseBody = paymentService.pickAndProcess(requestObject);

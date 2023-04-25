@@ -69,7 +69,7 @@ public class PaymentService {
                         payment.get().setPaymentType(rqBdy.getString("PaymentType"));
                         payment.get().setPaymentAccountType(rqBdy.getString("PaymentMode"));
                         payment.get().setAccountNumber(rqBdy.getString("UserEmail"));
-                        BigDecimal amount = new BigDecimal(order.getTotalPrice().doubleValue() + order.getDeliveryPrice().doubleValue());
+                        BigDecimal amount = new BigDecimal(order.getTotalPrice().doubleValue() + order.getDeliveryPrice().doubleValue() - order.getPromotionAmount().doubleValue());
                         amount = amount.setScale(2, RoundingMode.CEILING);
                         payment.get().setAmount(amount);
                         payment.get().setCurrency(rqBdy.getString("Currency"));

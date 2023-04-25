@@ -56,6 +56,22 @@ public class Order {
     @Column(name = "DeliveryPrice")
     private BigDecimal deliveryPrice;
     @Basic
+    @Column(name = "Charge")
+    private BigDecimal charge;
+    @Basic
+    @Column(name = "PromotionId")
+    private Integer promotionId;
+    @Basic
+    @Column(name = "PromotionAmount")
+    private BigDecimal promotionAmount;
+    @Basic
+    @Column(name = "ReferralUserType")
+    private String referralUserType;
+    @Basic
+    @Column(name = "ReferralUserId")
+    private Integer referralUserId;
+
+    @Basic
     @Column(name = "OrderDate")
     private Timestamp orderDate;
     @Basic
