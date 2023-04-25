@@ -88,7 +88,7 @@ public class MessengerAssignmentNotification {
             emailPayload.put("EmailMessage", getDeliveryType(payload.getString("DeliveryType")) + "-" + payload.getString("OrderRef"));
 
             JSONObject slackBody = new JSONObject();
-            slackBody.put("TemplateId", "9");
+            slackBody.put("TemplateId", "15");
             slackBody.put("messenger_name", mesRes.getString("firstName"));
             slackBody.put("phone_number", mesRes.getString("ownerPhoneNumber"));
             slackBody.put("sub_ref", payload.getString("SubOrderRef"));

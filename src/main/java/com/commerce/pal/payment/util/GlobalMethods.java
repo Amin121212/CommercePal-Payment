@@ -84,9 +84,6 @@ public class GlobalMethods {
         smsEmailService.pickAndProcessSlack(data);
     }
 
-
-
-
     public String generateValidationCode() {
         Random rnd = new Random();
         Integer n = Integer.valueOf(1000 + rnd.nextInt(9000));

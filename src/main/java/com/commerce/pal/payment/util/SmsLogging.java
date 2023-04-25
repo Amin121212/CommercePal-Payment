@@ -2,10 +2,8 @@ package com.commerce.pal.payment.util;
 
 
 import lombok.extern.java.Log;
-import org.asynchttpclient.RequestBuilder;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.persistence.EntityManager;
