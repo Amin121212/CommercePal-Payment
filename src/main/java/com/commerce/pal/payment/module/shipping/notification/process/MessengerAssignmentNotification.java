@@ -94,6 +94,13 @@ public class MessengerAssignmentNotification {
             slackBody.put("sub_ref", payload.getString("SubOrderRef"));
             globalMethods.sendSlackNotification(slackBody);
 
+            JSONObject sms = new JSONObject();
+            sms.put("TemplateId", "15");
+            sms.put("messenger_name", mesRes.getString("firstName"));
+            sms.put("Phone", mesRes.getString("ownerPhoneNumber"));
+            sms.put("sub_ref", payload.getString("SubOrderRef"));
+            globalMethods.sendSMSNotification(sms);
+
             loginValidationRepository.findLoginValidationByEmailAddress(mesRes.getString("email"))
                     .ifPresent(user -> {
                         JSONObject pushPayload = new JSONObject();
