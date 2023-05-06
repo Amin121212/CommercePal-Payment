@@ -95,7 +95,7 @@ public class MessengerAssignmentNotification {
             globalMethods.sendSlackNotification(slackBody);
 
             JSONObject sms = new JSONObject();
-            sms.put("TemplateId", "15");
+            sms.put("TemplateId", "9");
             sms.put("messenger_name", mesRes.getString("firstName"));
             sms.put("Phone", mesRes.getString("ownerPhoneNumber"));
             sms.put("sub_ref", payload.getString("SubOrderRef"));
