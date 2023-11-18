@@ -1,15 +1,14 @@
 package com.commerce.pal.payment.controller.payment;
 
 import com.commerce.pal.payment.integ.payment.cash.AgentCashProcessing;
-import com.commerce.pal.payment.integ.payment.ethio.EthioFundsTransfer;
 import com.commerce.pal.payment.integ.payment.ethio.EthioSwithAccount;
 import com.commerce.pal.payment.integ.payment.hellocash.HelloCashPaymentFulfillment;
 import com.commerce.pal.payment.integ.payment.sahay.SahayCustomerValidation;
 import com.commerce.pal.payment.integ.payment.sahay.SahayPaymentFulfillment;
+import com.commerce.pal.payment.integ.payment.telebirr.TeleBirrPaymentFulfillment;
 import com.commerce.pal.payment.jms.Sender;
 import com.commerce.pal.payment.module.payment.PaymentService;
 import com.commerce.pal.payment.module.ValidateAccessToken;
-import com.commerce.pal.payment.module.payment.ProcessSuccessPayment;
 import com.commerce.pal.payment.module.payment.PromotionService;
 import com.commerce.pal.payment.util.GlobalMethods;
 import com.commerce.pal.payment.util.ResponseCodes;
@@ -33,13 +32,11 @@ public class RequestController {
     private final PaymentService paymentService;
     private final PromotionService promotionService;
     private final EthioSwithAccount ethioSwithAccount;
-    private final EthioFundsTransfer ethioFundsTransfer;
     private final ValidateAccessToken validateAccessToken;
     private final AgentCashProcessing agentCashProcessing;
-
-    private final ProcessSuccessPayment processSuccessPayment;
     private final SahayCustomerValidation sahayCustomerValidation;
     private final SahayPaymentFulfillment sahayPaymentFulfillment;
+    private final TeleBirrPaymentFulfillment teleBirrPaymentFulfillment;
     private final HelloCashPaymentFulfillment helloCashPaymentFulfillment;
 
     @Autowired
@@ -48,25 +45,23 @@ public class RequestController {
                              PaymentService paymentService,
                              PromotionService promotionService,
                              EthioSwithAccount ethioSwithAccount,
-                             EthioFundsTransfer ethioFundsTransfer,
                              ValidateAccessToken validateAccessToken,
                              AgentCashProcessing agentCashProcessing,
-                             ProcessSuccessPayment processSuccessPayment,
                              SahayCustomerValidation sahayCustomerValidation,
                              SahayPaymentFulfillment sahayPaymentFulfillment,
+                             TeleBirrPaymentFulfillment teleBirrPaymentFulfillment,
                              HelloCashPaymentFulfillment helloCashPaymentFulfillment) {
         this.sender = sender;
         this.globalMethods = globalMethods;
         this.paymentService = paymentService;
         this.promotionService = promotionService;
         this.ethioSwithAccount = ethioSwithAccount;
-        this.ethioFundsTransfer = ethioFundsTransfer;
 
         this.validateAccessToken = validateAccessToken;
         this.agentCashProcessing = agentCashProcessing;
-        this.processSuccessPayment = processSuccessPayment;
         this.sahayCustomerValidation = sahayCustomerValidation;
         this.sahayPaymentFulfillment = sahayPaymentFulfillment;
+        this.teleBirrPaymentFulfillment = teleBirrPaymentFulfillment;
         this.helloCashPaymentFulfillment = helloCashPaymentFulfillment;
     }
 
@@ -146,6 +141,24 @@ public class RequestController {
         JSONObject responseBody = new JSONObject();
         try {
             sender.sendAirtimePurchase(requestBody.toString());
+        } catch (Exception ex) {
+            responseBody.put("statusCode", ResponseCodes.SYSTEM_ERROR)
+                    .put("statusDescription", "failed")
+                    .put("statusMessage", "Request failed");
+            log.log(Level.SEVERE, ex.getMessage());
+
+        }
+        return ResponseEntity.ok(responseBody.toString());
+    }
+
+    @RequestMapping(value = "/tele-bir-call-back", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<?> postTeleBirRes(@RequestBody String requestBody) {
+        log.log(Level.INFO, requestBody);
+        JSONObject responseBody = new JSONObject();
+        try {
+            JSONObject requestObject = new JSONObject(requestBody);
+            responseBody = teleBirrPaymentFulfillment.pickAndProcess(requestObject);
         } catch (Exception ex) {
             responseBody.put("statusCode", ResponseCodes.SYSTEM_ERROR)
                     .put("statusDescription", "failed")

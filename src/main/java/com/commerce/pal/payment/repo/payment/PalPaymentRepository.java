@@ -7,4 +7,6 @@ import java.util.Optional;
 
 public interface PalPaymentRepository extends JpaRepository<PalPayment, Long> {
     Optional<PalPayment> findPalPaymentByOrderRefAndTransRefAndStatus(String orderRef, String transRef, Integer status);
+
+    Optional<PalPayment> findPalPaymentByTransRefAndStatus(String transRef, Integer status);
 }
