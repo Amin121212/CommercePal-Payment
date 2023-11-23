@@ -173,7 +173,7 @@ public class RequestController {
         return ResponseEntity.ok(responseBody.toString());
     }
 
-    @RequestMapping(value = "/cbe-birr-call-back", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/cbe-birr/call-back", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity<?> postCBEBirrRes(@RequestBody String requestBody) {
         log.log(Level.INFO, requestBody);
