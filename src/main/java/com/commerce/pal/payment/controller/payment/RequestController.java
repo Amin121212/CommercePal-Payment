@@ -1,14 +1,15 @@
 package com.commerce.pal.payment.controller.payment;
 
 import com.commerce.pal.payment.integ.payment.cash.AgentCashProcessing;
+import com.commerce.pal.payment.integ.payment.cbebirr.CBEBirrPaymentFulfillment;
 import com.commerce.pal.payment.integ.payment.ethio.EthioSwithAccount;
 import com.commerce.pal.payment.integ.payment.hellocash.HelloCashPaymentFulfillment;
 import com.commerce.pal.payment.integ.payment.sahay.SahayCustomerValidation;
 import com.commerce.pal.payment.integ.payment.sahay.SahayPaymentFulfillment;
 import com.commerce.pal.payment.integ.payment.telebirr.TeleBirrPaymentFulfillment;
 import com.commerce.pal.payment.jms.Sender;
-import com.commerce.pal.payment.module.payment.PaymentService;
 import com.commerce.pal.payment.module.ValidateAccessToken;
+import com.commerce.pal.payment.module.payment.PaymentService;
 import com.commerce.pal.payment.module.payment.PromotionService;
 import com.commerce.pal.payment.util.GlobalMethods;
 import com.commerce.pal.payment.util.ResponseCodes;
@@ -38,6 +39,7 @@ public class RequestController {
     private final SahayPaymentFulfillment sahayPaymentFulfillment;
     private final TeleBirrPaymentFulfillment teleBirrPaymentFulfillment;
     private final HelloCashPaymentFulfillment helloCashPaymentFulfillment;
+    private final CBEBirrPaymentFulfillment cbeBirrPaymentFulfillment;
 
     @Autowired
     public RequestController(Sender sender,
@@ -50,7 +52,7 @@ public class RequestController {
                              SahayCustomerValidation sahayCustomerValidation,
                              SahayPaymentFulfillment sahayPaymentFulfillment,
                              TeleBirrPaymentFulfillment teleBirrPaymentFulfillment,
-                             HelloCashPaymentFulfillment helloCashPaymentFulfillment) {
+                             HelloCashPaymentFulfillment helloCashPaymentFulfillment, CBEBirrPaymentFulfillment cbeBirrPaymentFulfillment) {
         this.sender = sender;
         this.globalMethods = globalMethods;
         this.paymentService = paymentService;
@@ -63,12 +65,14 @@ public class RequestController {
         this.sahayPaymentFulfillment = sahayPaymentFulfillment;
         this.teleBirrPaymentFulfillment = teleBirrPaymentFulfillment;
         this.helloCashPaymentFulfillment = helloCashPaymentFulfillment;
+        this.cbeBirrPaymentFulfillment = cbeBirrPaymentFulfillment;
     }
 
     @RequestMapping(value = "/request", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity<?> postRequest(@RequestBody String requestBody,
                                          @RequestHeader("Authorization") String accessToken) {
+
         log.log(Level.INFO, requestBody);
         JSONObject responseBody = new JSONObject();
         try {
@@ -159,6 +163,24 @@ public class RequestController {
         try {
             JSONObject requestObject = new JSONObject(requestBody);
             responseBody = teleBirrPaymentFulfillment.pickAndProcess(requestObject);
+        } catch (Exception ex) {
+            responseBody.put("statusCode", ResponseCodes.SYSTEM_ERROR)
+                    .put("statusDescription", "failed")
+                    .put("statusMessage", "Request failed");
+            log.log(Level.SEVERE, ex.getMessage());
+
+        }
+        return ResponseEntity.ok(responseBody.toString());
+    }
+
+    @RequestMapping(value = "/cbe-birr-call-back", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<?> postCBEBirrRes(@RequestBody String requestBody) {
+        log.log(Level.INFO, requestBody);
+        JSONObject responseBody = new JSONObject();
+        try {
+            JSONObject requestObject = new JSONObject(requestBody);
+            responseBody = cbeBirrPaymentFulfillment.pickAndProcess(requestObject);
         } catch (Exception ex) {
             responseBody.put("statusCode", ResponseCodes.SYSTEM_ERROR)
                     .put("statusDescription", "failed")
