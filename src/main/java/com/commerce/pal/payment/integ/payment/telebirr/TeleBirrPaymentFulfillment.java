@@ -1,15 +1,10 @@
 package com.commerce.pal.payment.integ.payment.telebirr;
 
-import com.commerce.pal.payment.integ.payment.hellocash.HelloCashConstants;
 import com.commerce.pal.payment.module.payment.ProcessSuccessPayment;
 import com.commerce.pal.payment.repo.payment.PalPaymentRepository;
-import com.commerce.pal.payment.util.HttpProcessor;
-import com.commerce.pal.payment.util.ResponseCodes;
 import lombok.extern.java.Log;
-import org.asynchttpclient.RequestBuilder;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.sql.Timestamp;
@@ -23,60 +18,68 @@ public class TeleBirrPaymentFulfillment {
 
     private final PalPaymentRepository palPaymentRepository;
     private final ProcessSuccessPayment processSuccessPayment;
+    private final TeleBirrPaymentUtils teleBirrPaymentUtils;
 
     @Autowired
-    public TeleBirrPaymentFulfillment(PalPaymentRepository palPaymentRepository,
-                                      ProcessSuccessPayment processSuccessPayment) {
+    public TeleBirrPaymentFulfillment(PalPaymentRepository palPaymentRepository, ProcessSuccessPayment processSuccessPayment, TeleBirrPaymentUtils teleBirrPaymentUtils) {
         this.palPaymentRepository = palPaymentRepository;
         this.processSuccessPayment = processSuccessPayment;
+        this.teleBirrPaymentUtils = teleBirrPaymentUtils;
     }
 
-    public JSONObject pickAndProcess(JSONObject reqBdy) {
+    public JSONObject pickAndProcess(String encryptedReqBdy) {
         JSONObject respBdy = new JSONObject();
         try {
-            palPaymentRepository.findPalPaymentByTransRefAndStatus(
-                    reqBdy.getString("transRef"), 1
-            ).ifPresentOrElse(payment -> {
-                payment.setResponsePayload(reqBdy.toString());
-                payment.setResponseDate(Timestamp.from(Instant.now()));
-                if (reqBdy.getString("statusCode").equals("000")) {
-                    payment.setStatus(3);
-                    payment.setBillTransRef(reqBdy.getString("outTradeNo"));
-                    payment.setFinalResponse("000");
-                    payment.setFinalResponseMessage(reqBdy.getString("statusDescription"));
-                    payment.setFinalResponseDate(Timestamp.from(Instant.now()));
-                    palPaymentRepository.save(payment);
-                    respBdy.put("statusCode", ResponseCodes.SUCCESS)
-                            .put("billRef", payment.getOrderRef())
-                            .put("TransRef", payment.getTransRef())
-                            .put("statusDescription", "Success")
-                            .put("statusMessage", "Success");
+            String decryptedReqBdy = teleBirrPaymentUtils.decryptWithRSA(encryptedReqBdy);
+            JSONObject reqBdy = new JSONObject(decryptedReqBdy);
 
-                    // Process Payment
-                    processSuccessPayment.pickAndProcess(payment);
-                } else {
-                    payment.setStatus(5);
-                    payment.setBillTransRef("FAILED");
-                    payment.setFinalResponse("999");
-                    payment.setFinalResponseMessage(reqBdy.getString("statusDescription"));
-                    payment.setFinalResponseDate(Timestamp.from(Instant.now()));
-                    palPaymentRepository.save(payment);
+            palPaymentRepository.findPalPaymentByTransRefAndStatus(reqBdy.getString("outTradeNo"), 1)
+                    .ifPresentOrElse(payment -> {
+                        payment.setResponsePayload(reqBdy.toString());
+                        payment.setResponseDate(Timestamp.from(Instant.now()));
 
-                    respBdy.put("statusCode", ResponseCodes.TRANSACTION_FAILED)
-                            .put("statusDescription", "failed")
-                            .put("statusMessage", "Request failed");
-                }
-            }, () -> {
-                respBdy.put("statusCode", ResponseCodes.TRANSACTION_FAILED)
-                        .put("statusDescription", "failed")
-                        .put("statusMessage", "Request failed");
-            });
+                        if (reqBdy.optInt("tradeStatus") == 2) {
+                            payment.setStatus(3);
+                            payment.setBillTransRef(reqBdy.getString("tradeNo"));
+                            payment.setFinalResponse("000");
+                            payment.setFinalResponseMessage("SUCCESS");
+                            payment.setFinalResponseDate(Timestamp.from(Instant.now()));
+                            palPaymentRepository.save(payment);
+
+                            respBdy.put("code", 0)
+                                    .put("msg", "success");
+
+                            // Process Payment
+                            processSuccessPayment.pickAndProcess(payment);
+                        } else if (reqBdy.optInt("tradeStatus") == 1) {
+                            payment.setFinalResponseMessage("PENDING");
+                            payment.setFinalResponseDate(Timestamp.from(Instant.now()));
+                            palPaymentRepository.save(payment);
+
+                            respBdy.put("code", 0)
+                                    .put("msg", "Success");
+                        } else {
+                            payment.setStatus(5);
+                            payment.setBillTransRef("FAILED");
+                            payment.setFinalResponse("999");
+                            payment.setFinalResponseMessage("FAILED");
+                            payment.setFinalResponseDate(Timestamp.from(Instant.now()));
+                            palPaymentRepository.save(payment);
+
+                            respBdy.put("code", 5)
+                                    .put("msg", "Failed");
+                        }
+                    }, () -> respBdy.put("code", 5)
+                            .put("msg", "Failed"));
         } catch (Exception ex) {
             log.log(Level.WARNING, ex.getMessage());
-            respBdy.put("statusCode", ResponseCodes.TRANSACTION_FAILED)
-                    .put("statusDescription", "failed")
-                    .put("statusMessage", ex.getMessage());
+            respBdy.put("code", 5)
+                    .put("msg", "Failed");
+
         }
         return respBdy;
     }
 }
+
+
+

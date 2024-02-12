@@ -19,17 +19,17 @@ import java.util.logging.Level;
 @Log
 @Component
 @SuppressWarnings("Duplicates")
-public class TeleBirrPayment {
+public class TeleBirrPaymentMobile {
 
-    @Value(value = "${org.telebirr.initiate.payment}")
+    @Value(value = "${org.telebirr.initiate.payment.mobile}")
     private String URL_PAYMENT_REQUEST;
     private final HttpProcessor httpProcessor;
     private final PalPaymentRepository palPaymentRepository;
     private final TeleBirrPaymentUtils teleBirrPaymentUtils;
 
     @Autowired
-    public TeleBirrPayment(HttpProcessor httpProcessor,
-                           PalPaymentRepository palPaymentRepository, TeleBirrPaymentUtils teleBirrPaymentUtils) {
+    public TeleBirrPaymentMobile(HttpProcessor httpProcessor,
+                                 PalPaymentRepository palPaymentRepository, TeleBirrPaymentUtils teleBirrPaymentUtils) {
         this.httpProcessor = httpProcessor;
         this.palPaymentRepository = palPaymentRepository;
         this.teleBirrPaymentUtils = teleBirrPaymentUtils;
@@ -38,14 +38,13 @@ public class TeleBirrPayment {
     public JSONObject pickAndProcess(PalPayment payment) {
         JSONObject respBdy = new JSONObject();
         try {
-            //Both of them must be the same for sign and ussd generation.
             String timestamp = String.valueOf(System.currentTimeMillis());
             String nonce = UUID.randomUUID().toString().replace("-", "");
 
             JSONObject payload = new JSONObject();
             payload.put("appid", teleBirrPaymentUtils.getAppId());
-            payload.put("sign", teleBirrPaymentUtils.generateSignature(payment, timestamp, nonce));
-            payload.put("ussd", teleBirrPaymentUtils.generateUssdParameter(payment, timestamp, nonce));
+            payload.put("sign", teleBirrPaymentUtils.generateSignatureForMobile(payment, timestamp, nonce));
+            payload.put("ussd", teleBirrPaymentUtils.generateUssdParameterForMobile(payment, timestamp, nonce));
 
             //cant save payload as request payload, bcuz it`s too large
             JSONObject reqBodyToSave = new JSONObject();
@@ -68,10 +67,15 @@ public class TeleBirrPayment {
 
                 JSONObject resBody = new JSONObject(resp.getString("ResponseBody"));
 
+                // Extract the receiveCode from the nested JSON
+                String toPayMsg = resBody.optJSONObject("data").optString("toPayMsg");
+                JSONObject toPayMsgJsonObject = new JSONObject(toPayMsg);
+                String receiveCode = toPayMsgJsonObject.getJSONObject("extras").getString("receiveCode");
+
                 //cant save resBody as response payload, bcuz it`s too large
                 JSONObject resBodyToSave = new JSONObject();
                 resBodyToSave.put("code", resBody.getInt("code"))
-                        .put("data", resBody.optJSONObject("data").optString("toPayUrl"))
+                        .put("receiveCode", receiveCode)
                         .put("message", resBody.getString("message"));
 
                 payment.setResponsePayload(resBodyToSave.toString());
@@ -82,10 +86,9 @@ public class TeleBirrPayment {
                     respBdy.put("statusCode", ResponseCodes.SUCCESS)
                             .put("OrderRef", payment.getOrderRef())
                             .put("TransRef", payment.getTransRef())
-                            .put("PaymentUrl", resBody.optJSONObject("data").optString("toPayUrl"))
-                            .put("statusDescription", resBody.optString("message"))
+                            .put("toPayMsg", toPayMsg)
+                            .put("statusDescription", resBody.getString("message"))
                             .put("statusMessage", "Success");
-
 
                     payment.setStatus(1);
                     payment.setBillTransRef(nonce);
@@ -95,7 +98,7 @@ public class TeleBirrPayment {
                     palPaymentRepository.save(payment);
                 } else {
                     respBdy.put("statusCode", ResponseCodes.NOT_EXIST)
-                            .put("PaymentUrl", "")
+                            .put("toPayMsg", "")
                             .put("statusDescription", "Request failed")
                             .put("statusMessage", "FAILED");
 
@@ -108,7 +111,7 @@ public class TeleBirrPayment {
                 }
             } else {
                 respBdy.put("statusCode", ResponseCodes.SYSTEM_ERROR)
-                        .put("PaymentUrl", "")
+                        .put("toPayMsg", "")
                         .put("statusDescription", "Request failed")
                         .put("statusMessage", "FAILED");
 
@@ -124,9 +127,10 @@ public class TeleBirrPayment {
             }
 
         } catch (Exception ex) {
+            ex.printStackTrace();
             log.log(Level.WARNING, ex.getMessage());
             respBdy.put("statusCode", ResponseCodes.SYSTEM_ERROR)
-                    .put("PaymentUrl", "")
+                    .put("toPayMsg", "")
                     .put("statusDescription", "Request failed")
                     .put("statusMessage", "FAILED");
         }
