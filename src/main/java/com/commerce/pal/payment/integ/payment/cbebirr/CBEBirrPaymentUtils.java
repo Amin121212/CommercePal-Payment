@@ -15,18 +15,16 @@ import java.util.logging.Level;
 
 @Component
 @Log
-public class CBEBirrUtils {
+public class CBEBirrPaymentUtils {
 
     private static final String SECURITY_KEY = "b14ca5898a4e4133bbce2ea2315a1916";
     private static final String ALGORITHM = "DESede";
     private static final String TRANSFORMATION = "DESede/ECB/PKCS7Padding";
 
-    static {
-        Security.addProvider(new BouncyCastleProvider());
-    }
-
-    public static String encrypt(String plainText) {
+    public String encrypt(String plainText) {
         try {
+            Security.insertProviderAt(new BouncyCastleProvider(), 1);
+
             byte[] plainTextBytes = plainText.getBytes(StandardCharsets.UTF_8);
             MessageDigest md5 = MessageDigest.getInstance("MD5");
             byte[] securityKeyHash = md5.digest(SECURITY_KEY.getBytes(StandardCharsets.UTF_8));
@@ -41,7 +39,7 @@ public class CBEBirrUtils {
         }
     }
 
-    public static String decrypt(String decodedString) {
+    public String decrypt(String decodedString) {
         try {
             MessageDigest md5 = MessageDigest.getInstance("MD5");
             byte[] securityKeyHash = md5.digest(SECURITY_KEY.getBytes(StandardCharsets.UTF_8));
@@ -57,7 +55,7 @@ public class CBEBirrUtils {
         }
     }
 
-    public static String hash(String input) {
+    public String hash(String input) {
         try {
             return Hashing.sha256()
                     .hashString(input, StandardCharsets.UTF_8)
@@ -67,5 +65,6 @@ public class CBEBirrUtils {
             throw new RuntimeException("Error generating Hash", ex);
         }
     }
+
 
 }

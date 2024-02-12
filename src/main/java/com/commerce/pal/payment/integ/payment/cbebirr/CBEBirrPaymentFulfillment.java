@@ -18,7 +18,7 @@ public class CBEBirrPaymentFulfillment {
 
     @Autowired
     public CBEBirrPaymentFulfillment(PalPaymentRepository palPaymentRepository,
-                                     ProcessSuccessPayment processSuccessPayment, CBEBirrUtils cbeBirrUtils) {
+                                     ProcessSuccessPayment processSuccessPayment, CBEBirrPaymentUtils cbeBirrPaymentUtils) {
         this.palPaymentRepository = palPaymentRepository;
         this.processSuccessPayment = processSuccessPayment;
     }
@@ -27,8 +27,8 @@ public class CBEBirrPaymentFulfillment {
     public JSONObject pickAndProcess(JSONObject reqBdy) {
 //        JSONObject respBdy = new JSONObject();
 //        try {
-//            String transactionId = CBEBirrUtils.decrypt(reqBdy.getString("TransactionId"));
-//            String state = CBEBirrUtils.decrypt(reqBdy.getString("State"));
+//            String transactionId = CBEBirrMiniAppPaymentService.decrypt(reqBdy.getString("TransactionId"));
+//            String state = CBEBirrMiniAppPaymentService.decrypt(reqBdy.getString("State"));
 //
 //
 //            palPaymentRepository.findPalPaymentByTransRefAndStatus(transactionId, 1
@@ -74,7 +74,20 @@ public class CBEBirrPaymentFulfillment {
 //                    .put("statusMessage", ex.getMessage());
 //        }
 
-        System.out.println("CBE CALL BACK RESULT:  " + reqBdy.toString());
+
+        System.out.println("=========================================================================");
+        System.out.println();
+        System.out.println();
+        System.out.println();
+        System.out.println();
+        System.out.println("CBE CALL BACK RESULT:  ");
+        System.out.println(reqBdy.toString());
+        System.out.println();
+        System.out.println();
+        System.out.println();
+        System.out.println();
+        System.out.println("=========================================================================");
+
         return new JSONObject().put("statusCode", ResponseCodes.SUCCESS);
     }
 }

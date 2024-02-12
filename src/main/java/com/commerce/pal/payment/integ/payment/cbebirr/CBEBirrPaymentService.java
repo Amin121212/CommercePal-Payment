@@ -6,8 +6,7 @@ import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 
 @Log
@@ -21,19 +20,25 @@ public class CBEBirrPaymentService {
     private String password;
     @Value(value = "${org.cbe.birr.authenticate.merchantCode}")
     private String merchantCode;
+    private static final String SECURITY_KEY = "b14ca5898a4e4133bbce2ea2315a1916";
 
+    private final CBEBirrPaymentUtils cbeBirrPaymentUtils;
+
+    public CBEBirrPaymentService(CBEBirrPaymentUtils cbeBirrPaymentUtils) {
+        this.cbeBirrPaymentUtils = cbeBirrPaymentUtils;
+    }
 
     public String generatePaymentUrl(String amount, String transactionId) {
 
         String formattedJsonForHash = generateFormattedJsonForHash(userID, password, transactionId, amount, merchantCode);
-        String hashValue = CBEBirrUtils.hash(formattedJsonForHash);
+        String hashValue = cbeBirrPaymentUtils.hash(formattedJsonForHash);
 
-        String encryptedUserID = CBEBirrUtils.encrypt(userID);
-        String encryptedPassword = CBEBirrUtils.encrypt(password);
-        String encryptedTransactionId = CBEBirrUtils.encrypt(transactionId);
-        String encryptedAmount = CBEBirrUtils.encrypt(amount);
-        String encryptedMerchantCode = CBEBirrUtils.encrypt(merchantCode);
-        String encryptedHashValue = CBEBirrUtils.encrypt(hashValue);
+        String encryptedUserID = cbeBirrPaymentUtils.encrypt(userID);
+        String encryptedPassword = cbeBirrPaymentUtils.encrypt(password);
+        String encryptedTransactionId = cbeBirrPaymentUtils.encrypt(transactionId);
+        String encryptedAmount = cbeBirrPaymentUtils.encrypt(amount);
+        String encryptedMerchantCode = cbeBirrPaymentUtils.encrypt(merchantCode);
+        String encryptedHashValue = cbeBirrPaymentUtils.encrypt(hashValue);
 
         String formattedJsonForEncryption = generateEncryptedRequestBody(
                 encryptedUserID,
@@ -43,24 +48,25 @@ public class CBEBirrPaymentService {
                 encryptedMerchantCode,
                 encryptedHashValue);
 
-        return CBEBirrUtils.encrypt(formattedJsonForEncryption);
+        return cbeBirrPaymentUtils.encrypt(formattedJsonForEncryption);
     }
 
     private String generateFormattedJsonForHash(
             String userID, String password, String transactionId, String amount, String merchantCode) {
-        Map<String, String> body = new LinkedHashMap<>();
-        try {
-            body.put("UserID", userID);
-            body.put("Password", password);
-            body.put("TransactionId", transactionId);
-            body.put("Amount", amount);
-            body.put("MerchantCode", merchantCode);
 
-            return new ObjectMapper().writeValueAsString(body);
-        } catch (JsonProcessingException ex) {
-            log.log(Level.WARNING, ex.getMessage());
-            throw new RuntimeException(ex.getMessage());
+        TreeMap<String, String> payload = new TreeMap<>();
+        payload.put("U", userID);
+        payload.put("W", password);
+        payload.put("T", transactionId);
+        payload.put("A", amount);
+        payload.put("MC", merchantCode);
+        payload.put("Key", SECURITY_KEY);
+
+        List<String> temp = new ArrayList<>();
+        for (Map.Entry<String, String> entry : payload.entrySet()) {
+            temp.add(String.format("%s=%s", entry.getKey(), entry.getValue()));
         }
+        return String.join("&", temp);
     }
 
     private String generateEncryptedRequestBody(
