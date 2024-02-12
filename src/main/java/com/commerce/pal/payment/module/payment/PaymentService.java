@@ -1,9 +1,13 @@
 package com.commerce.pal.payment.module.payment;
 
+import com.commerce.pal.payment.integ.payment.amole.AmolePayment;
 import com.commerce.pal.payment.integ.payment.cash.AgentCashProcessing;
+import com.commerce.pal.payment.integ.payment.cbeBirrMiniApp.CBEBirrMiniAppPayment;
 import com.commerce.pal.payment.integ.payment.cbebirr.CBEBirrPayment;
 import com.commerce.pal.payment.integ.payment.ebirr.EBirrPayment;
+import com.commerce.pal.payment.integ.payment.epg.EPGPayment;
 import com.commerce.pal.payment.integ.payment.financials.FinancialPayment;
+import com.commerce.pal.payment.integ.payment.financials.rays.RaysLoanRequest;
 import com.commerce.pal.payment.integ.payment.hellocash.HelloCashPayment;
 import com.commerce.pal.payment.integ.payment.sahay.SahayPayment;
 import com.commerce.pal.payment.integ.payment.telebirr.TeleBirrPayment;
@@ -38,6 +42,10 @@ public class PaymentService {
     private final AgentCashProcessing agentCashProcessing;
     private final PalPaymentRepository palPaymentRepository;
     private final CBEBirrPayment cbeBirrPayment;
+    private final CBEBirrMiniAppPayment cbeBirrMiniAppPayment;
+    private final EPGPayment epgPayment;
+    private final AmolePayment amolePayment;
+    private final RaysLoanRequest raysLoanRequest;
 
     @Autowired
     public PaymentService(EBirrPayment eBirrPayment,
@@ -48,7 +56,7 @@ public class PaymentService {
                           FinancialPayment financialPayment,
                           HelloCashPayment helloCashPayment,
                           AgentCashProcessing agentCashProcessing,
-                          PalPaymentRepository palPaymentRepository, CBEBirrPayment cbeBirrPayment) {
+                          PalPaymentRepository palPaymentRepository, CBEBirrPayment cbeBirrPayment, CBEBirrMiniAppPayment cbeBirrMiniAppPayment, EPGPayment epgPayment, AmolePayment amolePayment, RaysLoanRequest raysLoanRequest) {
         this.eBirrPayment = eBirrPayment;
         this.sahayPayment = sahayPayment;
         this.globalMethods = globalMethods;
@@ -59,6 +67,11 @@ public class PaymentService {
         this.agentCashProcessing = agentCashProcessing;
         this.palPaymentRepository = palPaymentRepository;
         this.cbeBirrPayment = cbeBirrPayment;
+        this.cbeBirrMiniAppPayment = cbeBirrMiniAppPayment;
+        this.epgPayment = epgPayment;
+        this.amolePayment = amolePayment;
+//        this.teleBirrPaymentMobile = teleBirrPaymentMobile;
+        this.raysLoanRequest = raysLoanRequest;
     }
 
     public JSONObject pickAndProcess(JSONObject rqBdy) {
@@ -67,71 +80,93 @@ public class PaymentService {
             orderRepository.findOrderByOrderRefAndIsUserAddressAssigned(
                             rqBdy.getString("OrderRef"), 1)
                     .ifPresentOrElse(order -> {
-                        AtomicReference<PalPayment> payment = new AtomicReference<>(new PalPayment());
-                        payment.get().setUserType(rqBdy.getString("UserType"));
-                        payment.get().setUserEmail(rqBdy.getString("UserEmail"));
-                        payment.get().setTransRef(globalMethods.generateTrans());
-                        payment.get().setOrderRef(rqBdy.getString("OrderRef"));
-                        payment.get().setTransType("OrderPayment");
-                        payment.get().setPaymentType(rqBdy.getString("PaymentType"));
-                        payment.get().setPaymentAccountType(rqBdy.getString("PaymentMode"));
-                        payment.get().setAccountNumber(rqBdy.getString("UserEmail"));
-                        BigDecimal amount = new BigDecimal(order.getTotalPrice().doubleValue() + order.getDeliveryPrice().doubleValue() - order.getPromotionAmount().doubleValue());
-                        amount = amount.setScale(2, RoundingMode.CEILING);
-                        payment.get().setAmount(amount);
-                        payment.get().setCurrency(rqBdy.getString("Currency"));
-                        payment.get().setStatus(0);
-                        payment.get().setRequestPayload(rqBdy.toString());
-                        payment.get().setRequestDate(Timestamp.from(Instant.now()));
-                        payment.set(palPaymentRepository.save(payment.get()));
+                                AtomicReference<PalPayment> payment = new AtomicReference<>(new PalPayment());
+                                payment.get().setUserType(rqBdy.getString("UserType"));
+                                payment.get().setUserEmail(rqBdy.getString("UserEmail"));
+                                payment.get().setTransRef(globalMethods.generateTrans());
+                                payment.get().setOrderRef(rqBdy.getString("OrderRef"));
+                                payment.get().setTransType("OrderPayment");
+                                payment.get().setPaymentType(rqBdy.getString("PaymentType"));
+                                payment.get().setPaymentAccountType(rqBdy.getString("PaymentMode"));
+                                payment.get().setAccountNumber(rqBdy.getString("UserEmail"));
+                                BigDecimal amount = new BigDecimal(order.getTotalPrice().doubleValue() + order.getDeliveryPrice().doubleValue() - order.getPromotionAmount().doubleValue());
+                                amount = amount.setScale(2, RoundingMode.CEILING);
+                                payment.get().setAmount(amount);
+                                payment.get().setCurrency(rqBdy.getString("Currency"));
+                                payment.get().setStatus(0);
+                                payment.get().setRequestPayload(rqBdy.toString());
+                                payment.get().setRequestDate(Timestamp.from(Instant.now()));
+                                payment.set(palPaymentRepository.save(payment.get()));
 
-                        switch (rqBdy.getString("PaymentType")) {
-                            case "SAHAY":
-                                payment.get().setAccountNumber(rqBdy.getString("PhoneNumber"));
-                                payment.set(palPaymentRepository.save(payment.get()));
-                                respBdy.set(sahayPayment.pickAndProcess(payment.get()));
-                                break;
-                            case "HELLO-CASH":
-                                payment.get().setAccountNumber(rqBdy.getString("PhoneNumber"));
-                                payment.set(palPaymentRepository.save(payment.get()));
-                                respBdy.set(helloCashPayment.pickAndProcess(payment.get()));
-                                break;
-                            case "E-BIRR":
-                                payment.get().setAccountNumber(rqBdy.getString("PhoneNumber"));
-                                payment.set(palPaymentRepository.save(payment.get()));
-                                respBdy.set(eBirrPayment.pickAndProcess(payment.get()));
-                                break;
-                            case "TELE-BIRR":
-                                payment.get().setAccountNumber(rqBdy.getString("PhoneNumber"));
-                                payment.set(palPaymentRepository.save(payment.get()));
-                                respBdy.set(teleBirrPayment.pickAndProcess(payment.get()));
-                                break;
-                            case "CBE-BIRR":
-                                payment.get().setAccountNumber(rqBdy.getString("PhoneNumber"));
-                                payment.set(palPaymentRepository.save(payment.get()));
-                                respBdy.set(cbeBirrPayment.pickAndProcess(payment.get()));
-                                break;
-                            case "FINANCE-INST":
-                                respBdy.set(financialPayment.pickAndProcess(payment.get()));
-                                break;
-                            case "AGENT-CASH":
-                                payment.get().setAccountNumber(rqBdy.getString("PhoneNumber"));
-                                payment.set(palPaymentRepository.save(payment.get()));
-                                respBdy.set(agentCashProcessing.pickAndProcess(payment.get()));
-                                break;
-                            default:
-                                respBdy.get().put("statusCode", ResponseCodes.SYSTEM_ERROR)
-                                        .put("statusDescription", "failed")
-                                        .put("statusMessage", "Request failed");
-                                break;
-                        }
-                    }, () -> {
-                        respBdy.get().put("statusCode", ResponseCodes.SYSTEM_ERROR)
-                                .put("statusDescription", "Order has to be assigned shipment address")
-                                .put("statusMessage", "Order has to be assigned shipment address");
-                    });
+                                switch (rqBdy.getString("PaymentType")) {
+                                    case "SAHAY":
+                                        payment.get().setAccountNumber(rqBdy.getString("PhoneNumber"));
+                                        payment.set(palPaymentRepository.save(payment.get()));
+                                        respBdy.set(sahayPayment.pickAndProcess(payment.get()));
+                                        break;
+                                    case "HELLO-CASH":
+                                        payment.get().setAccountNumber(rqBdy.getString("PhoneNumber"));
+                                        payment.set(palPaymentRepository.save(payment.get()));
+                                        respBdy.set(helloCashPayment.pickAndProcess(payment.get()));
+                                        break;
+                                    case "E-BIRR":
+                                        payment.get().setAccountNumber(rqBdy.getString("PhoneNumber"));
+                                        payment.set(palPaymentRepository.save(payment.get()));
+                                        respBdy.set(eBirrPayment.pickAndProcess(payment.get()));
+                                        break;
+                                    case "TELE-BIRR":
+                                        payment.set(palPaymentRepository.save(payment.get()));
+                                        respBdy.set(teleBirrPayment.pickAndProcess(payment.get()));
+                                        break;
+//                                    case "TELE-BIRR-APP":
+//                                        payment.set(palPaymentRepository.save(payment.get()));
+//                                        respBdy.set(teleBirrPaymentMobile.pickAndProcess(payment.get()));
+//                                        break;
+                                    case "EPG":
+                                        payment.get().setAccountNumber(rqBdy.getString("PhoneNumber"));
+                                        payment.set(palPaymentRepository.save(payment.get()));
+                                        respBdy.set(epgPayment.pickAndProcess(payment.get()));
+                                        break;
+                                    case "CBE-BIRR":
+                                        payment.set(palPaymentRepository.save(payment.get()));
+                                        respBdy.set(cbeBirrPayment.pickAndProcess(payment.get()));
+                                        break;
+                                    case "CBE-BIRR-MIN-APP":
+                                        payment.set(palPaymentRepository.save(payment.get()));
+                                        respBdy.set(cbeBirrMiniAppPayment.pickAndProcess(payment.get()));
+                                        break;
+                                    case "AMOLE":
+                                        payment.get().setAccountNumber(rqBdy.getString("PhoneNumber"));
+                                        payment.set(palPaymentRepository.save(payment.get()));
+                                        respBdy.set(amolePayment.pickAndProcess(payment.get()));
+                                        break;
+                                    case "FINANCIAL_RAYS_MFI":
+                                        payment.get().setAccountNumber(rqBdy.getString("PhoneNumber"));
+                                        payment.get().setPaymentType("FINANCE-INST");
+                                        payment.set(palPaymentRepository.save(payment.get()));
+                                        respBdy.set(raysLoanRequest.pickAndProcess(payment.get()));
+                                        break;
+                                    case "FINANCE-INST":
+                                        respBdy.set(financialPayment.pickAndProcess(payment.get()));
+                                        break;
+                                    case "AGENT-CASH":
+                                        payment.get().setAccountNumber(rqBdy.getString("PhoneNumber"));
+                                        payment.set(palPaymentRepository.save(payment.get()));
+                                        respBdy.set(agentCashProcessing.pickAndProcess(payment.get()));
+                                        break;
+                                    default:
+                                        respBdy.get().put("statusCode", ResponseCodes.SYSTEM_ERROR)
+                                                .put("statusDescription", "failed")
+                                                .put("statusMessage", "Request failed");
+                                        break;
+                                }
+                            }, () -> respBdy.get().put("statusCode", ResponseCodes.SYSTEM_ERROR)
+                                    .put("statusDescription", "Order has to be assigned shipment address")
+                                    .put("statusMessage", "Order has to be assigned shipment address")
+                    );
             //payment.set
         } catch (Exception ex) {
+            ex.printStackTrace();
             log.log(Level.WARNING, ex.getMessage());
             respBdy.get().put("statusCode", ResponseCodes.SYSTEM_ERROR)
                     .put("statusDescription", "failed")
