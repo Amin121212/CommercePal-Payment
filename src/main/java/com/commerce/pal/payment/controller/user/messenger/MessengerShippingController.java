@@ -1,4 +1,4 @@
-package com.commerce.pal.payment.controller.user.messenger;
+package com.commerce.pal.payment.controller.portal.admin.user.messenger;
 
 import com.commerce.pal.payment.model.shipping.ItemShipmentStatus;
 import com.commerce.pal.payment.module.DataAccessService;
@@ -188,6 +188,7 @@ public class MessengerShippingController {
         return ResponseEntity.ok(responseMap.toString());
     }
 
+
     @RequestMapping(value = "/accept-order-delivery", method = RequestMethod.POST)
     public ResponseEntity<?> acceptOrderDelivery(@RequestHeader("Authorization") String accessToken,
                                                  @RequestBody String req) {
@@ -201,6 +202,7 @@ public class MessengerShippingController {
                 JSONObject userDetails = valTokenBdy.getJSONObject("UserDetails");
                 JSONObject messengerInfo = userDetails.getJSONObject("messengerInfo");
                 Long messengerId = Long.valueOf(messengerInfo.getInt("userId"));
+
                 JSONObject request = new JSONObject(req);
                 itemMessengerDeliveryRepository.findItemMessengerDeliveryByIdAndMessengerId(
                         request.getLong("DeliveryId"), messengerId
