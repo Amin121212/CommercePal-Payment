@@ -57,7 +57,7 @@ public class CBEBirrPayment {
 //                String requestParameters = resBody.getString("requestParameters");
 
                 payment.setRequestPayload(reqBdy.toString());
-//                palPaymentRepository.save(payment);
+                palPaymentRepository.save(payment);
 
                 String paymentUrl = URL_PAYMENT_REQUEST + requestParameters;
                 respBdy.put("statusCode", ResponseCodes.SUCCESS)
@@ -72,7 +72,7 @@ public class CBEBirrPayment {
                 payment.setFinalResponse("0");
                 payment.setFinalResponseMessage("PENDING");
                 payment.setFinalResponseDate(Timestamp.from(Instant.now()));
-//                palPaymentRepository.save(payment);
+                palPaymentRepository.save(payment);
             } else {
                 respBdy.put("statusCode", ResponseCodes.SYSTEM_ERROR)
                         .put("PaymentUrl", "")
@@ -88,7 +88,7 @@ public class CBEBirrPayment {
                 payment.setFinalResponse("999");
                 payment.setFinalResponseMessage("FAILED");
                 payment.setFinalResponseDate(Timestamp.from(Instant.now()));
-//                palPaymentRepository.save(payment);
+                palPaymentRepository.save(payment);
             }
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -103,7 +103,7 @@ public class CBEBirrPayment {
             payment.setFinalResponse("999");
             payment.setFinalResponseMessage("FAILED");
             payment.setFinalResponseDate(Timestamp.from(Instant.now()));
-//            palPaymentRepository.save(payment);
+            palPaymentRepository.save(payment);
         }
 
         return respBdy;
